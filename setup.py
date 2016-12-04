@@ -7,5 +7,8 @@ setup(name='nitor_deploy_tools',
       author='Pasi Niemi',
       author_email='pasi@nitor.com',
       license='Apache 2.0',
-      packages=['nitor_deploy_tools'],
+      packages=['vault'],
+      entry_points = {
+        'console_scripts': ['vault=vault.cli:main'],
+      },
       zip_safe=False)

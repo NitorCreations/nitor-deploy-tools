@@ -1,5 +1,8 @@
-import nitor_deploy_tools
+#!/usr/bin/env python
+from vault import Vault
+import sys
 
-keyArn = nitor_deploy_tools.get_cf_params("vault")['keyArn']
-enc = nitor_deploy_tools.encrypt(keyArn, b'Data')
-print nitor_deploy_tools.decrypt(enc['dataKey'], enc['cipherText'])
+vlt = Vault()
+enc = vlt.store(sys.argv[1], sys.argv[2].encode())
+print str(vlt.lookup(sys.argv[1]))
+vlt.delete(sys.argv[1])
