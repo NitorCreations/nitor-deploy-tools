@@ -11,4 +11,8 @@ setup(name='nitor_deploy_tools',
       entry_points = {
         'console_scripts': ['vault=vault.cli:main'],
       },
+      install_requires=[
+          'boto3',
+          'pycrypto'
+      ],
       zip_safe=False)
