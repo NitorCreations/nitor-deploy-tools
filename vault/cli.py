@@ -31,10 +31,18 @@ def main():
     if not args.store and not args.lookup and not args.init and not args.file and not args.delete:
         parser.error("--store requires name or a --file argument to get name to store")
     elif not args.store and not args.lookup and not args.init and not args.delete:
-        args.store = os.path.basename(args.file)
-        data = open(args.file, 'rb').read()
+        if args.file == "-":
+            parser.error("--store requires a name for stdin")
+        else:
+            args.store = os.path.basename(args.file)
+            data = open(args.file, 'rb').read()
     elif args.store:
-        data = args.value.encode()
+        if args.value:
+            data = args.value.encode()
+        elif args.file == "-":
+            data = sys.stdin.read()
+        else:
+            data = open(args.file, 'rb').read()
     if not args.vaultstack:
         if "VAULT_STACK" in os.environ:
             args.vaultstack = os.environ["VAULT_STACK"]
