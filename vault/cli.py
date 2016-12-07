@@ -57,6 +57,20 @@ def main():
     elif not args.prefix:
         args.prefix = "default/"
 
+    instance_data = None
+    # Try to get region from instance metadata if not otherwise specified
+    if not args.region and not "AWS_DEFAULT_REGION" in os.environ:
+        try:
+            response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
+            instance_data = json.loads(response.text)
+            args.region = instance_data['region']
+        except ConnectionError:
+            # no-op
+            args.region = ""
+
+    if args.region:
+        os.environ['AWS_DEFAULT_REGION'] = args.region
+
     if not args.init:
         vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
             vault_bucket=args.bucket, vault_iam_id=args.id,
@@ -75,17 +89,15 @@ def main():
     else:
         if not args.bucket:
             try:
-                response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
-                instance_data = json.loads(response.text)
+                if not instance_data:
+                    response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
+                    instance_data = json.loads(response.text)
                 account_id = instance_data['accountId']
                 args.bucket = "vault-" + account_id
-                if not args.region and not "AWS_DEFAULT_REGION" in os.environ:
-                    args.region = instance_data['region']
             except ConnectionError:
                 iam = boto3.client("iam")
                 arn = iam.get_user()['User']['Arn']
                 args.bucket = "vault-" + arn.split(':')[4]
-        os.environ["AWS_DEFAULT_REGION"] = args.region
         clf = boto3.client("cloudformation")
         try:
             clf.describe_stacks(StackName=args.vaultstack)
