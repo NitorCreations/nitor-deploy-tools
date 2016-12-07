@@ -4,6 +4,7 @@ import os
 import boto3
 import sys
 import requests
+import json
 from requests.exceptions import ConnectionError
 
 def main():
@@ -23,6 +24,7 @@ def main():
     parser.add_argument('-k', '--key-arn',  help="Override the KMS key arn for storinig or looking up")
     parser.add_argument('--id', help="Give an IAM access key id to override those defined by environent")
     parser.add_argument('--secret', help="Give an IAM secret access key to override those defined by environent")
+    parser.add_argument('-r', '--region', help="Give a region for the stack and bucket")
     args = parser.parse_args()
     if args.store and not (args.value or args.file):
         parser.error("--store requires --value or --file")
@@ -38,8 +40,15 @@ def main():
             args.vaultstack = os.environ["VAULT_STACK"]
         else:
             args.vaultstack = "vault"
-    if not args.prefix:
+
+    if not args.bucket and "VAULT_BUCKET" in os.environ:
+        args.bucket = os.environ["VAULT_BUCKET"]
+
+    if not args.prefix and "VAULT_PREFIX" in os.environ:
+        args.prefix = os.environ["VAULT_PREFIX"]
+    elif not args.prefix:
         args.prefix = "default/"
+
     if not args.init:
         vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
             vault_bucket=args.bucket, vault_iam_id=args.id,
@@ -65,12 +74,16 @@ def main():
             if not args.bucket:
                 try:
                     response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
-                    account_id = json.loads(response.text)['accountId']
+                    instance_data = json.loads(response.text)
+                    account_id = instance_data['accountId']
                     args.bucket = "vault-" + account_id
+                    if not args.region and not "AWS_DEFAULT_REGION" in os.environ:
+                        args.region = instance_data['region']
                 except ConnectionError:
                     iam = boto3.client("iam")
                     arn = iam.get_user()['User']['Arn']
                     args.bucket = "vault-" + arn.split(':')[4]
+
             params = {}
             params['ParameterKey'] = "paramBucketName"
             params['ParameterValue'] = args.bucket
