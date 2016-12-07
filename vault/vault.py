@@ -1,4 +1,5 @@
 import boto3
+import os
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
@@ -24,8 +25,13 @@ class Vault:
         # cloudformation stack
         if vault_key:
             self._vault_key = vault_key
+        elif "VAULT_KEY" in os.environ:
+            self._vault_key = os.environ["VAULT_KEY"]
         if vault_bucket:
             self._vault_bucket = vault_bucket
+        elif "VAULT_BUCKET" in os.environ:
+            self._vault_key = os.environ["VAULT_BUCKET"]
+        # If not given in constructor or environment, resolve from CloudFormation
         if not (self._vault_key and self._vault_bucket):
             stack_info = self._get_cf_params(vault_stack)
             if not self._vault_key:
