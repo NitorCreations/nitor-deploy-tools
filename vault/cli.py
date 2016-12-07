@@ -65,25 +65,25 @@ def main():
             else:
                 sys.stdout.write(data)
     else:
-        template = '{"Parameters": {"paramBucketName": {"Description": "Name of the vault bucket", "Type": "String", "Default": "nitor-core-vault"}}, "Resources": {"kmsKey": {"Type": "AWS::KMS::Key", "Properties": {"Description": "Key for encrypting / decrypting secrets", "KeyPolicy": {"Version": "2012-10-17", "Id": "key-default-2", "Statement": [{"Sid": "allowAdministration", "Effect": "Allow", "Principal": {"AWS": {"Fn::Join": ["", ["arn:aws:iam::", {"Ref": "AWS::AccountId"}, ":root"]]}}, "Action": ["kms:*"], "Resource": "*"}]}}}, "vaultBucket": {"Type": "AWS::S3::Bucket", "Properties": {"BucketName": {"Ref": "paramBucketName"}}}, "resourceDecryptRole": {"Type": "AWS::IAM::Role", "Properties": {"AssumeRolePolicyDocument": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}]}, "Path": "/"}}, "resourceEncryptRole": {"Type": "AWS::IAM::Role", "Properties": {"AssumeRolePolicyDocument": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}]}, "Path": "/"}}, "iamPolicyDecrypt": {"Type": "AWS::IAM::Policy", "Properties": {"PolicyName": "AllowVaultDecrypt", "Roles": [{"Ref": "resourceDecryptRole"}], "PolicyDocument": {"Version": "2012-10-17", "Statement": [{"Sid": "getVault", "Effect": "Allow", "Action": "s3:GetObject", "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "paramBucketName"}, "/*"]]}}, {"Sid": "allowDecrypt", "Effect": "Allow", "Action": ["kms:Decrypt"], "Resource": {"Fn::GetAtt": ["kmsKey", "Arn"]}}]}}}, "iamPolicyEncrypt": {"Type": "AWS::IAM::Policy", "Properties": {"PolicyName": "AllowVaultDecrypt", "Roles": [{"Ref": "resourceEncryptRole"}], "PolicyDocument": {"Version": "2012-10-17", "Statement": [{"Sid": "putVault", "Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "paramBucketName"}, "/*"]]}}, {"Sid": "allowDecrypt", "Effect": "Allow", "Action": ["kms:Decrypt", "kms:Encrypt"], "Resource": {"Fn::GetAtt": ["kmsKey", "Arn"]}}]}}}}, "Outputs": {"kmsKeyArn": {"Description": "KMS key Arn", "Value": {"Fn::GetAtt": ["kmsKey", "Arn"]}}, "vaultBucketName": {"Description": "Vault Bucket", "Value": {"Ref": "vaultBucket"}}, "decryptPolicy": {"Description": "The policy for decrypting", "Value": {"Ref": "iamPolicyDecrypt"}}, "encryptPolicy": {"Description": "The policy for decrypting", "Value": {"Ref": "iamPolicyEncrypt"}}}}'
+        if not args.bucket:
+            try:
+                response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
+                instance_data = json.loads(response.text)
+                account_id = instance_data['accountId']
+                args.bucket = "vault-" + account_id
+                if not args.region and not "AWS_DEFAULT_REGION" in os.environ:
+                    args.region = instance_data['region']
+            except ConnectionError:
+                iam = boto3.client("iam")
+                arn = iam.get_user()['User']['Arn']
+                args.bucket = "vault-" + arn.split(':')[4]
+        os.environ["AWS_DEFAULT_REGION"] = args.region
         clf = boto3.client("cloudformation")
         try:
             clf.describe_stacks(StackName=args.vaultstack)
             print "Vault stack '" + args.vaultstack + "' already initialized"
         except:
-            if not args.bucket:
-                try:
-                    response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
-                    instance_data = json.loads(response.text)
-                    account_id = instance_data['accountId']
-                    args.bucket = "vault-" + account_id
-                    if not args.region and not "AWS_DEFAULT_REGION" in os.environ:
-                        args.region = instance_data['region']
-                except ConnectionError:
-                    iam = boto3.client("iam")
-                    arn = iam.get_user()['User']['Arn']
-                    args.bucket = "vault-" + arn.split(':')[4]
-
+            template = '{"Parameters": {"paramBucketName": {"Description": "Name of the vault bucket", "Type": "String", "Default": "nitor-core-vault"}}, "Resources": {"kmsKey": {"Type": "AWS::KMS::Key", "Properties": {"Description": "Key for encrypting / decrypting secrets", "KeyPolicy": {"Version": "2012-10-17", "Id": "key-default-2", "Statement": [{"Sid": "allowAdministration", "Effect": "Allow", "Principal": {"AWS": {"Fn::Join": ["", ["arn:aws:iam::", {"Ref": "AWS::AccountId"}, ":root"]]}}, "Action": ["kms:*"], "Resource": "*"}]}}}, "vaultBucket": {"Type": "AWS::S3::Bucket", "Properties": {"BucketName": {"Ref": "paramBucketName"}}}, "resourceDecryptRole": {"Type": "AWS::IAM::Role", "Properties": {"AssumeRolePolicyDocument": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}]}, "Path": "/"}}, "resourceEncryptRole": {"Type": "AWS::IAM::Role", "Properties": {"AssumeRolePolicyDocument": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}]}, "Path": "/"}}, "iamPolicyDecrypt": {"Type": "AWS::IAM::Policy", "Properties": {"PolicyName": "AllowVaultDecrypt", "Roles": [{"Ref": "resourceDecryptRole"}], "PolicyDocument": {"Version": "2012-10-17", "Statement": [{"Sid": "getVault", "Effect": "Allow", "Action": "s3:GetObject", "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "paramBucketName"}, "/*"]]}}, {"Sid": "allowDecrypt", "Effect": "Allow", "Action": ["kms:Decrypt"], "Resource": {"Fn::GetAtt": ["kmsKey", "Arn"]}}]}}}, "iamPolicyEncrypt": {"Type": "AWS::IAM::Policy", "Properties": {"PolicyName": "AllowVaultDecrypt", "Roles": [{"Ref": "resourceEncryptRole"}], "PolicyDocument": {"Version": "2012-10-17", "Statement": [{"Sid": "putVault", "Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "paramBucketName"}, "/*"]]}}, {"Sid": "allowDecrypt", "Effect": "Allow", "Action": ["kms:Decrypt", "kms:Encrypt"], "Resource": {"Fn::GetAtt": ["kmsKey", "Arn"]}}]}}}}, "Outputs": {"kmsKeyArn": {"Description": "KMS key Arn", "Value": {"Fn::GetAtt": ["kmsKey", "Arn"]}}, "vaultBucketName": {"Description": "Vault Bucket", "Value": {"Ref": "vaultBucket"}}, "decryptPolicy": {"Description": "The policy for decrypting", "Value": {"Ref": "iamPolicyDecrypt"}}, "encryptPolicy": {"Description": "The policy for decrypting", "Value": {"Ref": "iamPolicyEncrypt"}}}}'
             params = {}
             params['ParameterKey'] = "paramBucketName"
             params['ParameterValue'] = args.bucket
