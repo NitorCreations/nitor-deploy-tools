@@ -10,10 +10,10 @@ class Vault:
     _vault_key = ""
     _vault_bucket = ""
     def __init__(self, vault_stack="vault", vault_key="", vault_bucket="",
-                 vault_iam_id="", vault_iam_secret="", vault_prefix="default/"):
-        _prefix = vault_prefix
-        if not _prefix.endswith("/"):
-            _prefix = _prefix + "/"
+                 vault_iam_id="", vault_iam_secret="", vault_prefix=""):
+        self._prefix = vault_prefix
+        if self._prefix and not self._prefix.endswith("/"):
+            self._prefix = self._prefix + "/"
         # Either use given vault iam credentials or assume that the environent has
         # some usable credentials (either through env vars or instance profile)
         if vault_iam_id and vault_iam_secret:
@@ -85,6 +85,14 @@ class Vault:
         s3cl = self._session.client('s3')
         s3cl.delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.key')
         s3cl.delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.encrypted')
+    def all(self):
+        s3bucket = self._session.resource('s3').Bucket(self._vault_bucket)
+        ret = ""
+        for object in s3bucket.objects.filter(Prefix=self._prefix):
+            if object.key.endswith(".encrypted"):
+                ret = ret + object.key[:-10] + os.linesep
+        return ret
+
 
 def _get_cipher(key):
     ctr = Counter.new(128, initial_value=1337)

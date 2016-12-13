@@ -14,11 +14,12 @@ def main():
     action.add_argument('-l', '--lookup', help="Name of element to lookup")
     action.add_argument('-i', '--init', action='store_true', help="Initializes a kms key and an s3 bucket with some roles for reading and writing on a fresh account via CloudFormation. Means that the account used has to have rights to create the resources")
     action.add_argument('-d', '--delete', help="Name of element to delete")
+    action.add_argument('-a', '--all', action='store_true', help="List available secrets")
     data = parser.add_mutually_exclusive_group(required=False)
     data.add_argument('-v', '--value', help="Value to store")
     data.add_argument('-f', '--file', help="File to store. If no -s argument given, the name of the file is used as the default name. Give - for stdin")
     parser.add_argument('-o', "--outfile", help="The file to write the data to")
-    parser.add_argument('-p', '--prefix', help="Optional prefix to store value under. 'default/' by default")
+    parser.add_argument('-p', '--prefix', help="Optional prefix to store value under. empty by default")
     parser.add_argument('--vaultstack', help="Optional CloudFormation stack to lookup key and bucket. 'vault' by default")
     parser.add_argument('-b', '--bucket', help="Override the bucket name either for initialization or storing and looking up values")
     parser.add_argument('-k', '--key-arn',  help="Override the KMS key arn for storinig or looking up")
@@ -28,9 +29,9 @@ def main():
     args = parser.parse_args()
     if args.store and not (args.value or args.file):
         parser.error("--store requires --value or --file")
-    if not args.store and not args.lookup and not args.init and not args.file and not args.delete:
+    if not args.store and not args.lookup and not args.init and not args.file and not args.delete and not args.all:
         parser.error("--store requires name or a --file argument to get name to store")
-    elif not args.store and not args.lookup and not args.init and not args.delete:
+    elif not args.store and not args.lookup and not args.init and not args.delete and not args.all:
         if args.file == "-":
             parser.error("--store requires a name for stdin")
         else:
@@ -55,7 +56,7 @@ def main():
     if not args.prefix and "VAULT_PREFIX" in os.environ:
         args.prefix = os.environ["VAULT_PREFIX"]
     elif not args.prefix:
-        args.prefix = "default/"
+        args.prefix = ""
 
     instance_data = None
     # Try to get region from instance metadata if not otherwise specified
@@ -79,6 +80,13 @@ def main():
             vlt.store(args.store, data)
         elif args.delete:
             vlt.delete(args.delete)
+        elif args.all:
+            data = vlt.all()
+            if args.outfile and not args.outfile == "-":
+                with open(args.outfile, 'w') as f:
+                    f.write(data)
+            else:
+                sys.stdout.write(data)
         else:
             data = vlt.lookup(args.lookup)
             if args.outfile and not args.outfile == "-":
