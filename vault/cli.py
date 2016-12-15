@@ -15,6 +15,7 @@ def main():
     action.add_argument('-i', '--init', action='store_true', help="Initializes a kms key and an s3 bucket with some roles for reading and writing on a fresh account via CloudFormation. Means that the account used has to have rights to create the resources")
     action.add_argument('-d', '--delete', help="Name of element to delete")
     action.add_argument('-a', '--all', action='store_true', help="List available secrets")
+    parser.add_argument('-w', '--overwrite', action='store_true', help="Add this argument if you want to overwrite an existing element")
     data = parser.add_mutually_exclusive_group(required=False)
     data.add_argument('-v', '--value', help="Value to store")
     data.add_argument('-f', '--file', help="File to store. If no -s argument given, the name of the file is used as the default name. Give - for stdin")
@@ -77,7 +78,10 @@ def main():
             vault_bucket=args.bucket, vault_iam_id=args.id,
             vault_iam_secret=args.secret, vault_prefix=args.prefix)
         if args.store:
-            vlt.store(args.store, data)
+            if args.overwrite or not vlt.exists(args.store):
+                vlt.store(args.store, data)
+            elif not args.overwrite:
+                parser.error("Will not overwrite '" + args.store + "' without the --overwrite (-w) flag")
         elif args.delete:
             vlt.delete(args.delete)
         elif args.all:

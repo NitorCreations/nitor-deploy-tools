@@ -2,6 +2,7 @@ import boto3
 import os
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
+from botocore.exceptions import ClientError
 
 class Vault:
     _session = boto3.Session()
@@ -81,6 +82,19 @@ class Vault:
         datakey = s3cl.get_object(Bucket=self._vault_bucket,
                                   Key=self._prefix + name + '.key')['Body'].read()
         return self._decrypt(datakey, ciphertext)
+
+    def exists(self, name):
+        s3cl = self._session.client('s3')
+        try:
+            s3cl.head_object(Bucket=self._vault_bucket,
+                             Key=self._prefix + name + '.key')
+            return True
+        except ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                return False
+            else:
+                raise
+
     def delete(self, name):
         s3cl = self._session.client('s3')
         s3cl.delete_object(Bucket=self._vault_bucket, Key=self._prefix + name + '.key')
