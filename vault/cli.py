@@ -23,16 +23,17 @@ def main():
     parser.add_argument('-p', '--prefix', help="Optional prefix to store value under. empty by default")
     parser.add_argument('--vaultstack', help="Optional CloudFormation stack to lookup key and bucket. 'vault' by default")
     parser.add_argument('-b', '--bucket', help="Override the bucket name either for initialization or storing and looking up values")
-    parser.add_argument('-k', '--key-arn',  help="Override the KMS key arn for storinig or looking up")
+    parser.add_argument('-k', '--key-arn', help="Override the KMS key arn for storinig or looking up")
     parser.add_argument('--id', help="Give an IAM access key id to override those defined by environent")
     parser.add_argument('--secret', help="Give an IAM secret access key to override those defined by environent")
     parser.add_argument('-r', '--region', help="Give a region for the stack and bucket")
     args = parser.parse_args()
     if args.store and not (args.value or args.file):
         parser.error("--store requires --value or --file")
-    if not args.store and not args.lookup and not args.init and not args.file and not args.delete and not args.all:
-        parser.error("--store requires name or a --file argument to get name to store")
-    elif not args.store and not args.lookup and not args.init and not args.delete and not args.all:
+    store_with_no_name = not args.store and not args.lookup and not args.init and not args.delete and not args.all
+    if store_with_no_name and not args.file:
+        parser.error("--store requires a name or a --file argument to get the name to store")
+    elif store_with_no_name:
         if args.file == "-":
             parser.error("--store requires a name for stdin")
         else:
@@ -75,27 +76,28 @@ def main():
 
     if not args.init:
         vlt = Vault(vault_stack=args.vaultstack, vault_key=args.key_arn,
-            vault_bucket=args.bucket, vault_iam_id=args.id,
-            vault_iam_secret=args.secret, vault_prefix=args.prefix)
+                    vault_bucket=args.bucket, vault_iam_id=args.id,
+                    vault_iam_secret=args.secret, vault_prefix=args.prefix)
         if args.store:
             if args.overwrite or not vlt.exists(args.store):
                 vlt.store(args.store, data)
             elif not args.overwrite:
-                parser.error("Will not overwrite '" + args.store + "' without the --overwrite (-w) flag")
+                parser.error("Will not overwrite '" + args.store +
+                             "' without the --overwrite (-w) flag")
         elif args.delete:
             vlt.delete(args.delete)
         elif args.all:
             data = vlt.all()
             if args.outfile and not args.outfile == "-":
-                with open(args.outfile, 'w') as f:
-                    f.write(data)
+                with open(args.outfile, 'w') as outf:
+                    outf.write(data)
             else:
                 sys.stdout.write(data)
         else:
             data = vlt.lookup(args.lookup)
             if args.outfile and not args.outfile == "-":
-                with open(args.outfile, 'w') as f:
-                    f.write(data)
+                with open(args.outfile, 'w') as outf:
+                    outf.write(data)
             else:
                 sys.stdout.write(data)
     else:

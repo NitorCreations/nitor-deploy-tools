@@ -4,7 +4,7 @@ from Crypto.Cipher import AES
 from Crypto.Util import Counter
 from botocore.exceptions import ClientError
 
-class Vault:
+class Vault(object):
     _session = boto3.Session()
     _kms = ""
     _prefix = ""
