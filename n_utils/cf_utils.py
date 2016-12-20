@@ -116,23 +116,24 @@ class LogSender(object):
             self.token = streamDesc['logStreams'][0]['uploadSequenceToken']
     def send(self, line):
         events = []
-       message = line.decode('utf-8','ignore').rstrip()
-        event = {}
-        event['timestamp'] = int(time.time() * 1000)
-        event['message'] = message
-        events.append(event)
-        if self.token:
-            logResponse = self._logs.put_log_events(logGroupName=self.groupName,
-                                                    logStreamName=self.streamName,
-                                                    logEvents=events,
-                                                    sequenceToken=self.token)
-        else:
-            logResponse = self._logs.put_log_events(logGroupName=self.groupName,
-                                                    logStreamName=self.streamName,
-                                                    logEvents=events)
-        if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
-            print "Sent " + message + " to " + self.streamName
-        self.token = logResponse['nextSequenceToken']
+        message = line.decode('utf-8','ignore').rstrip()
+        if message:
+            event = {}
+            event['timestamp'] = int(time.time() * 1000)
+            event['message'] = message
+            events.append(event)
+            if self.token:
+                logResponse = self._logs.put_log_events(logGroupName=self.groupName,
+                                                        logStreamName=self.streamName,
+                                                        logEvents=events,
+                                                        sequenceToken=self.token)
+            else:
+                logResponse = self._logs.put_log_events(logGroupName=self.groupName,
+                                                        logStreamName=self.streamName,
+                                                        logEvents=events)
+            if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
+                print "Sent " + message + " to " + self.streamName
+            self.token = logResponse['nextSequenceToken']
 
 def send_logs_to_cloudwatch(fileName):
     logSender = LogSender(fileName)
@@ -152,3 +153,12 @@ def read_and_follow(fileName, lineFunction, s=1):
                 endSeen = False
             if endSeen:
                 time.sleep(s)
+
+def signal_status(status, resourceName="resourceAsg"):
+    clf = boto3.client('cloudformation')
+    info = InstanceInfo()
+    print "Signalling " + status + " for " + info.stackName + "." + resourceName
+    clf.signal_resource(StackName=info.stackName,
+                        LogicalResourceId=resourceName,
+                        UniqueId=info.instanceId,
+                        Status=status)

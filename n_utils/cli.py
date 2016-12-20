@@ -35,3 +35,12 @@ def logs_to_cloudwatch():
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
     cf_utils.send_logs_to_cloudwatch(args.file)
+
+def signal_cf_status():
+    parser = argparse.ArgumentParser(description="Signal cloudformation status")
+    parser.add_argument("status", help="Status to indicate: SUCCESS | FAILURE")
+    parser.add_argument("-r", "--resource", help="Logical resource name to signal. resourceAsg by default", default="resourceAsg")
+    args = parser.parse_args()
+    if args.status != "SUCCESS" and args.status != "FAILURE"):
+        parser.error("Status needs to be SUCCESS or FAILURE")
+    cf_utils.signal_status(args.status, resourceName=args.resource)
