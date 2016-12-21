@@ -26,6 +26,7 @@ class InstanceInfo(object):
     stack_id = ""
     instance_id = ""
     initial_status = ""
+    logical_id = ""
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
             try:
@@ -41,7 +42,7 @@ class InstanceInfo(object):
             try:
                 response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
                 self._info = json.loads(response.text)
-                self.instance_id = self._info['instance_id']
+                self.instance_id = self._info['instanceId']
                 os.environ['AWS_DEFAULT_REGION'] = self._info['region']
                 ec2 = boto3.client('ec2')
                 tags = {}
@@ -58,12 +59,15 @@ class InstanceInfo(object):
                 if self.stack_name:
                     clf = boto3.client('cloudformation')
                     stacks = clf.describe_stacks(StackName=self.stack_name)
+                    stacks['Stacks'][0]['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000", stacks['Stacks'][0]['CreationTime'].timetuple())
+                    stacks['Stacks'][0]['LastUpdatedTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000", stacks['Stacks'][0]['LastUpdatedTime'].timetuple())
                     stack_parameters = {}
                     for parameter in stacks['Stacks'][0]['Parameters']:
                         stack_parameters[parameter['ParameterKey']] = parameter['ParameterValue']
-                    for output in  stacks['Stacks'][0]['Outputs']:
+                    for output in stacks['Stacks'][0]['Outputs']:
                         stack_parameters[output['OutputKey']] = output['OutputValue']
                     self._info['StackData'] = stack_parameters
+                    self._info['FullStackData'] = stacks['Stacks'][0]
             except ConnectionError:
                 self._info = {}
             info_file = None
@@ -76,7 +80,7 @@ class InstanceInfo(object):
             if os.path.isdir('/opt/nitor'):
                 info_file = '/opt/nitor/instance-data.json'
             with open(info_file, 'w') as outf:
-                outf.write(json.dumps(self._info, indent=2))
+                outf.write(json.dumps(self._info, skipkeys=True, indent=2))
         if 'instance_id' in self._info:
             self.instance_id = self._info['instance_id']
         if 'region' in self._info:
@@ -84,17 +88,20 @@ class InstanceInfo(object):
         if 'FullStackData' in self._info and 'StackStatus' in self._info['FullStackData']:
             self.initial_status = self._info['FullStackData']['StackStatus']
         if 'Tags' in self._info:
-            if 'aws:cloudformation:stack-name' in self._info['Tags']:
+            tags = self._info['Tags']
+            if 'aws:cloudformation:stack-name' in tags:
                 self.stack_name = tags['aws:cloudformation:stack-name']
-            if 'aws:cloudformation:stack-id' in self._info['Tags']:
+            if 'aws:cloudformation:stack-id' in tags:
                 self.stack_id = tags['aws:cloudformation:stack-id']
+            if 'aws:cloudformation:logical-id' in tags:
+                self.logical_id = tags['aws:cloudformation:logical-id']
     def stack_data(self, name):
         if 'StackData' in self._info:
             if name in self._info['StackData']:
                 return self._info['StackData'][name]
         return ''
     def __str__(self):
-        return json.dumps(self._info)
+        return json.dumps(self._info, skipkeys=True)
 
 class LogSender(object):
     def __init__(self, file_name):
@@ -158,9 +165,11 @@ def read_and_follow(file_name, line_function, wait=1):
             if end_seen:
                 time.sleep(wait)
 
-def signal_status(status, resource_name="resourceAsg"):
+def signal_status(status, resource_name=None):
     clf = boto3.client('cloudformation')
     info = InstanceInfo()
+    if not resource_name:
+        resource_name = info.logical_id
     print "Signalling " + status + " for " + info.stack_name + "." + resource_name
     clf.signal_resource(StackName=info.stack_name,
                         LogicalResourceId=resource_name,

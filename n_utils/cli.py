@@ -39,7 +39,7 @@ def logs_to_cloudwatch():
 def signal_cf_status():
     parser = argparse.ArgumentParser(description="Signal cloudformation status")
     parser.add_argument("status", help="Status to indicate: SUCCESS | FAILURE")
-    parser.add_argument("-r", "--resource", help="Logical resource name to signal. resourceAsg by default", default="resourceAsg")
+    parser.add_argument("-r", "--resource", help="Logical resource name to signal. Looked up for cloudformation tags by default")
     args = parser.parse_args()
     if args.status != "SUCCESS" and args.status != "FAILURE":
         parser.error("Status needs to be SUCCESS or FAILURE")
