@@ -108,7 +108,7 @@ class LogSender(object):
         info = InstanceInfo()
         self._logs = boto3.client('logs')
         self.group_name = "instanceDeployment"
-        self.stream_name = info.stack_name + "/" + info.instance_id + "/" + file_name
+        self.stream_name = info.stack_name + "/" + info.instance_id + "/" + file_name.replace(':', '_').replace('*', '_')
         try:
             self._logs.create_log_group(logGroupName=self.group_name)
         except:
@@ -123,7 +123,6 @@ class LogSender(object):
         self.token = None
         if 'uploadSequenceToken' in stream_desc['logStreams'][0]:
             self.token = stream_desc['logStreams'][0]['uploadSequenceToken']
-
         self.send(str(info))
     def send(self, line):
         events = []
