@@ -13,19 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import boto3
 import time
 import os
 import json
+import boto3
 import requests
 from requests.exceptions import ConnectionError
 
 class InstanceInfo(object):
     _info = None
-    stackName = ""
-    stackId = ""
-    instanceId = ""
-    initialStatus = ""
+    stack_name = ""
+    stack_id = ""
+    instance_id = ""
+    initial_status = ""
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
             try:
@@ -41,124 +41,150 @@ class InstanceInfo(object):
             try:
                 response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
                 self._info = json.loads(response.text)
-                self.instanceId = self._info['instanceId']
+                self.instance_id = self._info['instance_id']
                 os.environ['AWS_DEFAULT_REGION'] = self._info['region']
                 ec2 = boto3.client('ec2')
                 tags = {}
-                tagResponse = ec2.describe_tags(Filters=
-                                                [{'Name': 'resource-id',
-                                                  'Values': [self.instanceId]}])
-                for tag in tagResponse['Tags']:
+                tag_response = ec2.describe_tags(Filters=
+                                                 [{'Name': 'resource-id',
+                                                   'Values': [self.instance_id]}])
+                for tag in tag_response['Tags']:
                     tags[tag['Key']] = tag['Value']
                 self._info['Tags'] = tags
                 if 'aws:cloudformation:stack-name' in self._info['Tags']:
-                    self.stackName = tags['aws:cloudformation:stack-name']
+                    self.stack_name = tags['aws:cloudformation:stack-name']
                 if 'aws:cloudformation:stack-id' in self._info['Tags']:
-                    self.stackId = tags['aws:cloudformation:stack-id']
-                if self.stackName:
+                    self.stack_id = tags['aws:cloudformation:stack-id']
+                if self.stack_name:
                     clf = boto3.client('cloudformation')
-                    stacks = clf.describe_stacks(StackName=self.stackName)
-                    stackParameters = {}
+                    stacks = clf.describe_stacks(StackName=self.stack_name)
+                    stack_parameters = {}
                     for parameter in stacks['Stacks'][0]['Parameters']:
-                        stackParameters[parameter['ParameterKey']] = parameter['ParameterValue']
+                        stack_parameters[parameter['ParameterKey']] = parameter['ParameterValue']
                     for output in  stacks['Stacks'][0]['Outputs']:
-                        stackParameters[output['OutputKey']] = output['OutputValue']
-                    self._info['StackData'] = stackParameters
+                        stack_parameters[output['OutputKey']] = output['OutputValue']
+                    self._info['StackData'] = stack_parameters
             except ConnectionError:
                 self._info = {}
-            infoFile = None
+            info_file = None
             if os.path.isdir('C:/'):
                 if not os.path.isdir('C:/nitor'):
                     os.makedirs('C:/nitor')
-                infoFile = 'C:/nitor/instance-data.json'
+                info_file = 'C:/nitor/instance-data.json'
             elif not os.path.isdir('/opt/nitor'):
                 os.makedirs('/opt/nitor')
-           if os.path.isdir('/opt/nitor'):
-                infoFile = '/opt/nitor/instance-data.json'
-            with open(infoFile, 'w') as outf:
-                outf.write(json.dumps(self._info))
-       if 'instanceId' in self._info:
-               self.instanceId = self._info['instanceId']
-       if 'region' in self._info:
-               os.environ['AWS_DEFAULT_REGION'] = self._info['region']
+            if os.path.isdir('/opt/nitor'):
+                info_file = '/opt/nitor/instance-data.json'
+            with open(info_file, 'w') as outf:
+                outf.write(json.dumps(self._info, indent=2))
+        if 'instance_id' in self._info:
+            self.instance_id = self._info['instance_id']
+        if 'region' in self._info:
+            os.environ['AWS_DEFAULT_REGION'] = self._info['region']
         if 'FullStackData' in self._info and 'StackStatus' in self._info['FullStackData']:
-            self.initialStatus = self._info['FullStackData']['StackStatus']
+            self.initial_status = self._info['FullStackData']['StackStatus']
         if 'Tags' in self._info:
             if 'aws:cloudformation:stack-name' in self._info['Tags']:
-                self.stackName = tags['aws:cloudformation:stack-name']
+                self.stack_name = tags['aws:cloudformation:stack-name']
             if 'aws:cloudformation:stack-id' in self._info['Tags']:
-                self.stackId = tags['aws:cloudformation:stack-id']
-    def stackData(self, name):
+                self.stack_id = tags['aws:cloudformation:stack-id']
+    def stack_data(self, name):
         if 'StackData' in self._info:
             if name in self._info['StackData']:
                 return self._info['StackData'][name]
         return ''
+    def __str__(self):
+        return json.dumps(self._info)
 
 class LogSender(object):
-    def __init__(self, fileName):
+    def __init__(self, file_name):
         info = InstanceInfo()
         self._logs = boto3.client('logs')
-        self.groupName = "instanceDeployment"
-        self.streamName = info.stackName + "/" + info.instanceId + "/" + fileName
+        self.group_name = "instanceDeployment"
+        self.stream_name = info.stack_name + "/" + info.instance_id + "/" + file_name
         try:
-            self._logs.create_log_group(logGroupName=self.groupName)
+            self._logs.create_log_group(logGroupName=self.group_name)
         except:
             pass
         try:
-            self._logs.create_log_stream(logGroupName=self.groupName,
-                                         logStreamName=self.streamName)
+            self._logs.create_log_stream(logGroupName=self.group_name,
+                                         logStreamName=self.stream_name)
         except:
             pass
-        streamDesc = self._logs.describe_log_streams(logGroupName=self.groupName,
-                                                     logStreamNamePrefix=self.streamName)
+        stream_desc = self._logs.describe_log_streams(logGroupName=self.group_name,
+                                                      logStreamNamePrefix=self.stream_name)
         self.token = None
-        if 'uploadSequenceToken' in streamDesc['logStreams'][0]:
-            self.token = streamDesc['logStreams'][0]['uploadSequenceToken']
+        if 'uploadSequenceToken' in stream_desc['logStreams'][0]:
+            self.token = stream_desc['logStreams'][0]['uploadSequenceToken']
+
+        self.send(str(info))
     def send(self, line):
         events = []
-        message = line.decode('utf-8','ignore').rstrip()
+        message = line.decode('utf-8', 'ignore').rstrip()
         if message:
             event = {}
             event['timestamp'] = int(time.time() * 1000)
             event['message'] = message
             events.append(event)
             if self.token:
-                logResponse = self._logs.put_log_events(logGroupName=self.groupName,
-                                                        logStreamName=self.streamName,
-                                                        logEvents=events,
-                                                        sequenceToken=self.token)
+                log_response = self._logs.put_log_events(logGroupName=self.group_name,
+                                                         logStreamName=self.stream_name,
+                                                         logEvents=events,
+                                                         sequenceToken=self.token)
             else:
-                logResponse = self._logs.put_log_events(logGroupName=self.groupName,
-                                                        logStreamName=self.streamName,
-                                                        logEvents=events)
+                log_response = self._logs.put_log_events(logGroupName=self.group_name,
+                                                         logStreamName=self.stream_name,
+                                                         logEvents=events)
             if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
-                print "Sent " + message + " to " + self.streamName
-            self.token = logResponse['nextSequenceToken']
+                print "Sent " + message + " to " + self.stream_name
+            self.token = log_response['nextSequenceToken']
 
-def send_logs_to_cloudwatch(fileName):
-    logSender = LogSender(fileName)
-    read_and_follow(fileName, logSender.send)
+def send_logs_to_cloudwatch(file_name):
+    log_sender = LogSender(file_name)
+    read_and_follow(file_name, log_sender.send)
 
-def read_and_follow(fileName, lineFunction, s=1):
-    with open(fileName) as file_:
-        endSeen = False
+def read_and_follow(file_name, line_function, wait=1):
+    with open(file_name) as file_:
+        end_seen = False
         while True:
             curr_position = file_.tell()
             line = file_.readline()
             if not line:
                 file_.seek(curr_position)
-                endSeen = True
+                end_seen = True
             else:
-                lineFunction(line)
-                endSeen = False
-            if endSeen:
-                time.sleep(s)
+                line_function(line)
+                end_seen = False
+            if end_seen:
+                time.sleep(wait)
 
-def signal_status(status, resourceName="resourceAsg"):
+def signal_status(status, resource_name="resourceAsg"):
     clf = boto3.client('cloudformation')
     info = InstanceInfo()
-    print "Signalling " + status + " for " + info.stackName + "." + resourceName
-    clf.signal_resource(StackName=info.stackName,
-                        LogicalResourceId=resourceName,
-                        UniqueId=info.instanceId,
+    print "Signalling " + status + " for " + info.stack_name + "." + resource_name
+    clf.signal_resource(StackName=info.stack_name,
+                        LogicalResourceId=resource_name,
+                        UniqueId=info.instance_id,
                         Status=status)
+
+def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
+                  allocation_id_param="paramEipAllocationId"):
+    info = InstanceInfo()
+    if not allocation_id:
+        if eip:
+            ec2 = boto3.client('ec2')
+            address_data = ec2.describe_addresses(PublicIps=[eip])
+            if 'Addresses' in address_data and len(address_data['Addresses']) > 0 and 'AllocationId' in address_data['Addresses'][0]:
+                allocation_id = address_data['Addresses'][0]['AllocationId']
+    if not allocation_id:
+        allocation_id = info.stack_data(allocation_id_param)
+    if not allocation_id:
+        eip = info.stack_data(eip_param)
+        ec2 = boto3.client('ec2')
+        address_data = ec2.describe_addresses(PublicIps=[eip])
+        if 'Addresses' in address_data and len(address_data['Addresses']) > 0 and 'AllocationId' in address_data['Addresses'][0]:
+            allocation_id = address_data['Addresses'][0]['AllocationId']
+    print "Allocating " + allocation_id + " on " + info.instance_id
+    ec2 = boto3.client('ec2')
+    ec2.associate_address(InstanceId=info.instance_id, AllocationId=allocation_id,
+                          AllowReassociation=True)

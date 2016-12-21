@@ -13,11 +13,12 @@ setup(name='nitor_deploy_tools',
       entry_points = {
         'console_scripts': [
             'vault=vault.cli:main',
-            'yaml_to_json=n_utils.cli:yaml_to_json',
-            'json_to_yaml=n_utils.cli:json_to_yaml',
+            'yaml-to-json=n_utils.cli:yaml_to_json',
+            'json-to-yaml=n_utils.cli:json_to_yaml',
             'pytail=n_utils.cli:read_and_follow',
-            'logs_to_cloudwatch=n_utils.cli:logs_to_cloudwatch',
-            'signal_cf_status=n_utils.cli:signal_cf_status'
+            'logs-to-cloudwatch=n_utils.cli:logs_to_cloudwatch',
+            'signal-cf-status=n_utils.cli:signal_cf_status',
+            'associate-eip=n_utils.cli:associate_eip'
         ],
       },
       install_requires=[
