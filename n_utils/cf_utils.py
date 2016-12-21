@@ -165,8 +165,8 @@ def read_and_follow(file_name, line_function, wait=1):
                 time.sleep(wait)
 
 def signal_status(status, resource_name=None):
-    clf = boto3.client('cloudformation')
     info = InstanceInfo()
+    clf = boto3.client('cloudformation')
     if not resource_name:
         resource_name = info.logical_id
     print "Signalling " + status + " for " + info.stack_name + "." + resource_name
