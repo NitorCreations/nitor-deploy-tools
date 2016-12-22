@@ -16,7 +16,7 @@
 import time
 import os
 import json
-import threading
+from threading import Timer,Thread,Event,Lock
 import boto3
 import requests
 from requests.exceptions import ConnectionError
@@ -105,11 +105,22 @@ class InstanceInfo(object):
     def __str__(self):
         return json.dumps(self._info, skipkeys=True)
 
+class IntervalThread(Thread):
+    def __init__(self, event, interval, call_function):
+        Thread.__init__(self)
+        self._stopped = event
+        self._interval = interval
+        self._call_function = call_function
+
+    def run(self):
+        while not self._stopped.wait(self._interval):
+            self._call_function()
+
 class LogSender(object):
     def __init__(self, file_name):
         info = InstanceInfo()
-        self._lock = threading.Lock()
-        self._send_lock = threading.Lock()
+        self._lock = Lock()
+        self._send_lock = Lock()
         self._logs = boto3.client('logs')
         self.group_name = "instanceDeployment"
         self._messages = []
@@ -126,13 +137,16 @@ class LogSender(object):
         self.token = None
         self.send(str(info))
         self._do_send()
-        self._timer = threading.Timer(2, self._do_send)
-        self._timer.start()
+        self._stop_flag = Event()
+        self._thread = IntervalThread(self._stop_flag, 2, self._do_send)
+        self._thread.start()
 
     def send(self, line):
         try:
             self._lock.acquire()
             self._messages.append(line.decode('utf-8', 'ignore').rstrip())
+            if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
+                print "Queued message"
         finally:
             self._lock.release()
 
@@ -140,6 +154,8 @@ class LogSender(object):
         events = []
         try:
             self._lock.acquire()
+            if len(self._messages) == 0:
+                return
             for message in self._messages:
                 if message:
                     event = {}
@@ -166,7 +182,7 @@ class LogSender(object):
                                                          logStreamName=self.stream_name,
                                                          logEvents=events)
             if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
-                print "Sent " + len(events) + "messages to " + self.stream_name
+                print "Sent " + str(len(events)) + " messages to " + self.stream_name
             self.token = log_response['nextSequenceToken']
         except ClientError:
             self.token = None
