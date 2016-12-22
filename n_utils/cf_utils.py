@@ -127,6 +127,7 @@ class LogSender(object):
         self.send(str(info))
         self._do_send()
         self._timer = threading.Timer(2, self._do_send)
+        self._timer.start()
 
     def send(self, line):
         try:
