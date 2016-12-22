@@ -108,7 +108,8 @@ class InstanceInfo(object):
 class LogSender(object):
     def __init__(self, file_name):
         info = InstanceInfo()
-        self.lock = threading.Lock();
+        self._lock = threading.Lock()
+        self._send_lock = threading.Lock()
         self._logs = boto3.client('logs')
         self.group_name = "instanceDeployment"
         self._messages = []
@@ -129,15 +130,15 @@ class LogSender(object):
 
     def send(self, line):
         try:
-            self.lock.acquire()
+            self._lock.acquire()
             self._messages.append(line.decode('utf-8', 'ignore').rstrip())
         finally:
-            self.lock.release()
+            self._lock.release()
 
     def _do_send(self):
         events = []
         try:
-            self.lock.acquire()
+            self._lock.acquire()
             for message in self._messages:
                 if message:
                     event = {}
@@ -146,13 +147,14 @@ class LogSender(object):
                     events.append(event)
             self._messages = []
         finally:
-            self.lock.release()
-        if not self.token:
-            stream_desc = self._logs.describe_log_streams(logGroupName=self.group_name,
-                                                          logStreamNamePrefix=self.stream_name)
-            if 'uploadSequenceToken' in stream_desc['logStreams'][0]:
-                self.token = stream_desc['logStreams'][0]['uploadSequenceToken']
+            self._lock.release()
         try:
+            self._send_lock.acquire()
+            if not self.token:
+                stream_desc = self._logs.describe_log_streams(logGroupName=self.group_name,
+                                                              logStreamNamePrefix=self.stream_name)
+                if 'uploadSequenceToken' in stream_desc['logStreams'][0]:
+                    self.token = stream_desc['logStreams'][0]['uploadSequenceToken']
             if self.token:
                 log_response = self._logs.put_log_events(logGroupName=self.group_name,
                                                          logStreamName=self.stream_name,
@@ -167,6 +169,10 @@ class LogSender(object):
             self.token = log_response['nextSequenceToken']
         except ClientError:
             self.token = None
+            for event in events:
+                self.send(event['message'])
+        finally:
+            self._send_lock.release()
 
 def send_logs_to_cloudwatch(file_name):
     log_sender = LogSender(file_name)
