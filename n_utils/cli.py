@@ -49,10 +49,8 @@ def associate_eip():
     parser = argparse.ArgumentParser(description="Allocate Elastic IP for into instance")
     parser.add_argument("-i", "--ip", help="Elastic IP to allocate - default is to get paramEip from stack")
     parser.add_argument("-a", "--allocationid", help="Elastic IP allocation id to allocate - default is to get paramEipAllocationId from stack")
-    parser.add_argument("-e", "--eipparam", help="Parameter to look up for Elastic IP in the stack - default is paramEip",
-                        default="eipParam")
-    parser.add_argument("-p", "--allocationidparam", help="Parameter to look up for Elastic IP Allocation ID in the stack - default is paramEipAllocationId",
-                        default="paramEipAllocationId")
+    parser.add_argument("-e", "--eipparam", help="Parameter to look up for Elastic IP in the stack - default is paramEip", default="paramEip")
+    parser.add_argument("-p", "--allocationidparam", help="Parameter to look up for Elastic IP Allocation ID in the stack - default is paramEipAllocationId", default="paramEipAllocationId")
     args = parser.parse_args()
     cf_utils.associate_eip(eip=args.ip, allocation_id=args.allocationid,
                            eip_param=args.eipparam,

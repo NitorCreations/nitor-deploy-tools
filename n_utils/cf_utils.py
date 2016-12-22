@@ -207,6 +207,10 @@ def signal_status(status, resource_name=None):
 
 def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
                   allocation_id_param="paramEipAllocationId"):
+    if not eip_param:
+        eip_param = "paramEip"
+    if not allocation_id_param:
+        allocation_id_param="paramEipAllocationId"
     info = InstanceInfo()
     if not allocation_id:
         if eip:
