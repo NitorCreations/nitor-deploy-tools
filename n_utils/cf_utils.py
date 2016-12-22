@@ -16,9 +16,11 @@
 import time
 import os
 import json
+import threading
 import boto3
 import requests
 from requests.exceptions import ConnectionError
+from botocore.exceptions import ClientError
 
 class InstanceInfo(object):
     _info = None
@@ -106,8 +108,10 @@ class InstanceInfo(object):
 class LogSender(object):
     def __init__(self, file_name):
         info = InstanceInfo()
+        self.lock = threading.Lock();
         self._logs = boto3.client('logs')
         self.group_name = "instanceDeployment"
+        self._messages = []
         self.stream_name = info.stack_name + "/" + info.instance_id + "/" + file_name.replace(':', '_').replace('*', '_')
         try:
             self._logs.create_log_group(logGroupName=self.group_name)
@@ -118,20 +122,37 @@ class LogSender(object):
                                          logStreamName=self.stream_name)
         except:
             pass
-        stream_desc = self._logs.describe_log_streams(logGroupName=self.group_name,
-                                                      logStreamNamePrefix=self.stream_name)
         self.token = None
-        if 'uploadSequenceToken' in stream_desc['logStreams'][0]:
-            self.token = stream_desc['logStreams'][0]['uploadSequenceToken']
         self.send(str(info))
+        self._do_send()
+        self._timer = threading.Timer(2, self._do_send)
+
     def send(self, line):
+        try:
+            self.lock.acquire()
+            self._messages.append(line.decode('utf-8', 'ignore').rstrip())
+        finally:
+            self.lock.release()
+
+    def _do_send(self):
         events = []
-        message = line.decode('utf-8', 'ignore').rstrip()
-        if message:
-            event = {}
-            event['timestamp'] = int(time.time() * 1000)
-            event['message'] = message
-            events.append(event)
+        try:
+            self.lock.acquire()
+            for message in self._messages:
+                if message:
+                    event = {}
+                    event['timestamp'] = int(time.time() * 1000)
+                    event['message'] = message
+                    events.append(event)
+            self._messages = []
+        finally:
+            self.lock.release()
+        if not self.token:
+            stream_desc = self._logs.describe_log_streams(logGroupName=self.group_name,
+                                                          logStreamNamePrefix=self.stream_name)
+            if 'uploadSequenceToken' in stream_desc['logStreams'][0]:
+                self.token = stream_desc['logStreams'][0]['uploadSequenceToken']
+        try:
             if self.token:
                 log_response = self._logs.put_log_events(logGroupName=self.group_name,
                                                          logStreamName=self.stream_name,
@@ -142,8 +163,10 @@ class LogSender(object):
                                                          logStreamName=self.stream_name,
                                                          logEvents=events)
             if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
-                print "Sent " + message + " to " + self.stream_name
+                print "Sent " + len(events) + "messages to " + self.stream_name
             self.token = log_response['nextSequenceToken']
+        except ClientError:
+            self.token = None
 
 def send_logs_to_cloudwatch(file_name):
     log_sender = LogSender(file_name)
