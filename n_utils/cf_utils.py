@@ -246,3 +246,6 @@ def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
     ec2 = boto3.client('ec2')
     ec2.associate_address(InstanceId=info.instance_id, AllocationId=allocation_id,
                           AllowReassociation=True)
+
+def init():
+    info = InstanceInfo()

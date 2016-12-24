@@ -18,7 +18,8 @@ setup(name='nitor_deploy_tools',
             'pytail=n_utils.cli:read_and_follow',
             'logs-to-cloudwatch=n_utils.cli:logs_to_cloudwatch',
             'signal-cf-status=n_utils.cli:signal_cf_status',
-            'associate-eip=n_utils.cli:associate_eip'
+            'associate-eip=n_utils.cli:associate_eip',
+            'n-utils-init=n_utils.cf_utils:init'
         ],
       },
       install_requires=[
