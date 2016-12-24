@@ -27,6 +27,7 @@ class InstanceInfo(object):
     stack_name = ""
     stack_id = ""
     instance_id = ""
+    region = ""
     initial_status = ""
     logical_id = ""
     def __init__(self):
@@ -45,7 +46,8 @@ class InstanceInfo(object):
                 response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
                 self._info = json.loads(response.text)
                 self.instance_id = self._info['instanceId']
-                os.environ['AWS_DEFAULT_REGION'] = self._info['region']
+                self.region = self._info['region']
+                os.environ['AWS_DEFAULT_REGION'] = self.region
                 ec2 = boto3.client('ec2')
                 tags = {}
                 tag_response = ec2.describe_tags(Filters=
@@ -86,7 +88,8 @@ class InstanceInfo(object):
         if 'instance_id' in self._info:
             self.instance_id = self._info['instance_id']
         if 'region' in self._info:
-            os.environ['AWS_DEFAULT_REGION'] = self._info['region']
+            self.region = self._info['region']
+            os.environ['AWS_DEFAULT_REGION'] = self.region
         if 'FullStackData' in self._info and 'StackStatus' in self._info['FullStackData']:
             self.initial_status = self._info['FullStackData']['StackStatus']
         if 'Tags' in self._info:

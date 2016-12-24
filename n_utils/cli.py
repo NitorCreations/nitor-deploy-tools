@@ -3,6 +3,7 @@ import aws_infra_util
 import cf_utils
 import os.path
 import sys
+from cf_utils import InstanceInfo
 
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")
@@ -55,3 +56,27 @@ def associate_eip():
     cf_utils.associate_eip(eip=args.ip, allocation_id=args.allocationid,
                            eip_param=args.eipparam,
                            allocation_id_param=args.allocationidparam)
+
+def instance_id():
+    info = InstanceInfo()
+    print info.instance_id
+
+def region():
+    info = InstanceInfo()
+    print info.region
+
+def stack_name():
+    info = InstanceInfo()
+    print info.stack_name
+
+def stack_id():
+    info = InstanceInfo()
+    print info.stack_id
+
+def logical_id():
+    info = InstanceInfo()
+    print info.logical_id
+
+def cf_region():
+    info = InstanceInfo()
+    print info.stack_id.split(":")[3]

@@ -19,7 +19,13 @@ setup(name='nitor_deploy_tools',
             'logs-to-cloudwatch=n_utils.cli:logs_to_cloudwatch',
             'signal-cf-status=n_utils.cli:signal_cf_status',
             'associate-eip=n_utils.cli:associate_eip',
-            'n-utils-init=n_utils.cf_utils:init'
+            'n-utils-init=n_utils.cf_utils:init',
+            'ec2-instance-id=n_utils.cli:instance_id',
+            'ec2-region=n_utils.cli:region',
+            'cf-stack-name=n_utils.cli:stack_name',
+            'cf-stack-id=n_utils.cli:stack_id',
+            'cf-logical-id=n_utils.cli:logical_id',
+            'cf-region=n_utils.cli:cf_region'
         ],
       },
       install_requires=[
