@@ -16,6 +16,7 @@
 import time
 import os
 import json
+import stat
 from threading import Timer,Thread,Event,Lock
 import boto3
 import requests
@@ -23,6 +24,13 @@ from requests.exceptions import ConnectionError
 from botocore.exceptions import ClientError
 
 class InstanceInfo(object):
+    """ A class to get the relevant metadata for an instance running in EC2
+        firstly from the metadata service and then from EC2 tags and then
+        from the CloudFormation template that created this instance
+
+        The info is then cached in /opt/nitor/instance-data.json on linux and
+        in  C:\\nitor\\instance-data.json on windows.
+    """
     _info = None
     stack_name = ""
     stack_id = ""
@@ -75,16 +83,24 @@ class InstanceInfo(object):
             except ConnectionError:
                 self._info = {}
             info_file = None
+            info_file_dir = None
             if os.path.isdir('C:/'):
-                if not os.path.isdir('C:/nitor'):
-                    os.makedirs('C:/nitor')
-                info_file = 'C:/nitor/instance-data.json'
-            elif not os.path.isdir('/opt/nitor'):
-                os.makedirs('/opt/nitor')
-            if os.path.isdir('/opt/nitor'):
-                info_file = '/opt/nitor/instance-data.json'
+                info_file_dir = 'C:/nitor'
+            else:
+                info_file_dir = '/opt/nitor'
+            if not os.path.isdir(info_file_dir):
+                os.makedirs(info_file_dir)
+            info_file = info_file_dir + '/instance-data.json'
             with open(info_file, 'w') as outf:
                 outf.write(json.dumps(self._info, skipkeys=True, indent=2))
+            try:
+                os.chmod(info_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP |
+                         stat.S_IROTH | stat.S_IWOTH)
+                os.chmod(info_file_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
+                         stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP |
+                         stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
+            except:
+                print "Unable to change mode for " + info_file
         if 'instance_id' in self._info:
             self.instance_id = self._info['instance_id']
         if 'region' in self._info:

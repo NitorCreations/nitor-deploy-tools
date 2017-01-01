@@ -1,1 +1,1 @@
-import aws_infra_util
+from . import aws_infra_util

@@ -1,9 +1,10 @@
 import argparse
-import aws_infra_util
-import cf_utils
-import os.path
+import os
 import sys
-from cf_utils import InstanceInfo
+from . import aws_infra_util
+from . import cf_utils
+from . import cf_deploy
+from .cf_utils import InstanceInfo
 
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")
@@ -80,3 +81,13 @@ def logical_id():
 def cf_region():
     info = InstanceInfo()
     print info.stack_id.split(":")[3]
+
+def update_stack():
+    parser = argparse.ArgumentParser(description="Create or update existing CloudFormation stack")
+    parser.add_argument("stack_name", help="Name of the stack to create or update")
+    parser.add_argument("yaml_template", help="Yaml template to pre-process and use for creation")
+    parser.add_argument("region", help="The region to deploy the stack to")
+    args = parser.parse_args()
+    if not os.path.isfile(args.yaml_template):
+        parser.error(args.file + " not found")
+    cf_deploy.deploy(args.stack_name, args.yaml_template, args.region)

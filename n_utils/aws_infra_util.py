@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import yaml
-import subprocess
-import json
-import sys
-import collections
-import re
 import os
+import sys
+import subprocess
+import collections
+import yaml
+import json
+import re
 
 stacks = dict()
 ############################################################################
@@ -418,12 +418,15 @@ def extract_scripts(data, prefix, path=""):
             data['Fn::ImportFile'] = file
 
 ############################################################################
-# simple api
-
-def yaml_to_json(yaml_file_to_convert):
+# simple apis
+def yaml_to_dict(yaml_file_to_convert):
     data = yaml_load(open(yaml_file_to_convert))
     data = import_scripts(data, yaml_file_to_convert)
     patch_launchconf_userdata_with_metadata_hash_and_params(data)
+    return data
+
+def yaml_to_json(yaml_file_to_convert):
+    data = yaml_to_dict(yaml_file_to_convert)
     return json_save(data)
 
 def json_to_yaml(json_file_to_convert):
