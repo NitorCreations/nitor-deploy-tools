@@ -22,6 +22,7 @@ import boto3
 import requests
 from requests.exceptions import ConnectionError
 from botocore.exceptions import ClientError
+from collections import deque
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -71,8 +72,13 @@ class InstanceInfo(object):
                 if self.stack_name:
                     clf = boto3.client('cloudformation')
                     stacks = clf.describe_stacks(StackName=self.stack_name)
-                    stacks['Stacks'][0]['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000", stacks['Stacks'][0]['CreationTime'].timetuple())
-                    stacks['Stacks'][0]['LastUpdatedTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000", stacks['Stacks'][0]['LastUpdatedTime'].timetuple())
+                    stack = stacks['Stacks'][0]
+                    if 'CreationTime' in stack:
+                        stack['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                                                              stack['CreationTime'].timetuple())
+                    if 'LastUpdatedTime' in stack:
+                        stack['LastUpdatedTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                                                                 stack['LastUpdatedTime'].timetuple())
                     stack_parameters = {}
                     for parameter in stacks['Stacks'][0]['Parameters']:
                         stack_parameters[parameter['ParameterKey']] = parameter['ParameterValue']
@@ -142,7 +148,7 @@ class LogSender(object):
         self._send_lock = Lock()
         self._logs = boto3.client('logs')
         self.group_name = "instanceDeployment"
-        self._messages = []
+        self._messages = deque()
         self.stream_name = info.stack_name + "/" + info.instance_id + "/" + file_name.replace(':', '_').replace('*', '_')
         try:
             self._logs.create_log_group(logGroupName=self.group_name)
@@ -163,7 +169,7 @@ class LogSender(object):
     def send(self, line):
         try:
             self._lock.acquire()
-            self._messages.append(line.decode('utf-8', 'ignore').rstrip())
+            self._messages.append(line.decode('utf-8', 'replace').rstrip())
             if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
                 print "Queued message"
         finally:
@@ -175,15 +181,20 @@ class LogSender(object):
             self._lock.acquire()
             if len(self._messages) == 0:
                 return
-            for message in self._messages:
+            counter = 0
+            while len(self._messages) > 0 and counter < 599999 and \
+                  len(events) < 10000:
+                message = self._messages.popleft()
+                counter = counter + len(message.encode('utf-8', 'replace')) + 26
                 if message:
                     event = {}
                     event['timestamp'] = int(time.time() * 1000)
                     event['message'] = message
                     events.append(event)
-            self._messages = []
         finally:
             self._lock.release()
+        if len(events) == 0:
+            return
         try:
             self._send_lock.acquire()
             if not self.token:
@@ -206,7 +217,7 @@ class LogSender(object):
         except ClientError:
             self.token = None
             for event in events:
-                self.send(event['message'])
+                self.send(event['message'].encode('utf-8', 'replace'))
         finally:
             self._send_lock.release()
 

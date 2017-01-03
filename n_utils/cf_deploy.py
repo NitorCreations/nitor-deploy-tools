@@ -18,6 +18,8 @@ import sys
 import aws_infra_util
 import os
 import inspect
+import codecs
+import locale
 from threading import Thread
 import tempfile
 import collections
@@ -62,6 +64,9 @@ def create_stack(stack_name, template, params):
     return
 
 def deploy(stack_name, yaml_template, region):
+    if sys.version_info < (3, 0):
+        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
+
     os.environ['AWS_DEFAULT_REGION'] = region
     # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
@@ -139,7 +144,8 @@ def deploy(stack_name, yaml_template, region):
         print "Status: \033[32;1m" + status + "\033[m"
         stack_oper = "update_stack"
     except ClientError as e:
-        if e.response['Error']['Code'] == 'ValidationError' and e.response['Error']['Message'].endswith('does not exist'):
+        if e.response['Error']['Code'] == 'ValidationError' and \
+           e.response['Error']['Message'].endswith('does not exist'):
             print "Status: \033[32;1mNEW_STACK\033[m"
         else:
             raise
@@ -149,7 +155,8 @@ def deploy(stack_name, yaml_template, region):
     for key in template_parameters.keys():
         if key in os.environ:
             val = os.environ[key]
-            print("Parameter " + key + ": using \033[32;1mCUSTOM value " + val + "\033[m")
+            print("Parameter " + key + ": using \033[32;1mCUSTOM value " + \
+                  val + "\033[m")
             params_doc.append({'ParameterKey': key, 'ParameterValue': val})
         else:
             val = template_parameters[key]['Default']
@@ -170,11 +177,11 @@ def deploy(stack_name, yaml_template, region):
         else:
             color = "\033[32;1m"
         print color + "Status: " + status + "\033[m"
-        if (not status.endswith("_IN_PROGRESS")):
+        if not status.endswith("_IN_PROGRESS"):
             for stream_name, thread in log_threads.iteritems():
                 thread.raise_exception()
                 while thread.isAlive():
-                    time.sleep(0.1)
+                    time.sleep(0.01)
                     thread.raiseException()
             break
         for stream_name in logs.get_streams():
