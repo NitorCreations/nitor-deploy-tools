@@ -80,10 +80,12 @@ class InstanceInfo(object):
                         stack['LastUpdatedTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
                                                                  stack['LastUpdatedTime'].timetuple())
                     stack_parameters = {}
-                    for parameter in stacks['Stacks'][0]['Parameters']:
-                        stack_parameters[parameter['ParameterKey']] = parameter['ParameterValue']
-                    for output in stacks['Stacks'][0]['Outputs']:
-                        stack_parameters[output['OutputKey']] = output['OutputValue']
+                    if 'Parameters' in stack:
+                        for parameter in stack['Parameters']:
+                            stack_parameters[parameter['ParameterKey']] = parameter['ParameterValue']
+                    if 'Outputs' in stack:
+                        for output in stack['Outputs']:
+                            stack_parameters[output['OutputKey']] = output['OutputValue']
                     self._info['StackData'] = stack_parameters
                     self._info['FullStackData'] = stacks['Stacks'][0]
             except ConnectionError:
