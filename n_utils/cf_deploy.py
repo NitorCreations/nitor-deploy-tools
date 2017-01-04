@@ -13,25 +13,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import subprocess
-import sys
-import aws_infra_util
-import os
-import inspect
 import codecs
-import locale
-from threading import Thread
-import tempfile
 import collections
-import time
-import datetime
-import json
-import boto3
-import re
 import ctypes
+import inspect
+import locale
 from operator import itemgetter
+import os
+import re
+import sys
+import time
+import threading
+from threading import Thread
+import boto3
 from botocore.exceptions import ClientError
 from awslogs.core import AWSLogs
+from . import aws_infra_util
 
 def update_stack(stack_name, template, params):
     clf = boto3.client('cloudformation')
@@ -129,9 +126,9 @@ def deploy(stack_name, yaml_template, region):
     json_template = aws_infra_util.json_save(template_doc)
     json_small = aws_infra_util.json_save_small(template_doc)
 
-    print("** Final template:")
-    print(json_template)
-    print("")
+    print "** Final template:"
+    print json_template
+    print ""
 
     # Load previous stack information to see if it has been deployed before
     stack_data = None
@@ -143,9 +140,9 @@ def deploy(stack_name, yaml_template, region):
         status = stack_data['Stacks'][0]['StackStatus']
         print "Status: \033[32;1m" + status + "\033[m"
         stack_oper = "update_stack"
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'ValidationError' and \
-           e.response['Error']['Message'].endswith('does not exist'):
+    except ClientError as err:
+        if err.response['Error']['Code'] == 'ValidationError' and \
+           err.response['Error']['Message'].endswith('does not exist'):
             print "Status: \033[32;1mNEW_STACK\033[m"
         else:
             raise
@@ -155,21 +152,21 @@ def deploy(stack_name, yaml_template, region):
     for key in template_parameters.keys():
         if key in os.environ:
             val = os.environ[key]
-            print("Parameter " + key + ": using \033[32;1mCUSTOM value " + \
-                  val + "\033[m")
+            print "Parameter " + key + ": using \033[32;1mCUSTOM value " + \
+                  val + "\033[m"
             params_doc.append({'ParameterKey': key, 'ParameterValue': val})
         else:
             val = template_parameters[key]['Default']
-            print("Parameter " + key + ": using default value " + str(val))
+            print "Parameter " + key + ": using default value " + str(val)
 
     stack_func = globals()[stack_oper]
     stack_func(stack_name, json_small, params_doc)
     logs = AWSLogs(log_group_name='instanceDeployment',
                    log_stream_name=stack_name + "/*",
                    start='1m ago')
-    print("Waiting for " + stack_oper + " to complete:")
+    print "Waiting for " + stack_oper + " to complete:"
     log_threads = {}
-    while (True):
+    while True:
         stack_info = clf.describe_stacks(StackName=stack_name)
         status = stack_info['Stacks'][0]['StackStatus']
         if "ROLLBACK" in status:
@@ -184,25 +181,29 @@ def deploy(stack_name, yaml_template, region):
                     time.sleep(0.01)
                     thread.raiseException()
             break
-        for stream_name in logs.get_streams():
-            if stream_name not in log_threads:
-                thread = LoggingThread(stream_name)
-                thread.start()
-                log_threads[stream_name] = thread
+        try:
+            streams = logs.get_streams()
+            for stream_name in streams:
+                if stream_name not in log_threads:
+                    thread = LoggingThread(stream_name)
+                    thread.start()
+                    log_threads[stream_name] = thread
+        except ClientError:
+            pass
         time.sleep(5)
 
-    if ((stack_oper == "create_stack" and status != "CREATE_COMPLETE") or \
-       (stack_oper == "update_stack" and status != "UPDATE_COMPLETE")):
+    if (stack_oper == "create_stack" and status != "CREATE_COMPLETE") or \
+       (stack_oper == "update_stack" and status != "UPDATE_COMPLETE"):
         sys.exit(stack_oper + " failed: end state " + status)
 
-    print("Done!")
+    print "Done!"
 
 def _async_raise(tid, exctype):
     '''Raises an exception in the threads with id tid'''
     if not inspect.isclass(exctype):
         raise TypeError("Only types can be raised (not instances)")
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid,
-                                                  ctypes.py_object(exctype))
+                                                     ctypes.py_object(exctype))
     if res == 0:
         raise ValueError("invalid thread id")
     elif res != 1:
@@ -217,6 +218,7 @@ class LoggingThread(Thread):
     '''
     def __init__(self, stream_name):
         Thread.__init__(self)
+        self._thread_id = None
         self._stream_name = stream_name
 
     def _get_my_tid(self):
@@ -233,7 +235,7 @@ class LoggingThread(Thread):
         logs = AWSLogs(log_group_name='instanceDeployment',
                        log_stream_name=self._stream_name,
                        start='1m ago', output_timestamp_enabled=True,
-                       output_stream_enabled=True ,color_enabled=True,
+                       output_stream_enabled=True, color_enabled=True,
                        watch=True)
         logs.list_logs()
         return
