@@ -17,7 +17,7 @@ import time
 import os
 import json
 import stat
-from threading import Timer,Thread,Event,Lock
+from threading import Timer, Thread, Event, Lock
 import boto3
 import requests
 from requests.exceptions import ConnectionError
@@ -184,11 +184,13 @@ class LogSender(object):
             if len(self._messages) == 0:
                 return
             counter = 0
-            while len(self._messages) > 0 and counter < 599999 and \
+            while len(self._messages) > 0 and counter < 1048576 and \
                   len(events) < 10000:
                 message = self._messages.popleft()
                 counter = counter + len(message.encode('utf-8', 'replace')) + 26
-                if message:
+                if counter > 1048576:
+                    self._messages.appendleft(message)
+                elif message:
                     event = {}
                     event['timestamp'] = int(time.time() * 1000)
                     event['message'] = message
