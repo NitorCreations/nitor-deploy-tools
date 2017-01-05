@@ -60,6 +60,30 @@ def create_stack(stack_name, template, params):
                      Parameters=params, Capabilities=["CAPABILITY_IAM"])
     return
 
+def delete(stack_name, region):
+    if sys.version_info < (3, 0):
+        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
+
+    os.environ['AWS_DEFAULT_REGION'] = region
+    print "\n\n**** Deleting stack '" + stack_name
+    clf = boto3.client('cloudformation')
+    clf.delete_stack(StackName=stack_name)
+    while True:
+        try:
+            stack_info = clf.describe_stacks(StackName=stack_name)
+            status = stack_info['Stacks'][0]['StackStatus']
+            if not status.endswith("_IN_PROGRESS") and not status.endswith("_COMPLETE"):
+                 raise Exception("Delete stack failed: end state " + status)
+            print "Status: \033[32;1m"+ status + "\033[m"
+            time.sleep(5)
+        except ClientError as err:
+            if err.response['Error']['Code'] == 'ValidationError' and \
+               err.response['Error']['Message'].endswith('does not exist'):
+                print "Status: \033[32;1mDELETE_COMPLETE\033[m"
+                break
+            else:
+                raise
+
 def deploy(stack_name, yaml_template, region):
     if sys.version_info < (3, 0):
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)

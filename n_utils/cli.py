@@ -91,3 +91,10 @@ def update_stack():
     if not os.path.isfile(args.yaml_template):
         parser.error(args.file + " not found")
     cf_deploy.deploy(args.stack_name, args.yaml_template, args.region)
+
+def delete_stack():
+    parser = argparse.ArgumentParser(description="Create or update existing CloudFormation stack")
+    parser.add_argument("stack_name", help="Name of the stack to create or update")
+    parser.add_argument("region", help="The region to deploy the stack to")
+    args = parser.parse_args()
+    cf_deploy.delete(args.stack_name, args.region)

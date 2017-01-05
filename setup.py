@@ -26,7 +26,9 @@ setup(name='nitor_deploy_tools',
             'cf-stack-id=n_utils.cli:stack_id',
             'cf-logical-id=n_utils.cli:logical_id',
             'cf-region=n_utils.cli:cf_region',
-            'cf-update-stack=n_utils.cli:update_stack'
+            'cf-update-stack=n_utils.cli:update_stack',
+            'cf-delete-stack=n_utils.cli:delete_stack'
+
         ],
       },
       install_requires=[
