@@ -223,6 +223,8 @@ def deploy(stack_name, yaml_template, region):
     print "Done!"
 
 def _async_raise(tid, exctype):
+    if not tid:
+        return
     '''Raises an exception in the threads with id tid'''
     if not inspect.isclass(exctype):
         raise TypeError("Only types can be raised (not instances)")
@@ -247,7 +249,7 @@ class LoggingThread(Thread):
 
     def _get_my_tid(self):
         if not self.isAlive():
-            raise threading.ThreadError("the thread is not active")
+            return None
         if hasattr(self, "_thread_id"):
             return self._thread_id
         for tid, tobj in threading._active.items():
