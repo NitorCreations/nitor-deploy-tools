@@ -27,13 +27,15 @@ import threading
 from threading import Thread
 import boto3
 from botocore.exceptions import ClientError
-from awslogs.core import AWSLogs
+from .cw_logs import CloudWatchLogs
 from . import aws_infra_util
 
 def update_stack(stack_name, template, params):
     clf = boto3.client('cloudformation')
-    chset_name = stack_name + "-" + time.strftime("%Y%m%d%H%M%S", time.gmtime())
-    chset_id = clf.create_change_set(StackName=stack_name, TemplateBody=template,
+    chset_name = stack_name + "-" + time.strftime("%Y%m%d%H%M%S",
+                                                  time.gmtime())
+    chset_id = clf.create_change_set(StackName=stack_name,
+                                     TemplateBody=template,
                                      Parameters=params,
                                      Capabilities=["CAPABILITY_IAM"],
                                      ChangeSetName=chset_name)['Id']
@@ -185,7 +187,8 @@ def deploy(stack_name, yaml_template, region):
 
     stack_func = globals()[stack_oper]
     stack_func(stack_name, json_small, params_doc)
-    logs = AWSLogs(log_group_name=stack_name, log_stream_name="*", start='1m ago')
+    logs = CloudWatchLogs(log_group_name=stack_name)
+    logs.start()
     print "Waiting for " + stack_oper + " to complete:"
     log_threads = {}
     while True:
@@ -197,21 +200,8 @@ def deploy(stack_name, yaml_template, region):
             color = "\033[32;1m"
         print color + "Status: " + status + "\033[m"
         if not status.endswith("_IN_PROGRESS"):
-            for stream_name, thread in log_threads.iteritems():
-                thread.raise_exception()
-                while thread.isAlive():
-                    time.sleep(0.01)
-                    thread.raiseException()
+            logs.stop()
             break
-        try:
-            streams = logs.get_streams()
-            for stream_name in streams:
-                if stream_name not in log_threads:
-                    thread = LoggingThread(stack_name, stream_name)
-                    thread.start()
-                    log_threads[stream_name] = thread
-        except ClientError:
-            pass
         time.sleep(5)
 
     if (stack_oper == "create_stack" and status != "CREATE_COMPLETE") or \
@@ -219,51 +209,3 @@ def deploy(stack_name, yaml_template, region):
         sys.exit(stack_oper + " failed: end state " + status)
 
     print "Done!"
-
-def _async_raise(tid, exctype):
-    if not tid:
-        return
-    '''Raises an exception in the threads with id tid'''
-    if not inspect.isclass(exctype):
-        raise TypeError("Only types can be raised (not instances)")
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid,
-                                                     ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        # "if it returns a number greater than one, you're in trouble,
-        # and you should call it again with exc=NULL to revert the effect"
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, 0)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
-
-class LoggingThread(Thread):
-    '''A thread class that supports raising exception in the thread from
-       another thread.
-    '''
-    def __init__(self, group_name, stream_name):
-        Thread.__init__(self)
-        self._thread_id = None
-        self._group_name = group_name
-        self._stream_name = stream_name
-
-    def _get_my_tid(self):
-        if not self.isAlive():
-            return None
-        if hasattr(self, "_thread_id"):
-            return self._thread_id
-        for tid, tobj in threading._active.items():
-            if tobj is self:
-                self._thread_id = tid
-                return tid
-
-    def run(self):
-        logs = AWSLogs(log_group_name=self._group_name,
-                       log_stream_name=self._stream_name,
-                       start='1m ago', output_timestamp_enabled=True,
-                       output_stream_enabled=True, color_enabled=True,
-                       watch=True)
-        logs.list_logs()
-        return
-
-    def raise_exception(self):
-        _async_raise(self._get_my_tid(), KeyboardInterrupt)

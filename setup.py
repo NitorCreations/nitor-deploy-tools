@@ -27,14 +27,13 @@ setup(name='nitor_deploy_tools',
             'cf-logical-id=n_utils.cli:logical_id',
             'cf-region=n_utils.cli:cf_region',
             'cf-update-stack=n_utils.cli:update_stack',
-            'cf-delete-stack=n_utils.cli:delete_stack'
-
+            'cf-delete-stack=n_utils.cli:delete_stack',
+            'cf-follow-logs=n_utils.cli:tail_stack_logs'
         ],
       },
       install_requires=[
           'boto3',
           'pycrypto',
-          'requests',
-          'awslogs'
+          'requests'
       ],
       zip_safe=False)

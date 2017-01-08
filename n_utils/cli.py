@@ -1,10 +1,12 @@
 import argparse
 import os
 import sys
+import time
 from . import aws_infra_util
 from . import cf_utils
 from . import cf_deploy
 from .cf_utils import InstanceInfo
+from .cw_logs import CloudWatchLogs
 
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")
@@ -98,3 +100,18 @@ def delete_stack():
     parser.add_argument("region", help="The region to deploy the stack to")
     args = parser.parse_args()
     cf_deploy.delete(args.stack_name, args.region)
+
+def tail_stack_logs():
+    parser = argparse.ArgumentParser(description="Tail logs from the log group of a cloudformation stack")
+    parser.add_argument("stack_name", help="Name of the stack to create or update")
+    parser.add_argument("-s", "--start", help="Start time in seconds since epoc")
+    args = parser.parse_args()
+    cwlogs = CloudWatchLogs(args.stack_name, start_time=args.start)
+    cwlogs.start()
+    while True:
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            print 'Closing...'
+            cwlogs.stop()
+            return
