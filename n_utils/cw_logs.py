@@ -19,7 +19,7 @@ class CloudWatchLogs(Thread):
     def __init__(self, log_group_name, start_time=None):
         Thread.__init__(self)
         self.log_group_name = log_group_name
-        self.start_time = long(start_time) * 1000 if start_time else (time.gmtime() - 60) * 1000
+        self.start_time = long(start_time) * 1000 if start_time else long((time.time() - 60) * 1000)
         self.client = boto3.client('logs')
         self._stopped = Event()
 
