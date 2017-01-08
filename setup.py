@@ -34,6 +34,7 @@ setup(name='nitor_deploy_tools',
       install_requires=[
           'boto3',
           'pycrypto',
-          'requests'
+          'requests',
+          'termcolor'
       ],
       zip_safe=False)
