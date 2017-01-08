@@ -185,9 +185,7 @@ def deploy(stack_name, yaml_template, region):
 
     stack_func = globals()[stack_oper]
     stack_func(stack_name, json_small, params_doc)
-    logs = AWSLogs(log_group_name='instanceDeployment',
-                   log_stream_name=stack_name + "/*",
-                   start='1m ago')
+    logs = AWSLogs(log_group_name=stack_name, log_stream_name="*", start='1m ago')
     print "Waiting for " + stack_oper + " to complete:"
     log_threads = {}
     while True:
@@ -209,7 +207,7 @@ def deploy(stack_name, yaml_template, region):
             streams = logs.get_streams()
             for stream_name in streams:
                 if stream_name not in log_threads:
-                    thread = LoggingThread(stream_name)
+                    thread = LoggingThread(stack_name, stream_name)
                     thread.start()
                     log_threads[stream_name] = thread
         except ClientError:
@@ -242,9 +240,10 @@ class LoggingThread(Thread):
     '''A thread class that supports raising exception in the thread from
        another thread.
     '''
-    def __init__(self, stream_name):
+    def __init__(self, group_name, stream_name):
         Thread.__init__(self)
         self._thread_id = None
+        self._group_name = group_name
         self._stream_name = stream_name
 
     def _get_my_tid(self):
@@ -258,7 +257,7 @@ class LoggingThread(Thread):
                 return tid
 
     def run(self):
-        logs = AWSLogs(log_group_name='instanceDeployment',
+        logs = AWSLogs(log_group_name=self._group_name,
                        log_stream_name=self._stream_name,
                        start='1m ago', output_timestamp_enabled=True,
                        output_stream_enabled=True, color_enabled=True,

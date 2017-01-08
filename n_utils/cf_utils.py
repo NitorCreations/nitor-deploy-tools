@@ -149,9 +149,10 @@ class LogSender(object):
         self._lock = Lock()
         self._send_lock = Lock()
         self._logs = boto3.client('logs')
-        self.group_name = "instanceDeployment"
+        self.group_name = info.stack_name
         self._messages = deque()
-        self.stream_name = info.stack_name + "/" + info.instance_id + "/" + file_name.replace(':', '_').replace('*', '_')
+        self.stream_name = info.instance_id + "|" + \
+                           file_name.replace(':', '_').replace('*', '_')
         try:
             self._logs.create_log_group(logGroupName=self.group_name)
         except:
