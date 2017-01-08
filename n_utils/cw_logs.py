@@ -5,9 +5,8 @@ import codecs
 from threading import Event, Thread
 from datetime import datetime
 from collections import deque
-
 import boto3
-
+from botocore.exceptions import ClientError
 from termcolor import colored
 
 def millis2iso(millis):
@@ -71,10 +70,13 @@ class CloudWatchLogs(Thread):
         """Returns available CloudWatch logs streams in for stack"""
         kwargs = {'logGroupName': self.log_group_name}
         paginator = self.client.get_paginator('describe_log_streams')
-        for page in paginator.paginate(**kwargs):
-            for stream in page.get('logStreams', []):
-                if stream['lastEventTimestamp'] > self.start_time:
-                    yield stream['logStreamName']
+        try:
+            for page in paginator.paginate(**kwargs):
+                for stream in page.get('logStreams', []):
+                    if stream['lastEventTimestamp'] > self.start_time:
+                        yield stream['logStreamName']
+        except ClientError as err:
+            return
 
     def stop(self):
         self._stopped.set()
