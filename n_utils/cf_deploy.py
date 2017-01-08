@@ -40,8 +40,6 @@ def update_stack(stack_name, template, params):
                                      Capabilities=["CAPABILITY_IAM"],
                                      ChangeSetName=chset_name)['Id']
     chset_data = clf.describe_change_set(ChangeSetName=chset_id)
-    chset_data['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
-                                               chset_data['CreationTime'].timetuple())
     status = chset_data['Status']
     while "_COMPLETE" not in status and "FAILED" != status:
         time.sleep(5)
@@ -53,6 +51,8 @@ def update_stack(stack_name, template, params):
             print "\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m"
         raise Exception("Creating changeset failed")
     else:
+        chset_data['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                                                   chset_data['CreationTime'].timetuple())
         print "\033[32;1m*** Changeset ***:\033[m"
         print aws_infra_util.json_save(chset_data)
         clf.execute_change_set(ChangeSetName=chset_id)
