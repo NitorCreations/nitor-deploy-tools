@@ -27,7 +27,7 @@ import threading
 from threading import Thread
 import boto3
 from botocore.exceptions import ClientError
-from .cw_logs import CloudWatchLogs
+from .log_events import CloudWatchLogs, CloudFormationEvents
 from . import aws_infra_util
 
 def update_stack(stack_name, template, params):
@@ -65,12 +65,11 @@ def create_stack(stack_name, template, params):
     return
 
 def delete(stack_name, region):
-    if sys.version_info < (3, 0):
-        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
-
     os.environ['AWS_DEFAULT_REGION'] = region
     print "\n\n**** Deleting stack '" + stack_name
     clf = boto3.client('cloudformation')
+    cf_events = CloudFormationEvents(log_group_name=stack_name)
+    cf_events.start()
     clf.delete_stack(StackName=stack_name)
     while True:
         try:
@@ -89,9 +88,6 @@ def delete(stack_name, region):
                 raise
 
 def deploy(stack_name, yaml_template, region):
-    if sys.version_info < (3, 0):
-        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
-
     os.environ['AWS_DEFAULT_REGION'] = region
     # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
@@ -191,6 +187,8 @@ def deploy(stack_name, yaml_template, region):
     stack_func(stack_name, json_small, params_doc)
     logs = CloudWatchLogs(log_group_name=stack_name)
     logs.start()
+    cf_events = CloudFormationEvents(log_group_name=stack_name)
+    cf_events.start()
     print "Waiting for " + stack_oper + " to complete:"
     log_threads = {}
     while True:
