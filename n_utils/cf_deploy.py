@@ -16,6 +16,7 @@
 import codecs
 import collections
 import ctypes
+from datetime import datetime
 import inspect
 import locale
 from operator import itemgetter
@@ -27,8 +28,12 @@ import threading
 from threading import Thread
 import boto3
 from botocore.exceptions import ClientError
-from .log_events import CloudWatchLogs, CloudFormationEvents
+from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
 from . import aws_infra_util
+from termcolor import colored
+
+def log(message):
+    print colored(fmttime(datetime.now()), 'yellow') + " " + message
 
 def update_stack(stack_name, template, params):
     clf = boto3.client('cloudformation')
@@ -48,13 +53,13 @@ def update_stack(stack_name, template, params):
     if status == "FAILED":
         clf.delete_change_set(ChangeSetName=chset_id)
         if 'StatusReason' in chset_data:
-            print "\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m"
+            log("\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m")
         raise Exception("Creating changeset failed")
     else:
         chset_data['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
                                                    chset_data['CreationTime'].timetuple())
-        print "\033[32;1m*** Changeset ***:\033[m"
-        print aws_infra_util.json_save(chset_data)
+        log("\033[32;1m*** Changeset ***:\033[m")
+        log(aws_infra_util.json_save(chset_data))
         clf.execute_change_set(ChangeSetName=chset_id)
     return
 
@@ -66,7 +71,7 @@ def create_stack(stack_name, template, params):
 
 def delete(stack_name, region):
     os.environ['AWS_DEFAULT_REGION'] = region
-    print "\n\n**** Deleting stack '" + stack_name
+    log("**** Deleting stack '" + stack_name + "'")
     clf = boto3.client('cloudformation')
     cf_events = CloudFormationEvents(log_group_name=stack_name)
     cf_events.start()
@@ -77,12 +82,12 @@ def delete(stack_name, region):
             status = stack_info['Stacks'][0]['StackStatus']
             if not status.endswith("_IN_PROGRESS") and not status.endswith("_COMPLETE"):
                  raise Exception("Delete stack failed: end state " + status)
-            print "Status: \033[32;1m"+ status + "\033[m"
+            log("Status: \033[32;1m"+ status + "\033[m")
             time.sleep(5)
         except ClientError as err:
             if err.response['Error']['Code'] == 'ValidationError' and \
                err.response['Error']['Message'].endswith('does not exist'):
-                print "Status: \033[32;1mDELETE_COMPLETE\033[m"
+                log("Status: \033[32;1mDELETE_COMPLETE\033[m")
                 break
             else:
                 raise
@@ -102,7 +107,7 @@ def deploy(stack_name, yaml_template, region):
       'paramAmi'in template_doc['Parameters'] and \
       'IMAGE_JOB' in os.environ:
         image_job = re.sub(r'\W', '_', os.environ['IMAGE_JOB'].lower())
-        print "Looking for ami with name prefix " + image_job
+        log("Looking for ami with name prefix " + image_job)
         ec2 = boto3.client('ec2')
         ami_data = ec2.describe_images(Filters=[{'Name': 'name',
                                                  'Values': [image_job + "_*"]}])
@@ -111,23 +116,23 @@ def deploy(stack_name, yaml_template, region):
                                    key=itemgetter('CreationDate'), reverse=True)
             for image in sorted_images:
                 if re.match('^' + image_job + '_\\d{4,14}', image['Name']):
-                    print "Result: " + aws_infra_util.json_save(image)
+                    log("Result: " + aws_infra_util.json_save(image))
                     ami_id = image['ImageId']
                     ami_name = image['Name']
                     ami_created = image['CreationDate']
                     break
     elif ami_id and 'Parameters' in template_doc and \
         'paramAmi'in template_doc['Parameters']:
-        print "Looking for ami metadata with id " + ami_id
+        log("Looking for ami metadata with id " + ami_id)
         ec2 = boto3.client('ec2')
         ami_meta = ec2.describe_images(ImageIds=[ami_id])
-        print "Result: " + aws_infra_util.json_save(ami_meta)
+        log("Result: " + aws_infra_util.json_save(ami_meta))
         image = ami_meta['Images'][0]
         ami_name = image['Name']
         ami_created = image['CreationDate']
 
-    print "\n\n**** Deploying stack '" + stack_name + "' with template '" + \
-          yaml_template + "' and ami_id '" + str(ami_id) + "'"
+    log("**** Deploying stack '" + stack_name + "' with template '" + \
+          yaml_template + "' and ami_id '" + str(ami_id) + "'")
 
     if "Parameters" not in template_doc:
         template_doc['Parameters'] = []
@@ -150,9 +155,8 @@ def deploy(stack_name, yaml_template, region):
     json_template = aws_infra_util.json_save(template_doc)
     json_small = aws_infra_util.json_save_small(template_doc)
 
-    print "** Final template:"
-    print json_template
-    print ""
+    log("*** Final template ***")
+    log(json_template)
 
     # Load previous stack information to see if it has been deployed before
     stack_data = None
@@ -162,12 +166,12 @@ def deploy(stack_name, yaml_template, region):
         stack_data = clf.describe_stacks(StackName=stack_name)
         # Dump original status, for the record
         status = stack_data['Stacks'][0]['StackStatus']
-        print "Status: \033[32;1m" + status + "\033[m"
+        log("Status: \033[32;1m" + status + "\033[m")
         stack_oper = "update_stack"
     except ClientError as err:
         if err.response['Error']['Code'] == 'ValidationError' and \
            err.response['Error']['Message'].endswith('does not exist'):
-            print "Status: \033[32;1mNEW_STACK\033[m"
+            log("Status: \033[32;1mNEW_STACK\033[m")
         else:
             raise
 
@@ -176,12 +180,12 @@ def deploy(stack_name, yaml_template, region):
     for key in template_parameters.keys():
         if key in os.environ:
             val = os.environ[key]
-            print "Parameter " + key + ": using \033[32;1mCUSTOM value " + \
-                  val + "\033[m"
+            log("Parameter " + key + ": using \033[32;1mCUSTOM value " + \
+                  val + "\033[m")
             params_doc.append({'ParameterKey': key, 'ParameterValue': val})
         else:
             val = template_parameters[key]['Default']
-            print "Parameter " + key + ": using default value " + str(val)
+            log("Parameter " + key + ": using default value " + str(val))
 
     stack_func = globals()[stack_oper]
     stack_func(stack_name, json_small, params_doc)
@@ -189,7 +193,7 @@ def deploy(stack_name, yaml_template, region):
     logs.start()
     cf_events = CloudFormationEvents(log_group_name=stack_name)
     cf_events.start()
-    print "Waiting for " + stack_oper + " to complete:"
+    log("Waiting for " + stack_oper + " to complete:")
     log_threads = {}
     while True:
         stack_info = clf.describe_stacks(StackName=stack_name)
@@ -198,7 +202,7 @@ def deploy(stack_name, yaml_template, region):
             color = "\033[31;1m"
         else:
             color = "\033[32;1m"
-        print color + "Status: " + status + "\033[m"
+        log(color + "Status: " + status + "\033[m")
         if not status.endswith("_IN_PROGRESS"):
             logs.stop()
             break
@@ -208,4 +212,4 @@ def deploy(stack_name, yaml_template, region):
        (stack_oper == "update_stack" and status != "UPDATE_COMPLETE"):
         sys.exit(stack_oper + " failed: end state " + status)
 
-    print "Done!"
+    log("Done!")

@@ -4,16 +4,20 @@ import locale
 import codecs
 from threading import Event, Thread
 from datetime import datetime
+from dateutil import tz
 from collections import deque
 import boto3
 from botocore.exceptions import ClientError
 from termcolor import colored
 
 def millis2iso(millis):
-    return datetime.utcfromtimestamp(millis/1000.0).isoformat()[:23]
+    return fmttime(datetime.utcfromtimestamp(millis/1000.0))
 
 def timestamp(timestamp):
-    return (timestamp.replace(tzinfo=None) - datetime(1970,1,1)).total_seconds() * 1000
+    return (timestamp.replace(tzinfo=None) - datetime(1970,1,1,tzinfo=None)).total_seconds() * 1000
+
+def fmttime(timestamp):
+    return timestamp.replace(tzinfo=tz.tzlocal()).isoformat()[:23]
 
 class LogEventThread(Thread):
 
@@ -146,7 +150,7 @@ class CloudFormationEvents(LogEventThread):
                 return
 
             output = []
-            output.append(colored(event['Timestamp'].isoformat()[:23],
+            output.append(colored(fmttime(event['Timestamp']),
                                   'yellow'))
             target = event['ResourceType'] + ":" + event['LogicalResourceId']
             output.append(colored(target, 'cyan'))
