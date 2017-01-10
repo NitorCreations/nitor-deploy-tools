@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import sys
 import time
@@ -9,6 +10,22 @@ from . import cf_utils
 from . import cf_deploy
 from .cf_utils import InstanceInfo
 from .log_events import CloudWatchLogs, CloudFormationEvents
+
+def list_file_to_json():
+    parser = argparse.ArgumentParser(description="Ouput a file with one item per line as a json object")
+    parser.add_argument("arrayname", help="The name in the json object given to the array")
+    parser.add_argument("file", help="The file to parse")
+    args = parser.parse_args()
+    if not os.path.isfile(args.file):
+        parser.error(args.file + " not found")
+    content =  [line.rstrip('\n') for line in open(args.file)]
+    json.dump({ args.arrayname : content }, sys.stdout);
+
+def create_userid_list():
+    parser = argparse.ArgumentParser(description="Ouput arguments as a json object containing one array named 'Add'. Used in scripts used to share AWS AMI images with other AWS accounts and regions")
+    parser.add_argument("user_ids", help="User ids to dump", nargs="+")
+    args = parser.parse_args()
+    json.dump({ "Add" : args.user_ids }, sys.stdout);
 
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")

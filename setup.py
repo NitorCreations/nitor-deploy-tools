@@ -13,6 +13,8 @@ setup(name='nitor_deploy_tools',
       entry_points = {
         'console_scripts': [
             'vault=vault.cli:main',
+            'list-file-to-json=n_utils.cli:list_file_to_json',
+            'create-userid-list=n_utils.cli:create_userid_list',
             'yaml-to-json=n_utils.cli:yaml_to_json',
             'json-to-yaml=n_utils.cli:json_to_yaml',
             'pytail=n_utils.cli:read_and_follow',
