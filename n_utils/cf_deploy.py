@@ -33,7 +33,8 @@ from . import aws_infra_util
 from termcolor import colored
 
 def log(message):
-    print colored(fmttime(datetime.now()), 'yellow') + " " + message
+    sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " " \
+        + message + os.linesep).encode(locale.getpreferredencoding()))
 
 def update_stack(stack_name, template, params):
     clf = boto3.client('cloudformation')

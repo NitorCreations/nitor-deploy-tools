@@ -1,7 +1,7 @@
+import os
 import sys
 import time
 import locale
-import codecs
 from threading import Event, Thread
 from datetime import datetime
 from dateutil import tz
@@ -18,6 +18,9 @@ def timestamp(timestamp):
 
 def fmttime(timestamp):
     return timestamp.replace(tzinfo=tz.tzlocal()).isoformat()[:23]
+
+def uprint(message):
+    sys.stdout.write((message + os.linesep).encode(locale.getpreferredencoding()))
 
 class LogEventThread(Thread):
 
@@ -80,7 +83,7 @@ class CloudWatchLogs(LogEventThread):
             output.append(colored(millis2iso(event['timestamp']), 'yellow'))
             output.append(colored(event['logStreamName'], 'cyan'))
             output.append(event['message'])
-            print ' '.join(output)
+            uprint(' '.join(output))
             sys.stdout.flush()
 
     def get_streams(self):
@@ -160,5 +163,5 @@ class CloudFormationEvents(LogEventThread):
                 color = 'red'
                 message = message + " " + event['ResourceStatusReason']
             output.append(colored(message, color))
-            print ' '.join(output)
+            uprint(' '.join(output))
             sys.stdout.flush()

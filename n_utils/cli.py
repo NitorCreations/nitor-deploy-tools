@@ -3,8 +3,6 @@ import json
 import os
 import sys
 import time
-import locale
-import codecs
 from . import aws_infra_util
 from . import cf_utils
 from . import cf_deploy
@@ -116,8 +114,6 @@ def cf_region():
     print info.stack_id.split(":")[3]
 
 def update_stack():
-    if sys.version_info < (3, 0):
-        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
     parser = argparse.ArgumentParser(description="Create or update existing CloudFormation stack")
     parser.add_argument("stack_name", help="Name of the stack to create or update")
     parser.add_argument("yaml_template", help="Yaml template to pre-process and use for creation")
@@ -128,8 +124,6 @@ def update_stack():
     cf_deploy.deploy(args.stack_name, args.yaml_template, args.region)
 
 def delete_stack():
-    if sys.version_info < (3, 0):
-        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
     parser = argparse.ArgumentParser(description="Create or update existing CloudFormation stack")
     parser.add_argument("stack_name", help="Name of the stack to create or update")
     parser.add_argument("region", help="The region to deploy the stack to")
@@ -137,8 +131,6 @@ def delete_stack():
     cf_deploy.delete(args.stack_name, args.region)
 
 def tail_stack_logs():
-    if sys.version_info < (3, 0):
-        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
     parser = argparse.ArgumentParser(description="Tail logs from the log group of a cloudformation stack")
     parser.add_argument("stack_name", help="Name of the stack to create or update")
     parser.add_argument("-s", "--start", help="Start time in seconds since epoc")
