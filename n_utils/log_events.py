@@ -175,7 +175,8 @@ class CloudFormationEvents(LogEventThread):
             color = 'green'
             if "_FAILED" in message:
                 color = 'red'
-                message = message + " " + event['ResourceStatusReason']
             output.append(colored(message, color))
+            if 'ResourceStatusReason' in event:
+                output.append(event['ResourceStatusReason'])
             uprint(' '.join(output))
             sys.stdout.flush()
