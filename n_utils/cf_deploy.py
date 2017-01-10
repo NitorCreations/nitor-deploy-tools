@@ -87,6 +87,7 @@ def delete(stack_name, region):
             log("Status: \033[32;1m"+ status + "\033[m")
             time.sleep(5)
         except ClientError as err:
+            cf_events.stop()
             if err.response['Error']['Code'] == 'ValidationError' and \
                err.response['Error']['Message'].endswith('does not exist'):
                 log("Status: \033[32;1mDELETE_COMPLETE\033[m")
@@ -207,6 +208,7 @@ def deploy(stack_name, yaml_template, region):
         log(color + "Status: " + status + "\033[m")
         if not status.endswith("_IN_PROGRESS"):
             logs.stop()
+            cf_events.stop()
             break
         time.sleep(5)
 
