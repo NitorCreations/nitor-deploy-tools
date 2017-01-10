@@ -10,6 +10,8 @@ from . import cf_utils
 from . import cf_deploy
 from .cf_utils import InstanceInfo
 from .log_events import CloudWatchLogs, CloudFormationEvents
+from .maven_utils import add_server
+import xml.etree.ElementTree as ET
 
 def list_file_to_json():
     parser = argparse.ArgumentParser(description="Ouput a file with one item per line as a json object")
@@ -26,6 +28,17 @@ def create_userid_list():
     parser.add_argument("user_ids", help="User ids to dump", nargs="+")
     args = parser.parse_args()
     json.dump({ "Add" : args.user_ids }, sys.stdout);
+
+def add_deployer_server():
+    parser = argparse.ArgumentParser(description="Add a server into a maven configuration file. Password is taken from the environment variable 'DEPLOYER_PASSWORD'")
+    parser.add_argument("file", help="The file to modify")
+    parser.add_argument("username", help="The username to access the server.")
+    parser.add_argument("--id", help="Optional id for the server. Default is deploy. One server with this id is added and another with '-release' appended", default="deploy")
+    args = parser.parse_args()
+    if not os.path.isfile(args.file):
+        parser.error(args.file + " not found")
+    add_server(args.file, args.id, args.username)
+    add_server(args.file, args.id + "-release", args.username)
 
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")
