@@ -11,7 +11,6 @@ from . import cf_deploy
 from .cf_utils import InstanceInfo
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
-import xml.etree.ElementTree as ET
 
 def list_file_to_json():
     parser = argparse.ArgumentParser(description="Ouput a file with one item per line as a json object")
