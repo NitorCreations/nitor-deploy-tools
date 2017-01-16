@@ -38,7 +38,10 @@ def create_userid_list():
     parser = argparse.ArgumentParser(description="Ouput arguments as a json object containing one array named 'Add'. Used in scripts used to share AWS AMI images with other AWS accounts and regions")
     parser.add_argument("user_ids", help="User ids to dump", nargs="+")
     args = parser.parse_args()
-    json.dump({ "Add" : args.user_ids }, sys.stdout);
+    ret = { "Add": []}
+    for user_id in args.user_ids:
+        ret['Add'].append({"UserId": user_id})
+    json.dump(ret, sys.stdout);
 
 def add_deployer_server():
     parser = argparse.ArgumentParser(description="Add a server into a maven configuration file. Password is taken from the environment variable 'DEPLOYER_PASSWORD'")
