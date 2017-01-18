@@ -54,6 +54,18 @@ def add_deployer_server():
     add_server(args.file, args.id, args.username)
     add_server(args.file, args.id + "-release", args.username)
 
+def get_userdata():
+    parser = argparse.ArgumentParser(description="Get userdata defined for an instance into a file")
+    parser.add_argument("file", help="File to write userdata into")
+    args = parser.parse_args()
+    dirname = os.path.dirname(args.file)
+    if dirname:
+        if os.path.isfile(dirname):
+            parser.error(dirname + " exists and is a file")
+        elif not os.path.isdir(dirname):
+            os.makedirs(dirname)
+    print cf_utils.get_userdata(args.file)
+
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")
     parser.add_argument("file", help="File to parse")
@@ -137,7 +149,7 @@ def update_stack():
     parser.add_argument("region", help="The region to deploy the stack to")
     args = parser.parse_args()
     if not os.path.isfile(args.yaml_template):
-        parser.error(args.file + " not found")
+        parser.error(args.yaml_template + " not found")
     cf_deploy.deploy(args.stack_name, args.yaml_template, args.region)
     return
 

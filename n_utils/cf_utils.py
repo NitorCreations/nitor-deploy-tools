@@ -285,3 +285,8 @@ def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
 
 def init():
     info = InstanceInfo()
+
+def get_userdata(outfile):
+    response = requests.get('http://169.254.169.254/latest/user-data')
+    with open(outfile) as outf:
+        outf.write(response)
