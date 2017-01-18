@@ -64,7 +64,8 @@ def get_userdata():
             parser.error(dirname + " exists and is a file")
         elif not os.path.isdir(dirname):
             os.makedirs(dirname)
-    print cf_utils.get_userdata(args.file)
+    cf_utils.get_userdata(args.file)
+    return
 
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")

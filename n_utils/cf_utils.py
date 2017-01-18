@@ -288,5 +288,8 @@ def init():
 
 def get_userdata(outfile):
     response = requests.get('http://169.254.169.254/latest/user-data')
-    with open(outfile) as outf:
-        outf.write(response)
+    if outfile == "-":
+        print response.text
+    else:
+        with open(outfile, 'w') as outf:
+            outf.write(response.text)
