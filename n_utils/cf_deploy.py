@@ -17,6 +17,7 @@
 import codecs
 import collections
 import ctypes
+import hashlib
 from datetime import datetime
 import inspect
 import locale
@@ -41,11 +42,9 @@ def update_stack(stack_name, template, params):
     clf = boto3.client('cloudformation')
     chset_name = stack_name + "-" + time.strftime("%Y%m%d%H%M%S",
                                                   time.gmtime())
-    chset_id = clf.create_change_set(StackName=stack_name,
-                                     TemplateBody=template,
-                                     Parameters=params,
-                                     Capabilities=["CAPABILITY_IAM"],
-                                     ChangeSetName=chset_name)['Id']
+    params = get_template_arguments(stack_name, template, params)
+    params['ChangeSetName'] = chset_name
+    chset_id = clf.create_change_set(**params)['Id']
     chset_data = clf.describe_change_set(ChangeSetName=chset_id)
     status = chset_data['Status']
     while "_COMPLETE" not in status and "FAILED" != status:
@@ -67,9 +66,25 @@ def update_stack(stack_name, template, params):
 
 def create_stack(stack_name, template, params):
     clf = boto3.client('cloudformation')
-    clf.create_stack(StackName=stack_name, TemplateBody=template,
-                     Parameters=params, Capabilities=["CAPABILITY_IAM"])
+    params = get_template_arguments(stack_name, template, params)
+    clf.create_stack(**params)
     return
+
+def get_template_arguments(stack_name, template, params):
+    params = { "StackName": stack_name,
+        "Parameters": params, "Capabilities": ["CAPABILITY_IAM"]}
+    if 'CF_BUCKET' in os.environ and os.environ['CF_BUCKET']:
+        bucket = os.environ['CF_BUCKET']
+        s3cli = boto3.client('s3')
+        template_hash = hashlib.md5()
+        template_hash.update(template)
+        template_hash.update(aws_infra_util.json_save_small(params))
+        key = stack_name + '-' + template_hash.hexdigest()
+        s3cli.put_object(Body=template, Bucket=bucket, Key=key)
+        params['TemplateURL'] = "https://s3.amazonaws.com/" + bucket + "/" + key
+    else:
+        params["TemplateBody"] = template
+    return params
 
 def delete(stack_name, region):
     os.environ['AWS_DEFAULT_REGION'] = region

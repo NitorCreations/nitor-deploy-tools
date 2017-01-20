@@ -107,7 +107,7 @@ class CloudWatchLogs(LogEventThread):
         try:
             for page in paginator.paginate(**kwargs):
                 for stream in page.get('logStreams', []):
-                    if stream['lastEventTimestamp'] > self.start_time:
+                    if not 'lastEventTimestamp' in stream or stream['lastEventTimestamp'] > self.start_time:
                         yield stream['logStreamName']
         except ClientError as err:
             return
