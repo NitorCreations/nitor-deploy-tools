@@ -23,6 +23,13 @@ import json
 import re
 
 stacks = dict()
+include_dirs = []
+if "CF_TEMPLATE_INCLUDE" in os.environ:
+    for next_dir in os.environt["CF_TEMPLATE_INCLUDE"].split(":"):
+        if not next_dir.endswith("/"):
+            next_dir = next_dir + "/"
+        include_dirs.append(next_dir)
+include_dirs.append(os.path.dirname( __file__ ) + "/includes/")
 ############################################################################
 # _THE_ yaml & json deserialize/serialize functions
 def yaml_load(stream, Loader=yaml.SafeLoader, object_pairs_hook=collections.OrderedDict):
@@ -106,9 +113,19 @@ def import_script(filename, template):
                     arr.append(line)
     return arr
 
+def find_include(basefile):
+    global include_dirs
+    for next_dir in include_dirs:
+        if os.path.isfile(next_dir + basefile):
+            return next_dir + basefile
+
 def resolve_file(file, basefile):
-    if (file[0] == "/"):
+    if file[0] == "/":
         return file
+    if re.match("^(\.\./\.\./|\.\./|\./)?aws-utils/.*", file):
+        return find_include(re.sub("^(\.\./\.\./|\.\./|\./)?aws-utils/", "", file))
+    if re.match("^\(\(\s?includes\s?\)\)/.*", file):
+        return find_include(re.sub("^\(\(\s?includes\s?\)\)/", "", file))
     base = os.path.dirname(basefile)
     if (len(base) == 0):
         base = "."
