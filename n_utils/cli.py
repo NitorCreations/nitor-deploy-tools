@@ -188,3 +188,15 @@ def resolve_include():
     if not inc_file:
         parser.error("Include " + args.file + " not found on include paths " + str(aws_infra_util.include_dirs))
     print inc_file
+
+def assume_role():
+    parser = argparse.ArgumentParser(description="""Assume a defined role. Prints out environment variables
+        to be eval'd to current context for use:
+         eval $(assume-role 'arn:aws:iam::43243246645:role/DeployRole')""")
+    parser.add_argument("role_arn", help="The ARN of the role to assume")
+    args = parser.parse_args()
+    creds = cf_utils.assume_role(args.role_arn)
+    print "AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\""
+    print "AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\""
+    print "AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\""
+    print "export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN"

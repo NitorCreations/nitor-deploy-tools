@@ -18,6 +18,8 @@ import time
 import os
 import json
 import stat
+import string
+import random
 from threading import Timer, Thread, Event, Lock
 import boto3
 import requests
@@ -293,3 +295,12 @@ def get_userdata(outfile):
     else:
         with open(outfile, 'w') as outf:
             outf.write(response.text)
+def id_generator(size=10, chars=string.ascii_uppercase + string.digits + \
+                 string.ascii_lowercase):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+def assume_role(role_arn):
+    sts = boto3.client("sts")
+    response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" + \
+                               id_generator())
+    return response['Credentials']

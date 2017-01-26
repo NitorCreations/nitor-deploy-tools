@@ -1,0 +1,51 @@
+#!/bin/bash
+
+unset SSH_AUTH_SOCK
+unset SSH_AGENT_PID
+cleanup() {
+  if [ -n "$TMP" ]; then
+    rm -f $TMP
+  fi
+  if [ -n "$SSH_AGENT_PID" ]; then
+    if [ -z "$IOTMP" ]; then
+      IOTMP=$(mktemp)
+    fi
+    eval $(ssh-agent -k) > $IOTMP
+  fi
+  if [ -n "$IOTMP" ]; then
+    rm -f $IOTMP
+  fi
+}
+trap cleanup EXIT
+IOTMP=$(mktemp)
+if [ "$1" = "-k" ]; then
+  while  [ "$1" = "-k" ]; do
+    shift
+    KEY_NAMES="$KEY_NAMES $1"
+    shift
+  done
+else
+  TMP=$(mktemp)
+  if ! lpass show --notes my-ssh-mappings > $TMP; then
+    echo "Failed to get mappings"
+    exit 1
+  fi
+  if ! egrep "^$1:" $TMP > /dev/null; then
+    echo "$1 mapping not found"
+    exit 1
+  fi
+  KEY_NAMES=$(egrep "^$1:" $TMP | cut -d: -f2-)
+fi
+if  ! eval "$(ssh-agent)" > $IOTMP; then
+  echo "Failed to start ssh agent"
+  cat $IOTMP
+  exit 1
+fi
+for KEY_NAME in $KEY_NAMES; do
+  if ! lpass show --notes $KEY_NAME | ssh-add - > $IOTMP 2>&1; then
+    echo "Failed to add key"
+    cat $IOTMP
+    exit 1
+  fi
+done
+ssh -A "$@"
