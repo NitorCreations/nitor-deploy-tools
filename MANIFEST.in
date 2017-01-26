@@ -1,1 +1,1 @@
-recursive-include n_utils/includes *.yaml *.js *.sh
+recursive-include n_utils/includes *.yaml *.js *.sh *.repo

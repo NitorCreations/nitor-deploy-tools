@@ -1,0 +1,5 @@
+[varnish41]
+name=Varnish Cache 4.1 for Enterprise Linux
+baseurl=https://repo.varnish-cache.org/redhat/varnish-4.1/el7/$basearch
+enabled=1
+gpgcheck=0
