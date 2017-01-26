@@ -179,3 +179,12 @@ def tail_stack_logs():
             cwlogs.stop()
             cfevents.stop()
             return
+
+def resolve_include():
+    parser = argparse.ArgumentParser(description="Find a file from the first of the defined include paths")
+    parser.add_argument("file", help="The file to find")
+    args = parser.parse_args()
+    inc_file = aws_infra_util.find_include(args.file)
+    if not inc_file:
+        parser.error("Include " + args.file + " not found on include paths " + str(aws_infra_util.include_dirs))
+    print inc_file
