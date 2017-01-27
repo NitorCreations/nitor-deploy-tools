@@ -123,17 +123,17 @@ def find_include(basefile):
             return next_dir + basefile
     return None
 
-def resolve_file(file, basefile):
-    if file[0] == "/":
-        return file
-    if re.match("^(\.\./\.\./|\.\./|\./)?aws-utils/.*", file):
-        return find_include(re.sub("^(\.\./\.\./|\.\./|\./)?aws-utils/", "", file))
-    if re.match("^\(\(\s?includes\s?\)\)/.*", file):
-        return find_include(re.sub("^\(\(\s?includes\s?\)\)/", "", file))
+def resolve_file(filename, basefile):
+    if filename[0] == "/":
+        return filename
+    if re.match("^(\.\./\.\./|\.\./|\./)?aws-utils/.*", filename):
+        return find_include(re.sub("^(\.\./\.\./|\.\./|\./)?aws-utils/", "", filename))
+    if re.match("^\(\(\s?includes\s?\)\)/.*", filename):
+        return find_include(re.sub("^\(\(\s?includes\s?\)\)/", "", filename))
     base = os.path.dirname(basefile)
     if (len(base) == 0):
         base = "."
-    return base + "/" + file
+    return base + "/" + filename
 
 PARAM_NOT_AVAILABLE = "N/A"
 
@@ -242,10 +242,10 @@ def import_scripts_pass1(data, basefile, path):
     if (isinstance(data, collections.OrderedDict)):
         if ('Fn::ImportFile' in data):
             v = data['Fn::ImportFile']
-            import_script = resolve_file(v, basefile)
+            script_import = resolve_file(v, basefile)
             if import_script:
                 data.clear()
-                contents = import_script(import_script, basefile)
+                contents = import_script(script_import, basefile)
                 data['Fn::Join'] = [ "", contents ]
             else:
                 print "ERROR: " + v + ": Can't import file \"" + v + "\" - file not found on include paths or relative to " + basefile
@@ -260,13 +260,13 @@ def import_scripts_pass1(data, basefile, path):
                 data.clear()
                 if isinstance(contents, collections.OrderedDict):
                     for k,v in contents.items():
-                        data[k] = import_scripts_pass1(v, file, path + k + "_")
+                        data[k] = import_scripts_pass1(v, yaml_file, path + k + "_")
                 elif isinstance(contents, list):
                     data = contents
                     for i in range(0, len(data)):
-                        data[i] = import_scripts_pass1(data[i], file, path + str(i) + "_")
+                        data[i] = import_scripts_pass1(data[i], yaml_file, path + str(i) + "_")
                 else:
-                    print "ERROR: " + path + ": Can't import yaml file \"" + file + "\" that isn't an associative array or a list in file " + basefile
+                    print "ERROR: " + path + ": Can't import yaml file \"" + yaml_file + "\" that isn't an associative array or a list in file " + basefile
                     gotImportErrors = True
             else:
                 print "ERROR: " + v + ": Can't import file \"" + v + "\" - file not found on include paths or relative to " + basefile
@@ -442,9 +442,9 @@ def extract_scripts(data, prefix, path=""):
                 continue
             if isinstance(v[1][0], basestring) and (v[1][0].find("#!") != 0):
                 continue
-            file = extract_script(prefix, path, v[1])
+            script_file = extract_script(prefix, path, v[1])
             del data[k]
-            data['Fn::ImportFile'] = file
+            data['Fn::ImportFile'] = script_file
 
 ############################################################################
 # simple apis
