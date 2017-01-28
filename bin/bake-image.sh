@@ -157,6 +157,9 @@ else
   PLAYBOOK="$(n-include bake-image.yml)"
 fi
 rm -f ami.properties ||:
+cat > ansible.cfg << MARKER
+retry_files_enabled = False
+MARKER
 if python -u $(which ansible-playbook) \
   -vvvv \
   --flush-cache \
