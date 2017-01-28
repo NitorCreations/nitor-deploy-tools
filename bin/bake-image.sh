@@ -158,6 +158,7 @@ else
 fi
 rm -f ami.properties ||:
 cat > ansible.cfg << MARKER
+[defaults]
 retry_files_enabled = False
 MARKER
 if python -u $(which ansible-playbook) \
