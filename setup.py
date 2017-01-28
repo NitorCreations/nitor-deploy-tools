@@ -25,6 +25,7 @@ setup(name='nitor_deploy_tools',
       packages=['vault', 'n_utils'],
       include_package_data=True,
       scripts=[
+        'bin/bake-image.sh',
         'bin/create-shell-archive.sh',
         'bin/deploy-stack.sh',
         'bin/encrypt-and-mount.sh',

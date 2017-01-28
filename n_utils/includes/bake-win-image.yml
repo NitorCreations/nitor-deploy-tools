@@ -1,0 +1,181 @@
+# Copyright 2016-2017 Nitor Creations Oy
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+- name: Terminate any old instance(s)
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - local_action:
+        module: ec2
+        region: "{{ aws_region }}"
+        instance_tags: { "environment": "nitor", "Name": "{{ job_name }} prototype" }
+        count_tag:     { "environment": "nitor", "Name": "{{ job_name }} prototype" }
+        exact_count: 0
+        instance_type: t2.medium
+        image: "{{ root_ami }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        assign_public_ip: yes
+        group_id: "{{ sg_id }}"
+        monitoring: no
+        key_name: "{{ aws_key_name }}"
+        wait: yes
+      register: ec2_prototype_instance
+
+- name: "create instance"
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - local_action:
+        module: ec2
+        region: "{{ aws_region }}"
+        instance_tags: { "environment": "nitor", "Name": "{{ job_name }} prototype" }
+        count_tag:     { "environment": "nitor", "Name": "{{ job_name }} prototype" }
+        exact_count: 1
+        instance_type: t2.medium
+        image: "{{ root_ami }}"
+        instance_profile_name: "{{ amibake_instanceprofile }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        assign_public_ip: yes
+        group_id: "{{ sg_id }}"
+        monitoring: no
+        user_data: "{{ lookup('template', 'win-userdata.txt.j2') }}"
+        volumes:
+          - device_name: /dev/sda1
+            device_type: gp2
+            volume_size: 30
+            delete_on_termination: true
+        wait: yes
+      register: ec2_prototype_instance
+    - set_fact:
+        ec2_prototype_instance: "{{ ec2_prototype_instance }}"
+
+- name: Add new instance to host group {{ job_name }}-ami-instance
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - add_host: hostname={{ item.public_ip }} groupname={{ job_name }}-ami-instance
+      with_items: "{{ ec2_prototype_instance.tagged_instances }}"
+    # Wait for winrm
+    - wait_for: host={{ item.public_dns_name }} port=5986 delay=60 timeout=320 state=started
+      with_items: "{{ ec2_prototype_instance.tagged_instances }}"
+
+    - name: Pause for a bit to work around startup related WinRM problem
+      pause: "seconds={{ pause_seconds }}"
+
+- name: Prepare AMI instance - run pre_install, install/update packages and finally post_install
+  hosts: "{{ job_name }}-ami-instance"
+  vars:
+    ansible_connection: winrm
+    ansible_ssh_port: 5986
+  tasks:
+  - win_file: path="C:\\nitor" state=directory
+  - win_copy: src="{{ fetch_secrets }}" dest="C:\\Windows\\fetch-secrets.bat"
+  - win_copy: src="{{ imagedir }}/pre_install.ps1" dest="C:\\nitor\\pre_install.ps1"
+  - win_copy: src="{{ imagedir }}/post_install.ps1" dest="C:\\nitor\\post_install.ps1"
+  - win_copy:
+      src: "{{ imagedir }}/{{ item }}"
+      dest: "C:\\nitor\\"
+    with_items: "{{ files }}"
+  - win_shell: "C:\\nitor\\pre_install.ps1"
+    args:
+      chdir: "C:\\"
+  - win_updates:
+      category_names:
+      - 'SecurityUpdates'
+      - 'CriticalUpdates'
+      - 'UpdateRollups'
+      - 'Updates'
+  - win_chocolatey: name="{{ item }}"
+    with_items: "{{ packages }}"
+  - win_shell: "C:\\nitor\\post_install.ps1"
+    args:
+      chdir: "C:\\"
+
+- name: Create AMI from deployed instance
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - debug: var=ec2_prototype_instance
+
+    - name: "Create AMI from deployed web server {{ ec2_prototype_instance.tagged_instances[0].id }}"
+      ec2_ami:
+        instance_id: "{{ ec2_prototype_instance.tagged_instances[0].id }}"
+        wait: yes
+        name: "{{ job_name }}_{{ build_number }}"
+        region: "{{ aws_region }}"
+      register: base_ami
+
+    - set_fact:
+        ami_id_to_deploy: "{{ base_ami.image_id }}"
+
+    - name: Tag AMI
+      ec2_tag: resource={{ base_ami.image_id }} region={{ aws_region }}
+      args:
+        tags:
+          Name: "{{ job_name }}_{{ build_number }}"
+          Tstamp: "{{ tstamp }}"
+
+- name: Terminate instance(s) used for creating AMI
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - local_action:
+        module: ec2
+        region: "{{ aws_region }}"
+        instance_tags: { "environment": "nitor", "Name": "{{ job_name }} prototype" }
+        count_tag:     { "environment": "nitor", "Name": "{{ job_name }} prototype" }
+        exact_count: 0
+        instance_type: t2.medium
+        image: "{{ root_ami }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        assign_public_ip: yes
+        group_id: "{{ sg_id }}"
+        monitoring: no
+        key_name: "{{ aws_key_name }}"
+        wait: no
+      register: ec2_prototype_instance
+
+- name: Clean up old AMIs, keep the latest 5
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - ec2_ami_find:
+        region: "{{ aws_region }}"
+        owner: self
+        name: "{{ job_name }}_??????????????"
+        sort: creationDate
+        sort_end: -5
+      register: old_ami_result
+
+    - ec2_ami:
+        region: "{{ aws_region }}"
+        image_id: "{{ item.ami_id }}"
+        delete_snapshot: yes
+        state: absent
+      with_items: "{{ old_ami_result.results }}"
+      ignore_errors: yes
+
+- name: Write new AMI id to file {{ ami_id_file }}
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - local_action: copy content={{ base_ami.image_id }} dest={{ ami_id_file }}
