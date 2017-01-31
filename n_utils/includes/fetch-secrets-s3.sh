@@ -50,7 +50,7 @@ for ABS_FILE in "$@"; do
     FILE=$ABS_FILE
     ABS_FILE="-"
   fi
-  if /usr/bin/s3-role-download.sh ${CF_paramSecretsBucket} "$FILE" "$ABS_FILE"; then
+  if s3-role-download.sh ${CF_paramSecretsBucket} "$FILE" "$ABS_FILE"; then
     if [ -z "$SHOW" ]; then
       chmod $MODE $ABS_FILE
     fi

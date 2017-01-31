@@ -24,7 +24,7 @@ die () {
 image="$1" ; shift
 [ "${image}" ] || die "You must give the image name as argument"
 
-source aws-utils/source_infra_properties.sh "$image" ""
+source source_infra_properties.sh "$image" ""
 
 [ ! -d .cache ] || rm -rf .cache
 mkdir .cache
