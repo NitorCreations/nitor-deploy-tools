@@ -15,7 +15,7 @@
 # limitations under the License.
 
 cleanup() {
-  /opt/nitor/fetch-secrets.sh logout
+  fetch-secrets.sh logout
 }
 trap cleanup EXIT
 
@@ -38,7 +38,7 @@ renew_cert() {
 for DOMAIN in "$@"; do
   CERT=$CERT_DIR/$DOMAIN.crt
   chmod 600 $CERT
-  if /opt/nitor/fetch-secrets.sh get 444 $CERT; then
+  if fetch-secrets.sh get 444 $CERT; then
     VALID="$(openssl x509 -enddate -noout -in "$CERT" | cut -d= -f2- )"
     echo "Valid: $VALID"
     if ! openssl x509 -checkend $((RENEW_DAYS * 86400)) -noout -in "$CERT"; then

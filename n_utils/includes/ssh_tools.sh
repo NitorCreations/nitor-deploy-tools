@@ -18,7 +18,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/common_tools.sh"
 
 ssh_install_hostkeys () {
   check_parameters CF_paramDnsName
-  /opt/nitor/fetch-secrets.sh get 500 --optional /etc/ssh/${CF_paramDnsName}-ssh-hostkeys.sh
+  fetch-secrets.sh get 500 --optional /etc/ssh/${CF_paramDnsName}-ssh-hostkeys.sh
   if [ -x /etc/ssh/${CF_paramDnsName}-ssh-hostkeys.sh ]; then
     sleep 2
     source /etc/ssh/${CF_paramDnsName}-ssh-hostkeys.sh

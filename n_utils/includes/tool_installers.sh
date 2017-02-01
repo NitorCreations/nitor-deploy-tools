@@ -15,9 +15,9 @@
 # limitations under the License.
 
 # Functions to install various tools meant to be sourced and used as Functions
-if [ -z "$AWSUTILS_VERSION" ]; then
-  if [ -n "${CF_paramAwsUtilsVersion}" ]; then
-    AWSUTILS_VERSION="${CF_paramAwsUtilsVersion}"
+if [ -z "$DEPLOYTOOLS_VERSION" ]; then
+  if [ -n "${CF_paramDeployToolsVersion}" ]; then
+    DEPLOYTOOLS_VERSION="${CF_paramDeployToolsVersion}"
   fi
 fi
 if [ -z "$MAVEN_VERSION" ]; then
@@ -90,11 +90,14 @@ MARKER
   systemctl enable fail2ban
   systemctl start fail2ban
 }
-update_aws_utils () {
-  if [ ! "$AWSUTILS_VERSION" ]; then
-    echo "Neither AWSUTILS_VERSION nor CF_paramAwsUtilsVersion set - cannot update aws_utils"
-    exit 1
+update_deploytools() {
+  if [ ! "$DEPLOYTOOLS_VERSION" ]; then
+    echo "Specific version not defined - updating to latest"
+    DEPLOYTOOLS_VERSION="latest"
   fi
-  echo "Updating aws-utils from version $(cat /opt/nitor/aws-utils.version) to $AWSUTILS_VERSION"
-  bash "$(dirname "${BASH_SOURCE[0]}")/install_tools.sh" "${AWSUTILS_VERSION}"
+  echo "Updating nitor-deploy-tools to $DEPLOYTOOLS_VERSION"
+  bash "$(dirname "${BASH_SOURCE[0]}")/install_tools.sh" "${DEPLOYTOOLS_VERSION}"
+}
+update_aws_utils () {
+  update_deploytools "$@"
 }

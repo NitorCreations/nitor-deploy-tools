@@ -51,8 +51,8 @@ set_hostname() {
   fi
 }
 allow_cloud_init_firewall_cmd() {
-  local BASE=/opt/nitor/cloud-init-firewall-cmd
-  local SOURCE=$BASE.te
+  local SOURCE=$(n-include cloud-init-firewall-cmd.te)
+  local BASE=${SOURCE%.te}
   local MODULE=$BASE.mod
   local PACKAGE=$BASE.pp
   checkmodule -M -m -o $MODULE $SOURCE

@@ -47,13 +47,6 @@ if ! [ "$SSH_USER" ]; then
     SSH_USER="$IMAGETYPE"
   fi
 fi
-if ! [ "$FETCH_SECRETS" ]; then
-  if [ "$IMAGETYPE" = "windows" ]; then
-    FETCH_SECRETS=fetch-secrets.bat
-  else
-    FETCH_SECRETS=fetch-secrets.sh
-  fi
-fi
 [ "$NETWORK_STACK" ] || NETWORK_STACK=infra-network
 [ "$NETWORK_PARAMETER" ] || NETWORK_PARAMETER=subnetInfraB
 [ "$SUBNET" ] || SUBNET="$(cache show-stack-params-and-outputs.sh $REGION $NETWORK_STACK | jq -r .$NETWORK_PARAMETER)"
@@ -71,7 +64,7 @@ for var in REGION SUBNET SECURITY_GROUP AMIBAKE_INSTANCEPROFILE ; do
   [ "${!var}" ] || die "Could not determine $var automatically. Please set ${var} manually in ${infrapropfile}"
 done
 
-for var in IMAGETYPE AWS_KEY_NAME paramAwsUtilsVersion APP_USER APP_HOME SSH_USER FETCH_SECRETS ; do
+for var in IMAGETYPE AWS_KEY_NAME paramDeployToolsVersion APP_USER APP_HOME SSH_USER; do
   [ "${!var}" ] || die "Please set ${var} in ${infrapropfile}"
 done
 
@@ -167,7 +160,7 @@ if python -u $(which ansible-playbook) \
   -vvvv \
   --flush-cache \
   $PLAYBOOK \
-  -e tools_version=$paramAwsUtilsVersion \
+  -e tools_version=$paramDeployToolsVersion \
   -e ami_tag=$AMI_TAG \
   -e ami_id_file=$(pwd -P)/ami-id.txt \
   -e job_name=$JOB \
@@ -183,7 +176,6 @@ if python -u $(which ansible-playbook) \
   -e aws_region=$REGION \
   -e ansible_ssh_user=$SSH_USER \
   -e imagedir="$(realpath "${imagedir}")" \
-  -e fetch_secrets="$(realpath "$FETCH_SECRETS")" \
   -e subnet_id=$SUBNET \
   -e sg_id=$SECURITY_GROUP \
   -e amibake_instanceprofile=$AMIBAKE_INSTANCEPROFILE \

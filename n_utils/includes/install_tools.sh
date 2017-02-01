@@ -16,16 +16,12 @@
 
 set -xe
 
-if [ -z "$1" ]; then
-  AWSUTILS_VERSION=0.73
+if [ -z "$1" -o "$1" = "latest" ]; then
+  DEPLOYTOOLS_VERSION=""
 else
-  AWSUTILS_VERSION="$1"
+  DEPLOYTOOLS_VERSION="==$1"
 fi
 
-UTILS_VERSION=$AWSUTILS_VERSION
-curl -Ls https://github.com/NitorCreations/aws-utils/archive/$UTILS_VERSION.tar.gz | tar -xzf - --strip 1 -C /
-echo $AWSUTILS_VERSION > /opt/nitor/aws-utils.version
-
-source /opt/nitor/common_tools.sh
+source $(n-include common_tools.sh)
 ln -snf /usr/bin/lpass_$(system_type_and_version) /usr/bin/lpass
-pip install -U pip setuptools nitor-deploy-tools awscli boto3
+pip install -U pip setuptools awscli boto3 "nitor-deploy-tools$DEPLOYTOOLS_VERSION"

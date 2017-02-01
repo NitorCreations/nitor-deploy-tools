@@ -21,7 +21,7 @@ jenkins_setup_dotssh () {
   DOT_SSH_DIR=/var/lib/jenkins/jenkins-home/.ssh
   mkdir -p $DOT_SSH_DIR
   chmod 700 $DOT_SSH_DIR
-  /opt/nitor/fetch-secrets.sh get 400 $DOT_SSH_DIR/${CF_paramDnsName}.rsa
+  fetch-secrets.sh get 400 $DOT_SSH_DIR/${CF_paramDnsName}.rsa
   mv -v $DOT_SSH_DIR/${CF_paramDnsName}.rsa $DOT_SSH_DIR/id_rsa
   ssh-keygen -y -f $DOT_SSH_DIR/id_rsa > $DOT_SSH_DIR/id_rsa.pub
   chmod 400 $DOT_SSH_DIR/*
@@ -66,7 +66,7 @@ MARKER
     chmod 600 "$MAVEN_HOME/settings.xml"
     chown -R jenkins:jenkins "$MAVEN_HOME"
     fi
-    DEPLOYER_PWD=$(/opt/nitor/fetch-secrets.sh show "$CF_paramMvnDeployId")
+    DEPLOYER_PWD=$(fetch-secrets.sh show "$CF_paramMvnDeployId")
     export DEPLOYER_PASSWORD=$(sudo -iu jenkins mvn -ep "$DEPLOYER_PWD")
     add-deployer-server "$MAVEN_HOME/settings.xml" "$CF_paramMvnDeployId"
     if [ "$RESET_XTRACE" ]; then
@@ -255,7 +255,7 @@ jenkins_discard_default_install () {
 }
 
 jenkins_fetch_additional_files () {
-  /opt/nitor/fetch-secrets.sh get 400 ${CF_paramAdditionalFiles}
+  fetch-secrets.sh get 400 ${CF_paramAdditionalFiles}
   for i in ${CF_paramAdditionalFiles} ; do
     case "$i" in
       /var/lib/jenkins/*)

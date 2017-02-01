@@ -51,8 +51,8 @@ EOF
 onexit () {
   echo -----------------------------------------------------------------
   set +e
-  if [ -x /opt/nitor/fetch-secrets.sh ]; then
-    /opt/nitor/fetch-secrets.sh logout
+  if which fetch-secrets.sh > /dev/null 2>&1; then
+    fetch-secrets.sh logout
   fi
   signal-cf-status $status
   sleep 5

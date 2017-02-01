@@ -84,7 +84,6 @@
     ansible_ssh_port: 5986
   tasks:
   - win_file: path="C:\\nitor" state=directory
-  - win_copy: src="{{ fetch_secrets }}" dest="C:\\Windows\\fetch-secrets.bat"
   - win_copy: src="{{ imagedir }}/pre_install.ps1" dest="C:\\nitor\\pre_install.ps1"
   - win_copy: src="{{ imagedir }}/post_install.ps1" dest="C:\\nitor\\post_install.ps1"
   - win_copy:

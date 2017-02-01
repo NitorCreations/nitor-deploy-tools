@@ -16,7 +16,7 @@
 
 PATH=$PATH:/usr/local/bin:/usr/bin:/bin
 
-source /opt/nitor/ebs-functions.sh
+source $(n-include ebs-functions.sh)
 
 # Usage fail message
 fail() {

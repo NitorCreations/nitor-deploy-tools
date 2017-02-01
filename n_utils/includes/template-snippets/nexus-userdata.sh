@@ -26,18 +26,18 @@ CF_paramSonatypeWorkSize="20"
 export HOME=/root
 cd $HOME
 
-source /opt/nitor/cloud_init_functions.sh
-source /opt/nitor/tool_installers.sh
+source $(n-include cloud_init_functions.sh)
+source $(n-include tool_installers.sh)
 AWSUTILS_VERSION="${CF_paramAwsUtilsVersion}" update_aws_utils
 # reload scripts sourced above in case they changed:
-source /opt/nitor/cloud_init_functions.sh
-source /opt/nitor/tool_installers.sh
+source $(n-include cloud_init_functions.sh)
+source $(n-include tool_installers.sh)
 
-source /opt/nitor/apache_tools.sh
-source /opt/nitor/ebs-functions.sh
-source /opt/nitor/aws_tools.sh
-source /opt/nitor/ssh_tools.sh
-source /opt/nitor/nexus_tools.sh
+source $(n-include apache_tools.sh)
+source $(n-include ebs-functions.sh)
+source $(n-include aws_tools.sh)
+source $(n-include ssh_tools.sh)
+source $(n-include nexus_tools.sh)
 
 set_region
 aws_install_metadata_files
@@ -58,4 +58,4 @@ ssh_restart_service
 
 aws_ec2_associate_address
 
-source /opt/nitor/cloud_init_footer.sh
+source $(n-include cloud_init_footer.sh)

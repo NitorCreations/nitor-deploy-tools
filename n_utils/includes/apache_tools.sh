@@ -44,12 +44,12 @@ apache_install_certs () {
   DOMAIN=${CF_paramDnsName#*.}
   (
     perlgrep '^\s*(SSLCertificateFile|SSLCertificateKeyFile|SSLCACertificateFile)' ${APACHE_SSL_CONF} | awk '{ print $2 }'
-  ) | sort -u | xargs /opt/nitor/fetch-secrets.sh get 444
+  ) | sort -u | xargs fetch-secrets.sh get 444
   CONF_CHAIN=$(perlgrep '^\s*SSLCertificateChainFile' ${APACHE_SSL_CONF} \
     | awk '{ print $2 }')
   for CHAIN in "/etc/certs/${CF_paramDnsName}.chain" "/etc/certs/$DOMAIN.chain" \
     "$CONF_CHAIN"; do
-    if /opt/nitor/fetch-secrets.sh get 444 "$CHAIN"; then
+    if fetch-secrets.sh get 444 "$CHAIN"; then
         FETCHED_CHAIN="$CHAIN"
         break
     fi

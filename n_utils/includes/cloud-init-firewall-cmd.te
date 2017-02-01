@@ -1,0 +1,10 @@
+module cloud-init-firewall-cmd 1.0;
+
+require {
+	type cloud_init_t;
+	type firewalld_t;
+	class dbus send_msg;
+}
+
+#============= firewalld_t ==============
+allow firewalld_t cloud_init_t:dbus send_msg;

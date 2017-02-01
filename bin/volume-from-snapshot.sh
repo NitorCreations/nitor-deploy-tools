@@ -21,7 +21,7 @@ fail() {
 
 set -x
 
-source /opt/nitor/ebs-functions.sh
+source $(n-include ebs-functions.sh)
 SNAPSHOT_LOOKUP_TAG_KEY=$1
 SNAPSHOT_LOOKUP_TAG_VALUE=$2
 MOUNT_PATH=$3
