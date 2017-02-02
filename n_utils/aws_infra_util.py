@@ -23,6 +23,7 @@ import json
 import re
 
 stacks = dict()
+PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
 include_dirs = []
 if "CF_TEMPLATE_INCLUDE" in os.environ:
     for next_dir in os.environt["CF_TEMPLATE_INCLUDE"].split(":"):
@@ -33,26 +34,26 @@ if "CF_TEMPLATE_INCLUDE" in os.environ:
 include_dirs.append(os.path.dirname( __file__ ) + "/includes/")
 ############################################################################
 # _THE_ yaml & json deserialize/serialize functions
-def yaml_load(stream, Loader=yaml.SafeLoader, object_pairs_hook=collections.OrderedDict):
-    class OrderedLoader(Loader):
+def yaml_load(stream):
+    class OrderedLoader(yaml.SafeLoader):
         pass
     def construct_mapping(loader, node):
         loader.flatten_mapping(node)
-        return object_pairs_hook(loader.construct_pairs(node))
+        return collections.OrderedDict(loader.construct_pairs(node))
     OrderedLoader.add_constructor(
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             construct_mapping)
     return yaml.load(stream, OrderedLoader)
 
-def yaml_save(data, stream=None, Dumper=yaml.SafeDumper, **kwds):
-    class OrderedDumper(Dumper):
+def yaml_save(data):
+    class OrderedDumper(yaml.SafeDumper):
         pass
     def _dict_representer(dumper, data):
         return dumper.represent_mapping(
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             data.items())
     OrderedDumper.add_representer(collections.OrderedDict, _dict_representer)
-    return yaml.dump(data, stream, OrderedDumper, **kwds)
+    return yaml.dump(data, None, OrderedDumper)
 
 def json_load(stream):
     return json.loads(stream, object_pairs_hook=collections.OrderedDict)
@@ -65,7 +66,6 @@ def json_save_small(data):
 
 ############################################################################
 # import_scripts
-
 gotImportErrors = False
 
 # the CF_ prefix is expected already to have been stripped
@@ -195,8 +195,6 @@ def get_params(data, template):
 
     return params
 
-PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
-
 # replaces "((param))" references in `data` with values from `params` argument. Param references with no association in `params` are left as-is.
 def apply_params(data, params):
     if (isinstance(data, collections.OrderedDict)):
@@ -249,7 +247,7 @@ def import_scripts_pass1(data, basefile, path):
                 data['Fn::Join'] = [ "", contents ]
             else:
                 print "ERROR: " + v + ": Can't import file \"" + v + "\" - file not found on include paths or relative to " + basefile
-                gotImportErrors=True
+                gotImportErrors = True
         elif ('Fn::ImportYaml' in data):
             v = data['Fn::ImportYaml']
             del data['Fn::ImportYaml']
@@ -270,7 +268,7 @@ def import_scripts_pass1(data, basefile, path):
                     gotImportErrors = True
             else:
                 print "ERROR: " + v + ": Can't import file \"" + v + "\" - file not found on include paths or relative to " + basefile
-                gotImportErrors=True
+                gotImportErrors = True
         elif ('Fn::Merge' in data):
             mergeList = data['Fn::Merge']
             if not isinstance(mergeList, list):
@@ -374,7 +372,7 @@ def import_scripts(data, basefile):
     data = import_scripts_pass1(data, basefile, "")
     data = import_scripts_pass2(data, basefile, "", get_params(data, basefile), False)
 
-    if (gotImportErrors):
+    if gotImportErrors:
         sys.exit(1)
     return data
 
@@ -466,7 +464,6 @@ def json_to_yaml(json_file_to_convert):
 
 ############################################################################
 # misc json
-
 def locate_launchconf_metadata(data):
     if "Resources" in data:
         resources = data["Resources"]
