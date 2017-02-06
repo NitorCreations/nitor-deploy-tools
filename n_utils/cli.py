@@ -200,3 +200,10 @@ def assume_role():
     print "AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\""
     print "AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\""
     print "export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN"
+
+def get_parameter():
+    parser = argparse.ArgumentParser(description="Get a parameter value from the stack")
+    parser.add_argument("parameter", help="The name of the parameter to print")
+    args = parser.parse_args()
+    info = InstanceInfo()
+    print info.stack_data(args.parameter)

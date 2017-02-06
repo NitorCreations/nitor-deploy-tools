@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CF_paramSecretsBucket="nitor-infra-secure"
-CF_paramSecretsUser="webmaster@nitorcreations.com"
+CF_paramSecretsBucket="$(cf-get-parameter paramSecretsBucket)"
+CF_paramSecretsUser="$(cf-get-parameter paramSecretsUser)"
 
 login_if_not_already () {
   if ! lpass ls not-meant-to-return-anything > /dev/null 2>&1; then

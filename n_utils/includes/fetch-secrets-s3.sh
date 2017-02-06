@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CF_paramSecretsBucket="nitor-infra-secure"
+CF_paramSecretsBucket=$(cf-get-parameter paramSecretsBucket)
 
 COMMAND=$1
 shift
