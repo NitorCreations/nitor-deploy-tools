@@ -98,10 +98,14 @@ if [ "$IMAGETYPE" != "windows" ]; then
   fi
 else
   WIN_PASSWD="$(tr -cd '[:alnum:]' < /dev/urandom | head -c16)"
-  PASSWD_ARG="{\"ansible_ssh_pass\": \"$WIN_PASSWD\", \"ansible_winrm_operation_timeout_sec\": 60, \"ansible_winrm_read_timeout_sec\": 70, \"ansible_winrm_server_cert_validation\": \"ignore\"}"
+  PASSWD_ARG="{\"ansible_ssh_pass\": \"$WIN_PASSWD\","
+  PASSWD_ARG="$PASSWD_ARG \"ansible_winrm_operation_timeout_sec\": 60,"
+  PASSWD_ARG="$PASSWD_ARG \"ansible_winrm_read_timeout_sec\": 70,"
+  PASSWD_ARG="$PASSWD_ARG \"ansible_winrm_server_cert_validation\": \"ignore\","
+  PASSWD_ARG="$PASSWD_ARG \"prepare_script\": \"$(n-include prepare.ps1)\"}"
 fi
-
 if [ -z "$BUILD_NUMBER" ]; then
+
   BUILD_NUMBER=$TSTAMP
 else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
