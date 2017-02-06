@@ -22,6 +22,6 @@ else
   DEPLOYTOOLS_VERSION="==$1"
 fi
 
+pip install -U pip setuptools awscli boto3 "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
 source $(n-include common_tools.sh)
 ln -snf /usr/bin/lpass_$(system_type_and_version) /usr/bin/lpass
-pip install -U pip setuptools awscli boto3 "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
