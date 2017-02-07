@@ -20,4 +20,4 @@ CF_paramBakeRoleStack="bakery-roles"
 CF_AWS__Region="eu-west-1"
 
 ROLE_ARN=$(show-stack-params-and-outputs.sh ${CF_AWS__Region} ${CF_paramBakeRoleStack} | jq -r .deployRoleArn)
-assume-role.sh $ROLE_ARN
+assume-role $ROLE_ARN
