@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CF_paramSecretsBucket='nitor-infra-secure'
-CF_paramSecretsFolder='Certs'
-CF_paramSecretsUser="webmaster@nitorcreations.com"
+[ "$CF_paramSecretsBucket" ] || CF_paramSecretsBucket="$(cf-get-parameter paramSecretsBucket)"
+[ "$CF_paramSecretsFolder" ] || CF_paramSecretsFolder="$(cf-get-parameter paramSecretsFolder)"
+[ "$CF_paramSecretsUser" ] || CF_paramSecretsUser="$(cf-get-parameter paramSecretsUser)"
 
 
 login_if_not_already () {
