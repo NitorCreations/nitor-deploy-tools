@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import time
+from datetime import datetime, timedelta
 import os
 import json
 import stat
@@ -26,6 +27,8 @@ import requests
 from requests.exceptions import ConnectionError
 from botocore.exceptions import ClientError
 from collections import deque
+from termcolor import colored
+from dateutil import tz
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -306,3 +309,43 @@ def assume_role(role_arn):
     response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" + \
                                id_generator())
     return response['Credentials']
+
+def resolve_account():
+    try:
+        response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
+        instance_data = json.loads(response.text)
+        account_id = instance_data['accountId']
+        args.bucket = "vault-" + account_id
+    except ConnectionError:
+        iam = boto3.client("iam")
+        arn = iam.get_user()['User']['Arn']
+        account_id = arn.split(':')[4]
+    return account_id
+
+def clean_snapshots(days, tags):
+    ec2 = boto3.client("ec2")
+    account_id = resolve_account()
+    newest_timestamp = datetime.utcnow() - timedelta(days=days)
+    newest_timestamp = newest_timestamp .replace(tzinfo=None)
+    paginator = ec2.get_paginator('describe_snapshots')
+    for page in paginator.paginate(OwnerIds=[account_id],
+                                   Filters=[{'Name': 'tag-value', 'Values': tags}],
+                                   PaginationConfig={'PageSize': 1000}):
+        for snapshot in page['Snapshots']:
+            tags = {}
+            for tag in snapshot['Tags']:
+                tags[tag['Key']] = tag['Value']
+            print_time = snapshot['StartTime'].replace(tzinfo=tz.tzlocal()).timetuple()
+            compare_time = snapshot['StartTime'].replace(tzinfo=None)
+            if compare_time < newest_timestamp:
+                print colored("Deleting " + snapshot['SnapshotId'], "yellow") + " || " + \
+                      time.strftime("%a, %d %b %Y %H:%M:%S", print_time) + \
+                                    " || " + json.dumps(tags)
+                try:
+                    ec2.delete_snapshot(SnapshotId=snapshot['SnapshotId'])
+                except ClientError as err:
+                    print colored("Delete failed: " + err.response['Error']['Message'], "red")
+            else:
+                print colored("Skipping " + snapshot['SnapshotId'], "cyan") + " || " + \
+                      time.strftime("%a, %d %b %Y %H:%M:%S", print_time) + \
+                                    " || " + json.dumps(tags)

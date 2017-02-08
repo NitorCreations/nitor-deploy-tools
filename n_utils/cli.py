@@ -67,6 +67,9 @@ def get_userdata():
     cf_utils.get_userdata(args.file)
     return
 
+def get_account_id():
+    print cf_utils.resolve_account()
+
 def yaml_to_json():
     parser = argparse.ArgumentParser(description="Convert Nitor CloudFormation yaml to CloudFormation json with some preprosessing")
     parser.add_argument("file", help="File to parse")
@@ -207,3 +210,10 @@ def get_parameter():
     args = parser.parse_args()
     info = InstanceInfo()
     print info.stack_data(args.parameter)
+
+def clean_snapshots():
+    parser = argparse.ArgumentParser(description="Clean snapshots that are older than a number of days (30 by default) and have one of specified tag values")
+    parser.add_argument("-d", "--days", help="The number of days that is the minimum age for snapshots to be deleted", type=int, default=30)
+    parser.add_argument("tags", help="The tag values to select deleted snapshots", nargs="+")
+    args = parser.parse_args()
+    cf_utils.clean_snapshots(args.days, args.tags)
