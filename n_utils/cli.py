@@ -213,7 +213,10 @@ def get_parameter():
 
 def clean_snapshots():
     parser = argparse.ArgumentParser(description="Clean snapshots that are older than a number of days (30 by default) and have one of specified tag values")
+    parser.add_argument("-r", "--region", help="The number of days that is the minimum age for snapshots to be deleted")
     parser.add_argument("-d", "--days", help="The number of days that is the minimum age for snapshots to be deleted", type=int, default=30)
     parser.add_argument("tags", help="The tag values to select deleted snapshots", nargs="+")
     args = parser.parse_args()
+    if args.region:
+        os.environ['AWS_DEFAULT_REGION'] = args.region
     cf_utils.clean_snapshots(args.days, args.tags)

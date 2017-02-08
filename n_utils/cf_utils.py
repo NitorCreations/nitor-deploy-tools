@@ -315,7 +315,8 @@ def resolve_account():
         response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
         instance_data = json.loads(response.text)
         account_id = instance_data['accountId']
-        args.bucket = "vault-" + account_id
+        if 'AWS_DEFAULT_REGION' not in os.environ:
+            os.environ['AWS_DEFAULT_REGION'] = instance_data['region']
     except ConnectionError:
         iam = boto3.client("iam")
         arn = iam.get_user()['User']['Arn']
