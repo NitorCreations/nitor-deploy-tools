@@ -26,7 +26,7 @@ stacks = dict()
 PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
 include_dirs = []
 if "CF_TEMPLATE_INCLUDE" in os.environ:
-    for next_dir in os.environt["CF_TEMPLATE_INCLUDE"].split(":"):
+    for next_dir in os.environ["CF_TEMPLATE_INCLUDE"].split(":"):
         if not next_dir.endswith("/"):
             next_dir = next_dir + "/"
         include_dirs.append(next_dir)

@@ -31,22 +31,22 @@ def indent(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-def add_server(file, id, username):
-    tree = ET.parse(file)
+def add_server(pomfile, id, username):
+    tree = ET.parse(pomfile)
     settings = tree.getroot()
     servers = settings.find("./servers")
     if servers is None:
         servers = ET.SubElement(settings, "servers")
-    deployerServer = servers.find("./server[id='" + id + "']")
-    if deployerServer is None:
-        deployerServer = ET.SubElement(servers, "server")
-        ET.SubElement(deployerServer, "id").text = id
-        ET.SubElement(deployerServer, "username")
-    password = deployerServer.find("./password")
-    usernameEl = deployerServer.find("./username")
+    deployer_server = servers.find("./server[id='" + id + "']")
+    if deployer_server is None:
+        deployer_server = ET.SubElement(servers, "server")
+        ET.SubElement(deployer_server, "id").text = id
+        ET.SubElement(deployer_server, "username")
+    password = deployer_server.find("./password")
+    usernameEl = deployer_server.find("./username")
     usernameEl.text = username
     if password is None:
-        password = ET.SubElement(deployerServer, "password")
+        password = ET.SubElement(deployer_server, "password")
     password.text = os.getenv("DEPLOYER_PASSWORD", "password")
     indent(settings)
     tree.write(sys.argv[1], encoding="utf-8")
