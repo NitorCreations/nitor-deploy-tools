@@ -59,5 +59,17 @@ allow_cloud_init_firewall_cmd() {
   semodule_package -o $PACKAGE -m $MODULE
   semodule -i $PACKAGE
 }
+safe_download() {
+  url="$1"
+  csum="$2"
+  out="$3"
 
+  wget --no-verbose --output-document="$out" "$url"
+  echo "$csum  $out" | sha256sum --check
+}
+wait_background_jobs() {
+  for i in $(jobs -p); do
+    wait $i
+  done
+}
 SYSTEM_TYPE=$(system_type)
