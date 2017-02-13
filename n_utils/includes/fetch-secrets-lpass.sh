@@ -45,10 +45,7 @@ case "$1" in
     ;;
   logout)
     # usage: fetch-secrets.sh logout
-    shift
-    if [ -e $logged_file ]; then
-      lastpass-logout.sh || rm -f $logged_file
-    fi
+    lastpass-logout.sh
     ;;
   *)
     # old api

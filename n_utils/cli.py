@@ -360,3 +360,22 @@ def clean_snapshots():
     if args.region:
         os.environ['AWS_DEFAULT_REGION'] = args.region
     cf_utils.clean_snapshots(args.days, args.tags)
+
+def setup_cli():
+    """Setup the command line environment to define an aws cli profile with
+    the given name and credentials. If an identically named profile exists,
+    it will not be overwritten.
+    """
+    parser = argparse.ArgumentParser(description="Setup the command line " +\
+                                                 "environment to define an " +\
+                                                 "aws cli profile with the " +\
+                                                 "given name and credentials" +\
+                                                 ". If an identically named" +\
+                                                 " profile exists, it will " +\
+                                                 "not be overwritten.")
+    parser.add_argument("-n", "--name", help="Name for the profile to create")
+    parser.add_argument("-k", "--key-id", help="Key id for the profile")
+    parser.add_argument("-s", "--secret", help="Secret to set for the profile")
+    parser.add_argument("-r", "--region", help="Default region for the profile")
+    args = parser.parse_args()
+    cf_utils.setup_cli(**vars(args))

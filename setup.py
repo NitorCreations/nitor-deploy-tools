@@ -77,6 +77,7 @@ setup(name='nitor_deploy_tools',
             'ec2-instance-id=n_utils.cli:instance_id',
             'ec2-region=n_utils.cli:region',
             'ec2-get-userdata=n_utils.cli:get_userdata',
+            'setup-cli=n_utils.cli:setup_cli'
         ],
       },
       install_requires=[

@@ -21,7 +21,7 @@ import json
 import stat
 import string
 import random
-from threading import Timer, Thread, Event, Lock
+from threading import Thread, Event, Lock
 import boto3
 import requests
 from requests.exceptions import ConnectionError
@@ -29,6 +29,7 @@ from botocore.exceptions import ClientError
 from collections import deque
 from termcolor import colored
 from dateutil import tz
+from awscli.customizations.configure.writer import ConfigFileWriter
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -108,11 +109,12 @@ class InstanceInfo(object):
             with open(info_file, 'w') as outf:
                 outf.write(json.dumps(self._info, skipkeys=True, indent=2))
             try:
-                os.chmod(info_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP |
-                         stat.S_IROTH | stat.S_IWOTH)
-                os.chmod(info_file_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
-                         stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP |
-                         stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
+                os.chmod(info_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP |
+                         stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+                os.chmod(info_file_dir, stat.S_IRUSR | stat.S_IWUSR |
+                         stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP |
+                         stat.S_IXGRP | stat.S_IROTH | stat.S_IWOTH |
+                         stat.S_IXOTH)
             except:
                 print "Unable to change mode for " + info_file
         if 'instance_id' in self._info:
@@ -258,7 +260,8 @@ def signal_status(status, resource_name=None):
     clf = boto3.client('cloudformation')
     if not resource_name:
         resource_name = info.logical_id
-    print "Signalling " + status + " for " + info.stack_name + "." + resource_name
+    print "Signalling " + status + " for " + info.stack_name + "." +\
+          resource_name
     clf.signal_resource(StackName=info.stack_name,
                         LogicalResourceId=resource_name,
                         UniqueId=info.instance_id,
@@ -275,7 +278,9 @@ def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
         if eip:
             ec2 = boto3.client('ec2')
             address_data = ec2.describe_addresses(PublicIps=[eip])
-            if 'Addresses' in address_data and len(address_data['Addresses']) > 0 and 'AllocationId' in address_data['Addresses'][0]:
+            if 'Addresses' in address_data and \
+               len(address_data['Addresses']) > 0 and \
+               'AllocationId' in address_data['Addresses'][0]:
                 allocation_id = address_data['Addresses'][0]['AllocationId']
     if not allocation_id:
         allocation_id = info.stack_data(allocation_id_param)
@@ -283,15 +288,18 @@ def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
         eip = info.stack_data(eip_param)
         ec2 = boto3.client('ec2')
         address_data = ec2.describe_addresses(PublicIps=[eip])
-        if 'Addresses' in address_data and len(address_data['Addresses']) > 0 and 'AllocationId' in address_data['Addresses'][0]:
+        if 'Addresses' in address_data and len(address_data['Addresses']) > 0 \
+           and 'AllocationId' in address_data['Addresses'][0]:
             allocation_id = address_data['Addresses'][0]['AllocationId']
     print "Allocating " + allocation_id + " on " + info.instance_id
     ec2 = boto3.client('ec2')
-    ec2.associate_address(InstanceId=info.instance_id, AllocationId=allocation_id,
+    ec2.associate_address(InstanceId=info.instance_id,
+                          AllocationId=allocation_id,
                           AllowReassociation=True)
 
 def init():
     info = InstanceInfo()
+    return str(info)
 
 def get_userdata(outfile):
     response = requests.get('http://169.254.169.254/latest/user-data')
@@ -330,23 +338,79 @@ def clean_snapshots(days, tags):
     newest_timestamp = newest_timestamp .replace(tzinfo=None)
     paginator = ec2.get_paginator('describe_snapshots')
     for page in paginator.paginate(OwnerIds=[account_id],
-                                   Filters=[{'Name': 'tag-value', 'Values': tags}],
+                                   Filters=[{'Name': 'tag-value',
+                                             'Values': tags}],
                                    PaginationConfig={'PageSize': 1000}):
         for snapshot in page['Snapshots']:
             tags = {}
             for tag in snapshot['Tags']:
                 tags[tag['Key']] = tag['Value']
-            print_time = snapshot['StartTime'].replace(tzinfo=tz.tzlocal()).timetuple()
+            print_time = snapshot['StartTime'].replace(tzinfo=\
+                                                       tz.tzlocal()).timetuple()
             compare_time = snapshot['StartTime'].replace(tzinfo=None)
             if compare_time < newest_timestamp:
-                print colored("Deleting " + snapshot['SnapshotId'], "yellow") + " || " + \
-                      time.strftime("%a, %d %b %Y %H:%M:%S", print_time) + \
-                                    " || " + json.dumps(tags)
+                print colored("Deleting " + snapshot['SnapshotId'], "yellow") +\
+                              " || " +\
+                              time.strftime("%a, %d %b %Y %H:%M:%S",
+                                            print_time) + \
+                              " || " + json.dumps(tags)
                 try:
                     ec2.delete_snapshot(SnapshotId=snapshot['SnapshotId'])
                 except ClientError as err:
-                    print colored("Delete failed: " + err.response['Error']['Message'], "red")
+                    print colored("Delete failed: " + \
+                                  err.response['Error']['Message'], "red")
             else:
-                print colored("Skipping " + snapshot['SnapshotId'], "cyan") + " || " + \
-                      time.strftime("%a, %d %b %Y %H:%M:%S", print_time) + \
-                                    " || " + json.dumps(tags)
+                print colored("Skipping " + snapshot['SnapshotId'], "cyan") +\
+                              " || " + \
+                              time.strftime("%a, %d %b %Y %H:%M:%S",
+                                            print_time) +\
+                              " || " + json.dumps(tags)
+
+def has_entry(prefix, name, file_name):
+    if not os.path.isfile(file_name):
+        return False
+    with open(file_name, "r") as config:
+        for line in config.readlines():
+            if "[" + prefix + name + "]" == line.strip():
+                return True
+    return False
+
+def setup_cli(name=None, key_id=None, secret=None, region=None):
+    if name is None:
+        name = raw_input("Profile name: ")
+    home_dir = os.path.expanduser("~")
+    config_file = os.path.join(home_dir, ".aws", "config")
+    credentials_file = os.path.join(home_dir, ".aws", "credentials")
+    if has_entry("profile ", name, config_file) or \
+       has_entry("", name, credentials_file):
+       print "Profile " + name + " already exists. Not overwriting."
+       return
+    if key_id is None:
+        key_id = raw_input("Key ID: ")
+    if secret is None:
+        secret = raw_input("Key secret: ")
+    if region is None:
+        region = raw_input("Default region: ")
+    writer = ConfigFileWriter()
+    config_values = {
+            "__section__": "profile " + name,
+            "output": "json",
+            "region": region
+        }
+    credentials_values = {
+            "__section__": name,
+            "aws_access_key_id": key_id,
+            "aws_secret_access_key": secret
+        }
+    writer.update_config(config_values, config_file)
+    writer.update_config(credentials_values, credentials_file)
+    home_bin = credentials_file = os.path.join(home_dir, "bin")
+    if not os.path.isdir(home_bin):
+        os.makedirs(home_bin)
+    source_file = os.path.join(home_bin, name)
+    with open(source_file, "w") as source_script:
+        source_script.write('#!/bin/bash\n\n')
+        source_script.write('export AWS_DEFAULT_REGION=')
+        source_script.write(region + ' AWS_PROFILE=' + name)
+        source_script.write(' AWS_DEFAULT_PROFILE=' + name + "\n")
+    os.chmod(source_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)

@@ -14,4 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-lpass logout -f 2>&1 >/dev/null
+LPASS_DISABLE_PINENTRY=1 lpass logout -f 2>&1 >/dev/null
