@@ -110,7 +110,7 @@ class CloudWatchLogs(LogEventThread):
                 for stream in page.get('logStreams', []):
                     if not 'lastEventTimestamp' in stream or stream['lastEventTimestamp'] > self.start_time:
                         yield stream['logStreamName']
-        except ClientError as err:
+        except ClientError:
             return
 
 class CloudFormationEvents(LogEventThread):
@@ -132,7 +132,7 @@ class CloudFormationEvents(LogEventThread):
                 response = {}
                 try:
                     response = self.client.describe_stack_events(**kwargs)
-                except ClientError as err:
+                except ClientError:
                     pass
                 for event in response.get('StackEvents', []):
                     event_timestamp = timestamp(event['Timestamp'])

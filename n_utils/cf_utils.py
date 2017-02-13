@@ -16,14 +16,6 @@
 
 """ Utilities to work with instances made by nitor-deploy-tools stacks
 """
-from botocore.exceptions import ClientError
-from collections import deque
-from datetime import datetime, timedelta
-from dateutil import tz
-from requests.exceptions import ConnectionError
-from termcolor import colored
-from threading import Event, Lock, Thread
-import boto3
 import json
 import os
 import random
@@ -31,6 +23,15 @@ import requests
 import stat
 import string
 import time
+from threading import Event, Lock, Thread
+
+import boto3
+from botocore.exceptions import ClientError
+from collections import deque
+from datetime import datetime, timedelta
+from dateutil import tz
+from requests.exceptions import ConnectionError
+from termcolor import colored
 
 
 class InstanceInfo(object):

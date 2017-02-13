@@ -14,11 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from botocore.exceptions import ClientError
-from datetime import datetime
-from operator import itemgetter
-from termcolor import colored
-import boto3
 import collections
 import hashlib
 import locale
@@ -26,6 +21,13 @@ import os
 import re
 import sys
 import time
+
+import boto3
+
+from botocore.exceptions import ClientError
+from datetime import datetime
+from operator import itemgetter
+from termcolor import colored
 
 from . import aws_infra_util
 from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime

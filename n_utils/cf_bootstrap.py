@@ -17,10 +17,10 @@
 """ Utilities to bootsrap AWS accounts into use with nitor-deploy-tools
 """
 
-from awscli.customizations.configure.writer import ConfigFileWriter
 import os
 import stat
 
+from awscli.customizations.configure.writer import ConfigFileWriter
 
 def has_entry(prefix, name, file_name):
     if not os.path.isfile(file_name):
