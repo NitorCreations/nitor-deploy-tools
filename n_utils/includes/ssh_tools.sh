@@ -27,6 +27,7 @@ ssh_install_hostkeys () {
 }
 
 ssh_restart_service () {
+  sed -i 's/^#PermitRootLogin.*$/PermitRootLogin no/g' /etc/ssh/sshd_config
   case  "$SYSTEM_TYPE" in
     ubuntu)
       service ssh restart
