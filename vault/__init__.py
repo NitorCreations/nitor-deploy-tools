@@ -1,4 +1,4 @@
-# Copyright 2016 Nitor Creations Oy
+# Copyright 2016-2017 Nitor Creations Oy
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,4 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from vault import Vault
+""" Vault module for securely storing secrets in s3 with local encryption
+with data keys from AWS KMS
+"""
+from .vault import Vault
