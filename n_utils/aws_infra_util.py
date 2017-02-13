@@ -14,13 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-import subprocess
 import collections
-import yaml
 import json
+import os
 import re
+import subprocess
+import sys
+import yaml
+
 
 stacks = dict()
 PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')

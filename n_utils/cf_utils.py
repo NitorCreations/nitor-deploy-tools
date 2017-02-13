@@ -14,22 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-from datetime import datetime, timedelta
-import os
-import json
-import stat
-import string
-import random
-from threading import Thread, Event, Lock
-import boto3
-import requests
-from requests.exceptions import ConnectionError
+""" Utilities to work with instances made by nitor-deploy-tools stacks
+"""
 from botocore.exceptions import ClientError
 from collections import deque
-from termcolor import colored
+from datetime import datetime, timedelta
 from dateutil import tz
-from awscli.customizations.configure.writer import ConfigFileWriter
+from requests.exceptions import ConnectionError
+from termcolor import colored
+from threading import Event, Lock, Thread
+import boto3
+import json
+import os
+import random
+import requests
+import stat
+import string
+import time
+
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -365,52 +367,3 @@ def clean_snapshots(days, tags):
                               time.strftime("%a, %d %b %Y %H:%M:%S",
                                             print_time) +\
                               " || " + json.dumps(tags)
-
-def has_entry(prefix, name, file_name):
-    if not os.path.isfile(file_name):
-        return False
-    with open(file_name, "r") as config:
-        for line in config.readlines():
-            if "[" + prefix + name + "]" == line.strip():
-                return True
-    return False
-
-def setup_cli(name=None, key_id=None, secret=None, region=None):
-    if name is None:
-        name = raw_input("Profile name: ")
-    home_dir = os.path.expanduser("~")
-    config_file = os.path.join(home_dir, ".aws", "config")
-    credentials_file = os.path.join(home_dir, ".aws", "credentials")
-    if has_entry("profile ", name, config_file) or \
-       has_entry("", name, credentials_file):
-       print "Profile " + name + " already exists. Not overwriting."
-       return
-    if key_id is None:
-        key_id = raw_input("Key ID: ")
-    if secret is None:
-        secret = raw_input("Key secret: ")
-    if region is None:
-        region = raw_input("Default region: ")
-    writer = ConfigFileWriter()
-    config_values = {
-            "__section__": "profile " + name,
-            "output": "json",
-            "region": region
-        }
-    credentials_values = {
-            "__section__": name,
-            "aws_access_key_id": key_id,
-            "aws_secret_access_key": secret
-        }
-    writer.update_config(config_values, config_file)
-    writer.update_config(credentials_values, credentials_file)
-    home_bin = credentials_file = os.path.join(home_dir, "bin")
-    if not os.path.isdir(home_bin):
-        os.makedirs(home_bin)
-    source_file = os.path.join(home_bin, name)
-    with open(source_file, "w") as source_script:
-        source_script.write('#!/bin/bash\n\n')
-        source_script.write('export AWS_DEFAULT_REGION=')
-        source_script.write(region + ' AWS_PROFILE=' + name)
-        source_script.write(' AWS_DEFAULT_PROFILE=' + name + "\n")
-    os.chmod(source_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)

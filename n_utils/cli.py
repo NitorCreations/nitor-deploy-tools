@@ -14,17 +14,21 @@
 
 """ Command line tools for nitor-deploy-tools
 """
+
 import argparse
 import json
 import os
 import sys
 import time
+
 from . import aws_infra_util
-from . import cf_utils
+from . import cf_bootstrap
 from . import cf_deploy
+from . import cf_utils
 from .cf_utils import InstanceInfo
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
+
 
 def list_file_to_json():
     """ Convert a file with an entry on each line to a json document with
@@ -378,4 +382,4 @@ def setup_cli():
     parser.add_argument("-s", "--secret", help="Secret to set for the profile")
     parser.add_argument("-r", "--region", help="Default region for the profile")
     args = parser.parse_args()
-    cf_utils.setup_cli(**vars(args))
+    cf_bootstrap.setup_cli(**vars(args))

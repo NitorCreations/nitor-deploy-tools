@@ -14,25 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import codecs
-import collections
-import ctypes
-import hashlib
+from botocore.exceptions import ClientError
 from datetime import datetime
-import inspect
-import locale
 from operator import itemgetter
+from termcolor import colored
+import boto3
+import collections
+import hashlib
+import locale
 import os
 import re
 import sys
 import time
-import threading
-from threading import Thread
-import boto3
-from botocore.exceptions import ClientError
-from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
+
 from . import aws_infra_util
-from termcolor import colored
+from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
+
 
 def log(message):
     sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " " \

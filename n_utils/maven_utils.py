@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
+import sys
+
 import xml.etree.ElementTree as ET
+
 
 def indent(elem, level=0):
     i = "\n" + level*"  "

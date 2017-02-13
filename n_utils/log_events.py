@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from botocore.exceptions import ClientError
+from collections import deque
+from datetime import datetime
+from dateutil import tz
+from termcolor import colored
+from threading import Event, Thread
+import boto3
+import locale
 import os
 import sys
 import time
-import locale
-from threading import Event, Thread
-from datetime import datetime
-from dateutil import tz
-from collections import deque
-import boto3
-from botocore.exceptions import ClientError
-from termcolor import colored
+
 
 def millis2iso(millis):
     return fmttime(datetime.utcfromtimestamp(millis/1000.0))
