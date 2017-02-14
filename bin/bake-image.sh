@@ -85,7 +85,7 @@ cleanup() {
 trap cleanup EXIT
 if [ "$IMAGETYPE" != "windows" ]; then
   eval $(ssh-agent)
-  fetch-secrets.sh get 400 --optional "$HOME/.ssh/$AWS_KEY_NAME" \
+  fetch-secrets.sh get 600 --optional "$HOME/.ssh/$AWS_KEY_NAME" \
       "$HOME/.ssh/$AWS_KEY_NAME.pem" "$HOME/.ssh/$AWS_KEY_NAME.rsa" ||:
   if [ -r "$HOME/.ssh/$AWS_KEY_NAME" ]; then
     ssh-add "$HOME/.ssh/$AWS_KEY_NAME"
