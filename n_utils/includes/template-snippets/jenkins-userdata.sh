@@ -19,7 +19,7 @@ CF_AWS__Region=
 CF_paramAmiName=
 CF_paramAdditionalFiles=
 CF_paramAmi=
-CF_paramAwsUtilsVersion=
+CF_paramDeployToolsVersion=
 CF_paramJenkinsGit=
 CF_paramDnsName=
 CF_paramEip=
@@ -34,7 +34,7 @@ cd $HOME
 
 source $(n-include cloud_init_functions.sh)
 source $(n-include tool_installers.sh)
-AWSUTILS_VERSION="${CF_paramAwsUtilsVersion}" update_aws_utils
+update_aws_utils
 # reload scripts sourced above in case they changed:
 source $(n-include cloud_init_functions.sh)
 source $(n-include tool_installers.sh)

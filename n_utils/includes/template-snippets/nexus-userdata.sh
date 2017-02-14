@@ -17,7 +17,7 @@
 CF_AWS__StackName=""
 CF_AWS__Region=""
 CF_paramDnsName=""
-CF_paramAwsUtilsVersion=""
+CF_paramDeployToolsVersion=""
 CF_paramAmi=""
 CF_paramAmiName=""
 CF_paramEip=""
