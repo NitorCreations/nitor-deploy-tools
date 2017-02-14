@@ -36,6 +36,7 @@ for path ; do
       exit 1
     else
       echo "Optional file $path not found"
+      rm -f $path
     fi
   else
     chmod $mode $path
