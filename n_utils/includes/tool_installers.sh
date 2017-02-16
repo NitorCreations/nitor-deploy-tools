@@ -80,6 +80,13 @@ MARKER
 install_fail2ban() {
   yum update -y selinux-policy*
   mkdir -p /var/run/fail2ban
+  local SOURCE=$(n-include fail2ban-rundir.te)
+  local BASE=${SOURCE%.te}
+  local MODULE=$BASE.mod
+  local PACKAGE=$BASE.pp
+  checkmodule -M -m -o $MODULE $SOURCE
+  semodule_package -o $PACKAGE -m $MODULE
+  semodule -i $PACKAGE
   cat > /etc/fail2ban/jail.d/sshd.local << MARKER
 [sshd]
 enabled = true

@@ -1,0 +1,2 @@
+#============= fail2ban_client_t ==============
+allow fail2ban_client_t var_run_t:dir write;
