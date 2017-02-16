@@ -197,6 +197,12 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
     subnet_base = ipaddr.IPv4Address(subnet_base)
     network_yaml = _get_network_yaml(network, subnet_prefixlen, subnet_base)
     stack_dir = os.path.join(".", "bootstrap", "stack-" + name)
+    file_name = "infra-master.properties"
+    with open(file_name, 'a'):
+        os.utime(file_name, None)
+    stack_props = os.path.join(stack_dir, file_name)
+    with open(stack_props, 'w') as stack_props_file:
+        stack_props_file.write("STACK_NAME=$ORIG_STACK_NAME\n")
     if not os.path.isdir(stack_dir):
         os.makedirs(stack_dir)
     stack_template = os.path.join(stack_dir, "template.yaml")

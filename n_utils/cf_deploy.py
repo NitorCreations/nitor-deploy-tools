@@ -235,7 +235,7 @@ def deploy(stack_name, yaml_template, region):
             log("Parameter " + key + ": using default value " + str(val))
 
     status = create_or_update_stack(stack_name, json_small, params_doc)
-    if (status != "CREATE_COMPLETE") or (status != "UPDATE_COMPLETE"):
-        sys.exit(stack_oper + " failed: end state " + status)
+    if not (status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE"):
+        sys.exit("Stack operation failed: end state " + status)
 
     log("Done!")

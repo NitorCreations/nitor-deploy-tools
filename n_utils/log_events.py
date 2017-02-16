@@ -29,20 +29,23 @@ def millis2iso(millis):
     return fmttime(datetime.utcfromtimestamp(millis/1000.0))
 
 def timestamp(timestamp):
-    return (timestamp.replace(tzinfo=None) - datetime(1970,1,1,tzinfo=None)).total_seconds() * 1000
+    return (timestamp.replace(tzinfo=None) - datetime(1970,1,1,tzinfo=None))\
+                                                 .total_seconds() * 1000
 
 def fmttime(timestamp):
     return timestamp.replace(tzinfo=tz.tzlocal()).isoformat()[:23]
 
 def uprint(message):
-    sys.stdout.write((message + os.linesep).encode(locale.getpreferredencoding()))
+    sys.stdout.write((message + os.linesep)\
+                        .encode(locale.getpreferredencoding()))
 
 class LogEventThread(Thread):
 
     def __init__(self, log_group_name, start_time=None):
         Thread.__init__(self)
         self.log_group_name = log_group_name
-        self.start_time = long(start_time) * 1000 if start_time else long((time.time() - 60) * 1000)
+        self.start_time = long(start_time) * 1000 if start_time else \
+                          long((time.time() - 60) * 1000)
         self._stopped = Event()
 
     def list_logs(self):
@@ -108,7 +111,8 @@ class CloudWatchLogs(LogEventThread):
         try:
             for page in paginator.paginate(**kwargs):
                 for stream in page.get('logStreams', []):
-                    if not 'lastEventTimestamp' in stream or stream['lastEventTimestamp'] > self.start_time:
+                    if not 'lastEventTimestamp' in stream or \
+                       stream['lastEventTimestamp'] > self.start_time:
                         yield stream['logStreamName']
         except ClientError:
             return
@@ -136,7 +140,8 @@ class CloudFormationEvents(LogEventThread):
                     pass
                 for event in response.get('StackEvents', []):
                     event_timestamp = timestamp(event['Timestamp'])
-                    if  event_timestamp < max(self.start_time, seen_events_up_to):
+                    if  event_timestamp < max(self.start_time,
+                                              seen_events_up_to):
                         break
                     if not event['EventId'] in dedup_queue:
                             dedup_queue.append(event['EventId'])
