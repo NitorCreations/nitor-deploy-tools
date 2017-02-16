@@ -77,14 +77,17 @@ setup(name='nitor_deploy_tools',
             'ec2-instance-id=n_utils.cli:instance_id',
             'ec2-region=n_utils.cli:region',
             'ec2-get-userdata=n_utils.cli:get_userdata',
-            'setup-cli=n_utils.cli:setup_cli'
+            'setup-cli=n_utils.cli:setup_cli',
+            'setup-networks=n_utils.cli:setup_networks'
         ],
       },
       install_requires=[
           'pyaml',
           'boto3',
+          'awscli',
           'pycrypto',
           'requests',
-          'termcolor'
+          'termcolor',
+          'ipaddr'
       ],
       zip_safe=False)

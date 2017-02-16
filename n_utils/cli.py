@@ -383,3 +383,24 @@ def setup_cli():
     parser.add_argument("-r", "--region", help="Default region for the profile")
     args = parser.parse_args()
     cf_bootstrap.setup_cli(**vars(args))
+
+def setup_networks():
+    """Setup a VPC and a private and public network in each availability zone.
+    """
+    parser = argparse.ArgumentParser(description="Setup a VPC and a private " +\
+                                                 "and public network in each" +\
+                                                 " availability zone.")
+    parser.add_argument("-y", "--yes", help="Answer yes and go with defaults" +\
+                                            " for all questions",
+                        action="store_true")
+    parser.add_argument("-n", "--name", help="Name for the infra network " +\
+                                             "to create")
+    parser.add_argument("-v", "--vpc-cidr", help="CIDR for the VPC")
+    parser.add_argument("-p", "--subnet-prefixlen", help="The lenght of the " +\
+                                                         "bitmask for " +\
+                                                         "created subnets",
+                        type=int)
+    parser.add_argument("-b", "--subnet-base", help="Base address for " + \
+                                                    "subnets within the VPC")
+    args = parser.parse_args()
+    print cf_bootstrap.setup_networks(**vars(args))

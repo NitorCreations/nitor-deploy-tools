@@ -69,6 +69,52 @@ def create_stack(stack_name, template, params):
     clf.create_stack(**params)
     return
 
+def get_stack_operation(stack_name):
+    clf = boto3.client('cloudformation')
+    stack_oper = "create_stack"
+    try:
+        stack_data = clf.describe_stacks(StackName=stack_name)
+        # Dump original status, for the record
+        status = stack_data['Stacks'][0]['StackStatus']
+        log("Status: \033[32;1m" + status + "\033[m")
+        stack_oper = "update_stack"
+    except ClientError as err:
+        if err.response['Error']['Code'] == 'ValidationError' and \
+           err.response['Error']['Message'].endswith('does not exist'):
+            log("Status: \033[32;1mNEW_STACK\033[m")
+        else:
+            raise
+    return globals()[stack_oper]
+
+def get_end_status(stack_name):
+    logs = CloudWatchLogs(log_group_name=stack_name)
+    logs.start()
+    cf_events = CloudFormationEvents(log_group_name=stack_name)
+    cf_events.start()
+    log("Waiting for stack operation to complete:")
+    clf = boto3.client('cloudformation')
+    status = "_IN_PROGRESS"
+    while True:
+        stack_info = clf.describe_stacks(StackName=stack_name)
+        status = stack_info['Stacks'][0]['StackStatus']
+        if "ROLLBACK" in status:
+            color = "\033[31;1m"
+        else:
+            color = "\033[32;1m"
+        log(color + "Status: " + status + "\033[m")
+        if not status.endswith("_IN_PROGRESS"):
+            logs.stop()
+            cf_events.stop()
+            break
+        time.sleep(5)
+    return status
+
+def create_or_update_stack(stack_name, json_small, params_doc):
+    stack_func = get_stack_operation(stack_name)
+    stack_func(stack_name, json_small, params_doc)
+    return get_end_status(stack_name)
+
+
 def get_template_arguments(stack_name, template, params):
     params = { "StackName": stack_name,
         "Parameters": params, "Capabilities": ["CAPABILITY_IAM"]}
@@ -175,23 +221,7 @@ def deploy(stack_name, yaml_template, region):
     log("*** Final template ***")
     log(json_template)
 
-    # Load previous stack information to see if it has been deployed before
     stack_data = None
-    clf = boto3.client('cloudformation')
-    stack_oper = "create_stack"
-    try:
-        stack_data = clf.describe_stacks(StackName=stack_name)
-        # Dump original status, for the record
-        status = stack_data['Stacks'][0]['StackStatus']
-        log("Status: \033[32;1m" + status + "\033[m")
-        stack_oper = "update_stack"
-    except ClientError as err:
-        if err.response['Error']['Code'] == 'ValidationError' and \
-           err.response['Error']['Message'].endswith('does not exist'):
-            log("Status: \033[32;1mNEW_STACK\033[m")
-        else:
-            raise
-
     # Create/update stack
     params_doc = []
     for key in template_parameters.keys():
@@ -204,30 +234,8 @@ def deploy(stack_name, yaml_template, region):
             val = template_parameters[key]['Default']
             log("Parameter " + key + ": using default value " + str(val))
 
-    stack_func = globals()[stack_oper]
-    stack_func(stack_name, json_small, params_doc)
-    logs = CloudWatchLogs(log_group_name=stack_name)
-    logs.start()
-    cf_events = CloudFormationEvents(log_group_name=stack_name)
-    cf_events.start()
-    log("Waiting for " + stack_oper + " to complete:")
-    log_threads = {}
-    while True:
-        stack_info = clf.describe_stacks(StackName=stack_name)
-        status = stack_info['Stacks'][0]['StackStatus']
-        if "ROLLBACK" in status:
-            color = "\033[31;1m"
-        else:
-            color = "\033[32;1m"
-        log(color + "Status: " + status + "\033[m")
-        if not status.endswith("_IN_PROGRESS"):
-            logs.stop()
-            cf_events.stop()
-            break
-        time.sleep(5)
-
-    if (stack_oper == "create_stack" and status != "CREATE_COMPLETE") or \
-       (stack_oper == "update_stack" and status != "UPDATE_COMPLETE"):
+    status = create_or_update_stack(stack_name, json_small, params_doc)
+    if (status != "CREATE_COMPLETE") or (status != "UPDATE_COMPLETE"):
         sys.exit(stack_oper + " failed: end state " + status)
 
     log("Done!")
