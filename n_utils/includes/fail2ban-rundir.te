@@ -1,2 +1,8 @@
+module fail2ban-rundir 1.0;
+require {
+	type fail2ban_client_t;
+	type var_run_t;
+	class dir write;
+}
 #============= fail2ban_client_t ==============
 allow fail2ban_client_t var_run_t:dir write;
