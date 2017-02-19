@@ -17,6 +17,7 @@
 """ Utilities to bootsrap AWS accounts into use with nitor-deploy-tools
 """
 
+import collections
 import os
 import random
 import stat
@@ -172,6 +173,54 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base):
             }
     return network_yaml
 
+def _get_include_yaml(name, network_yaml, include_data):
+    for output_name, output_dict in network_yaml['Outputs'].iteritems():
+        if output_name == "VPCCIDR":
+            include_data['paramVPCCidr'] = {
+                "Description": "VPC Cidr",
+                "Type": "Sting",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
+        elif output_name == "VPC":
+            include_data['paramVPCId'] = {
+                "Description": "Infra subnet A",
+                "Type": "AWS::EC2::VPC::Id",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
+        elif output_name.startswith("subnetInfra"):
+            include_data['paramSubnetInfra' + output_name[-1:]] = {
+                "Description": "Public subnet " + output_name[-1:],
+                "Type": "AWS::EC2::VPC::Id",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
+        elif output_name.startswith("subnetPrivInfra"):
+            include_data['paramSubnetPrivInfra' + output_name[-1:]] = {
+                "Description": "Private subnet " + output_name[-1:],
+                "Type": "AWS::EC2::VPC::Id",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
+
+
 def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
                    subnet_base=None, yes=False):
     if name is None and not yes:
@@ -201,18 +250,31 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
     with open(file_name, 'a'):
         os.utime(file_name, None)
     stack_props = os.path.join(stack_dir, file_name)
-    with open(stack_props, 'w') as stack_props_file:
-        stack_props_file.write("STACK_NAME=$ORIG_STACK_NAME\n")
     if not os.path.isdir(stack_dir):
         os.makedirs(stack_dir)
+    with open(stack_props, 'w') as stack_props_file:
+        stack_props_file.write("STACK_NAME=$ORIG_STACK_NAME\n")
     stack_template = os.path.join(stack_dir, "template.yaml")
     with open(stack_template, "w") as stack_file:
         stack_file.write(yaml_save(network_yaml))
     if not yes:
         answer = raw_input("Deploy network stack? (y): ")
-    if yes or answer == "y":
+    if yes or answer.lower() == "y" or not answer:
         json_small = json_save_small(network_yaml)
-        return cf_deploy.create_or_update_stack(name, json_small, [])
+        end_status = cf_deploy.create_or_update_stack(name, json_small, [])
+        if status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE":
+            include_dir = os.path.join(".", "common")
+            if not os.path.isdir(include_dir):
+                os.makedirs(include_dir)
+            network_include_yaml = os.path.join(include_dir, "network.yaml")
+            if os.path.isfile(network_include_yaml):
+                include_data = yaml_load(network_include_yaml)
+            else:
+                include_data = collections.OrderedDict()
+            _get_include_yaml(name, network_yaml, include_data)
+            with open(network_include_yaml, "w") as include_file:
+                include_file.write(yaml_save(include_data))
+        return end_status
     else:
         print yaml_save(network_yaml)
         return "NOT_CREATED"
