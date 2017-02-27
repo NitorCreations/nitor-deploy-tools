@@ -62,7 +62,8 @@ if [ -n "$EMPTY_VOLUME" ]; then
 else
   SNAPSHOT_SIZE=$(aws ec2 describe-snapshots --snapshot-ids $SNAPSHOT_ID | jq -r ".Snapshots[0]|.VolumeSize")
   if [ "$SNAPSHOT_SIZE" != "$SIZE_GB" ]; then
-    if ! e2fsck -f -p $DEVICE; then
+    e2fsck -f -p $DEVICE
+    if [ $? -gt 2 ]; then
       fail "e2fsck failed"
     fi
     resize2fs $DEVICE
