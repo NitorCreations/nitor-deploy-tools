@@ -143,7 +143,7 @@ def delete(stack_name, region):
             stack_info = clf.describe_stacks(StackName=stack_name)
             status = stack_info['Stacks'][0]['StackStatus']
             if not status.endswith("_IN_PROGRESS") and not status.endswith("_COMPLETE"):
-                 raise Exception("Delete stack failed: end state " + status)
+                raise Exception("Delete stack failed: end state " + status)
             log("Status: \033[32;1m"+ status + "\033[m")
             time.sleep(5)
         except ClientError as err:
@@ -221,7 +221,6 @@ def deploy(stack_name, yaml_template, region):
     log("*** Final template ***")
     log(json_template)
 
-    stack_data = None
     # Create/update stack
     params_doc = []
     for key in template_parameters.keys():

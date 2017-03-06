@@ -28,12 +28,12 @@ import time
 def millis2iso(millis):
     return fmttime(datetime.utcfromtimestamp(millis/1000.0))
 
-def timestamp(timestamp):
-    return (timestamp.replace(tzinfo=None) - datetime(1970,1,1,tzinfo=None))\
+def timestamp(tstamp):
+    return (tstamp.replace(tzinfo=None) - datetime(1970, 1, 1, tzinfo=None))\
                                                  .total_seconds() * 1000
 
-def fmttime(timestamp):
-    return timestamp.replace(tzinfo=tz.tzlocal()).isoformat()[:23]
+def fmttime(tstamp):
+    return tstamp.replace(tzinfo=tz.tzlocal()).isoformat()[:23]
 
 def uprint(message):
     sys.stdout.write((message + os.linesep)\
@@ -125,9 +125,9 @@ class CloudFormationEvents(LogEventThread):
     def list_logs(self):
         do_wait = object()
         dedup_queue = deque(maxlen=10000)
-        start_seen = False
-        kwargs = { 'StackName': self.log_group_name }
+        kwargs = {'StackName': self.log_group_name}
         def generator():
+            start_seen = False
             seen_events_up_to = 0
             event_timestamp = float("inf")
 
@@ -144,8 +144,8 @@ class CloudFormationEvents(LogEventThread):
                                               seen_events_up_to):
                         break
                     if not event['EventId'] in dedup_queue:
-                            dedup_queue.append(event['EventId'])
-                            unseen_events.append(event)
+                        dedup_queue.append(event['EventId'])
+                        unseen_events.append(event)
 
                 if len(unseen_events) > 0:
                     seen_events_up_to = \

@@ -21,16 +21,13 @@ import collections
 import os
 import random
 import stat
-import copy
-
 from copy import deepcopy
 
 import boto3
 import ipaddr
 from . import cf_deploy
 from awscli.customizations.configure.writer import ConfigFileWriter
-from .aws_infra_util import find_include, yaml_load, json_save, json_save_small
-from .aws_infra_util import yaml_save
+from .aws_infra_util import find_include, yaml_load, json_save_small, yaml_save
 
 def has_entry(prefix, name, file_name):
     if not os.path.isfile(file_name):
@@ -174,7 +171,7 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base):
     return network_yaml
 
 def _get_include_yaml(name, network_yaml, include_data):
-    for output_name, output_dict in network_yaml['Outputs'].iteritems():
+    for output_name in network_yaml['Outputs']:
         if output_name == "VPCCIDR":
             include_data['paramVPCCidr'] = {
                 "Description": "VPC Cidr",
@@ -262,7 +259,7 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
     if yes or answer.lower() == "y" or not answer:
         json_small = json_save_small(network_yaml)
         end_status = cf_deploy.create_or_update_stack(name, json_small, [])
-        if status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE":
+        if end_status == "CREATE_COMPLETE" or end_status == "UPDATE_COMPLETE":
             include_dir = os.path.join(".", "common")
             if not os.path.isdir(include_dir):
                 os.makedirs(include_dir)
