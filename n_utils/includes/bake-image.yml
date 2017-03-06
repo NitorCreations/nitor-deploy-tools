@@ -71,10 +71,19 @@
   tasks:
     - add_host: hostname={{ item.public_ip }} groupname={{ job_name }}-ami-instance
       with_items: "{{ ec2_prototype_instance.tagged_instances }}"
-    # Wait for ssh
+      when: private_subnet == "no"
 
     - wait_for: host={{ item.public_dns_name }} port=22 delay=60 timeout=320 state=started search_regex=OpenSSH
       with_items: "{{ ec2_prototype_instance.tagged_instances }}"
+      when: private_subnet == "no"
+
+    - add_host: hostname={{ item.private_ip }} groupname={{ job_name }}-ami-instance
+      with_items: "{{ ec2_prototype_instance.tagged_instances }}"
+      when: private_subnet == "yes"
+
+    - wait_for: host={{ item.private_dns_name }} port=22 delay=60 timeout=320 state=started search_regex=OpenSSH
+      with_items: "{{ ec2_prototype_instance.tagged_instances }}"
+      when: private_subnet == "yes"
 
     - name: Pause for a bit to work around startup related SSH access denied error
       pause: "seconds={{ pause_seconds }}"

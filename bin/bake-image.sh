@@ -48,7 +48,14 @@ if ! [ "$SSH_USER" ]; then
   fi
 fi
 [ "$NETWORK_STACK" ] || NETWORK_STACK=infra-network
-[ "$NETWORK_PARAMETER" ] || NETWORK_PARAMETER=subnetInfraB
+[ "$PRIVATE_SUBNET" ] || PRIVATE_SUBNET="no"
+if ! [ "$NETWORK_PARAMETER" ]; then
+  if [ "$PRIVATE_SUBNET" = "yes" ]; then
+    NETWORK_PARAMETER=subnetPrivInfraB
+  else
+    NETWORK_PARAMETER=subnetInfraB
+  fi
+fi
 [ "$SUBNET" ] || SUBNET="$(cache show-stack-params-and-outputs.sh $REGION $NETWORK_STACK | jq -r .$NETWORK_PARAMETER)"
 if ! [ "$SECURITY_GROUP" ]; then
   if [ "$IMAGETYPE" != "windows" ]; then
@@ -172,6 +179,7 @@ if python -u $(which ansible-playbook) \
   -e app_user=$APP_USER \
   -e app_home=$APP_HOME \
   -e build_number=$BUILD_NUMBER \
+  -e private_subnet=$PRIVATE_SUBNET \
   -e "$PACKAGES" \
   -e "$FILES" \
   "${extra_args[@]}" \
