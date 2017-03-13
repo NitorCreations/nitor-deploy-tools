@@ -23,4 +23,5 @@ else
 fi
 
 pip install -U pip setuptools awscli boto3 "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
+aws configure set default.s3.signature_version s3v4
 source $(n-include common_tools.sh)

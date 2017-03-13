@@ -14,13 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Set aws-cli region to the region of the current instance
-set_region() {
-  [ "${REGION}" -o ! "${CF_AWS__Region}" ] || REGION="${CF_AWS__Region}"
-  [ "${REGION}" ] || REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}')
-  aws configure set default.region $REGION
-}
-
 # Find the latest snapshot with a tag key and value
 # Usage: find_latest_snapshot tag_key tag_value
 find_latest_snapshot() {
