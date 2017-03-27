@@ -62,11 +62,20 @@ class InstanceInfo(object):
                 pass
         if not self._info:
             try:
-                response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
-                self._info = json.loads(response.text)
-                self.instance_id = self._info['instanceId']
-                self.region = self._info['region']
-                os.environ['AWS_DEFAULT_REGION'] = self.region
+                retry = 0
+                while not (self._info and self.instance_id) and retry < 5:
+                    retry += 1
+                    response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
+                    if not response.text:
+                        time.sleep(1)
+                        continue
+                    self._info = json.loads(response.text)
+                    if not self._info or not self._info['instanceId']:
+                        time.sleep(1)
+                        continue
+                    self.instance_id = self._info['instanceId']
+                    self.region = self._info['region']
+                    os.environ['AWS_DEFAULT_REGION'] = self.region
                 ec2 = boto3.client('ec2')
                 tags = {}
                 tag_response = ec2.describe_tags(Filters=
