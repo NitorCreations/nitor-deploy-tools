@@ -27,7 +27,7 @@ RENEW_DAYS="30"
 if [ -z "$CERT_DIR" ]; then
   CERT_DIR=/etc/certs
 fi
-
+mkdir -p $CERT_DIR
 renew_cert() {
   local DOMAIN="$1"
   echo "LOCKFILE=$CERT_DIR/lock" > $CERT_DIR/conf
