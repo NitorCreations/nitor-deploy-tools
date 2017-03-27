@@ -33,7 +33,6 @@ from dateutil import tz
 from requests.exceptions import ConnectionError
 from termcolor import colored
 
-
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
         firstly from the metadata service and then from EC2 tags and then
@@ -43,12 +42,37 @@ class InstanceInfo(object):
         in  C:\\nitor\\instance-data.json on windows.
     """
     _info = None
-    stack_name = ""
-    stack_id = ""
-    instance_id = ""
-    region = ""
-    initial_status = ""
-    logical_id = ""
+    def stack_name(self):
+        if 'stack_name' in self._info:
+            return self._info['stack_name']
+        else:
+            return None
+    def stack_id(self):
+        if 'stack_id' in self._info:
+            return self._info['stack_id']
+        else:
+            return None
+    def instance_id(self):
+        if 'instanceId' in self._info:
+            return self._info['instanceId']
+        else:
+            return None
+    def region(self):
+        if 'region' in self._info:
+            return self._info['region']
+        else:
+            return None
+    def initial_status(self):
+        if 'initial_status' in self._info:
+            return self._info['initial_status']
+        else:
+            return None
+    def logical_id(self):
+        if 'logical_id' in self._info:
+            return self._info['logical_id']
+        else:
+            return None
+  
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
             try:
@@ -73,24 +97,22 @@ class InstanceInfo(object):
                     if not self._info or not self._info['instanceId']:
                         time.sleep(1)
                         continue
-                    self.instance_id = self._info['instanceId']
-                    self.region = self._info['region']
-                    os.environ['AWS_DEFAULT_REGION'] = self.region
+                os.environ['AWS_DEFAULT_REGION'] = self.region()
                 ec2 = boto3.client('ec2')
                 tags = {}
                 tag_response = ec2.describe_tags(Filters=
                                                  [{'Name': 'resource-id',
-                                                   'Values': [self.instance_id]}])
+                                                   'Values': [self.instance_id()]}])
                 for tag in tag_response['Tags']:
                     tags[tag['Key']] = tag['Value']
                 self._info['Tags'] = tags
                 if 'aws:cloudformation:stack-name' in self._info['Tags']:
-                    self.stack_name = tags['aws:cloudformation:stack-name']
+                    self._info['stack_name'] = tags['aws:cloudformation:stack-name']
                 if 'aws:cloudformation:stack-id' in self._info['Tags']:
-                    self.stack_id = tags['aws:cloudformation:stack-id']
-                if self.stack_name:
+                    self._info['stack_id'] = tags['aws:cloudformation:stack-id']
+                if self.stack_name():
                     clf = boto3.client('cloudformation')
-                    stacks = clf.describe_stacks(StackName=self.stack_name)
+                    stacks = clf.describe_stacks(StackName=self.stack_name())
                     stack = stacks['Stacks'][0]
                     if 'CreationTime' in stack:
                         stack['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
@@ -129,21 +151,19 @@ class InstanceInfo(object):
                          stat.S_IXOTH)
             except:
                 pass
-        if 'instance_id' in self._info:
-            self.instance_id = self._info['instance_id']
-        if 'region' in self._info:
-            self.region = self._info['region']
-            os.environ['AWS_DEFAULT_REGION'] = self.region
+        if self.region():
+            os.environ['AWS_DEFAULT_REGION'] = self.region()
         if 'FullStackData' in self._info and 'StackStatus' in self._info['FullStackData']:
-            self.initial_status = self._info['FullStackData']['StackStatus']
+            self._info['initial_status']= self._info['FullStackData']['StackStatus']
         if 'Tags' in self._info:
             tags = self._info['Tags']
             if 'aws:cloudformation:stack-name' in tags:
-                self.stack_name = tags['aws:cloudformation:stack-name']
+                self._info['stack_name'] = tags['aws:cloudformation:stack-name']
             if 'aws:cloudformation:stack-id' in tags:
-                self.stack_id = tags['aws:cloudformation:stack-id']
+                self._info['stack_id'] = tags['aws:cloudformation:stack-id']
             if 'aws:cloudformation:logical-id' in tags:
-                self.logical_id = tags['aws:cloudformation:logical-id']
+                self._info['logical_id'] = tags['aws:cloudformation:logical-id']
+
     def stack_data(self, name):
         if 'StackData' in self._info:
             if name in self._info['StackData']:
@@ -169,9 +189,9 @@ class LogSender(object):
         self._lock = Lock()
         self._send_lock = Lock()
         self._logs = boto3.client('logs')
-        self.group_name = info.stack_name
+        self.group_name = info.stack_name()
         self._messages = deque()
-        self.stream_name = info.instance_id + "|" + \
+        self.stream_name = info.instance_id() + "|" + \
                            file_name.replace(':', '_').replace('*', '_')
         try:
             self._logs.create_log_group(logGroupName=self.group_name)
@@ -271,12 +291,12 @@ def signal_status(status, resource_name=None):
     info = InstanceInfo()
     clf = boto3.client('cloudformation')
     if not resource_name:
-        resource_name = info.logical_id
-    print "Signalling " + status + " for " + info.stack_name + "." +\
+        resource_name = info.logical_id()
+    print "Signalling " + status + " for " + info.stack_name() + "." +\
           resource_name
-    clf.signal_resource(StackName=info.stack_name,
+    clf.signal_resource(StackName=info.stack_name(),
                         LogicalResourceId=resource_name,
-                        UniqueId=info.instance_id,
+                        UniqueId=info.instance_id(),
                         Status=status)
 
 def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
@@ -303,9 +323,9 @@ def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
         if 'Addresses' in address_data and len(address_data['Addresses']) > 0 \
            and 'AllocationId' in address_data['Addresses'][0]:
             allocation_id = address_data['Addresses'][0]['AllocationId']
-    print "Allocating " + allocation_id + " on " + info.instance_id
+    print "Allocating " + allocation_id + " on " + info.instance_id()
     ec2 = boto3.client('ec2')
-    ec2.associate_address(InstanceId=info.instance_id,
+    ec2.associate_address(InstanceId=info.instance_id(),
                           AllocationId=allocation_id,
                           AllowReassociation=True)
 

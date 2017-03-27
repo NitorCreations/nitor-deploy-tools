@@ -215,37 +215,37 @@ def instance_id():
     """ Get id for instance
     """
     info = InstanceInfo()
-    print info.instance_id
+    print info.instance_id()
 
 def region():
     """ Get region for instance
     """
     info = InstanceInfo()
-    print info.region
+    print info.region()
 
 def stack_name():
     """ Get name of the stack that created this instance
     """
     info = InstanceInfo()
-    print info.stack_name
+    print info.stack_name()
 
 def stack_id():
     """ Get id of the stack the creted this instance
     """
     info = InstanceInfo()
-    print info.stack_id
+    print info.stack_id()
 
 def logical_id():
     """ Get the logical id that is expecting a signal from this instance
     """
     info = InstanceInfo()
-    print info.logical_id
+    print info.logical_id()
 
 def cf_region():
     """ Get region of the stack that created this instance
     """
     info = InstanceInfo()
-    print info.stack_id.split(":")[3]
+    print info.stack_id().split(":")[3]
 
 def update_stack():
     """ Create or update existing CloudFormation stack
