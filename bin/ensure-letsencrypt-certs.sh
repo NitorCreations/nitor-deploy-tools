@@ -37,7 +37,9 @@ renew_cert() {
 
 for DOMAIN in "$@"; do
   CERT=$CERT_DIR/$DOMAIN.crt
-  chmod 600 $CERT
+  if [ -e $CERT ]; then
+    chmod 600 $CERT
+  fi
   if fetch-secrets.sh get 444 $CERT; then
     VALID="$(openssl x509 -enddate -noout -in "$CERT" | cut -d= -f2- )"
     echo "Valid: $VALID"
