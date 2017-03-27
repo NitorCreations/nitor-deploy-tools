@@ -52,12 +52,12 @@ class InstanceInfo(object):
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
             try:
-                self._info = json.loads(open('/opt/nitor/instance-data.json'))
+                self._info = json.load(open('/opt/nitor/instance-data.json'))
             except:
                 pass
         if os.path.isfile('C:/nitor/instance-data.json'):
             try:
-                self._info = json.loads(open('C:/nitor/instance-data.json'))
+                self._info = json.load(open('C:/nitor/instance-data.json'))
             except:
                 pass
         if not self._info:
@@ -119,7 +119,7 @@ class InstanceInfo(object):
                          stat.S_IXGRP | stat.S_IROTH | stat.S_IWOTH |
                          stat.S_IXOTH)
             except:
-                print "Unable to change mode for " + info_file
+                pass
         if 'instance_id' in self._info:
             self.instance_id = self._info['instance_id']
         if 'region' in self._info:
