@@ -157,6 +157,7 @@ def delete(stack_name, region):
 
 def deploy(stack_name, yaml_template, region):
     os.environ['AWS_DEFAULT_REGION'] = region
+    os.environ['REGION'] = region
     # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     ami_id = ""
