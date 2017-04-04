@@ -257,10 +257,14 @@ def update_stack():
     parser.add_argument("yaml_template", help="Yaml template to pre-process " +\
                                               "and use for creation")
     parser.add_argument("region", help="The region to deploy the stack to")
+    parser.add_argument("-d", "--dry-run", action="store_true",
+                        help="Do not actually deploy anything, but just " +\
+                             "assemble the json and associated parameters")
     args = parser.parse_args()
     if not os.path.isfile(args.yaml_template):
         parser.error(args.yaml_template + " not found")
-    cf_deploy.deploy(args.stack_name, args.yaml_template, args.region)
+    cf_deploy.deploy(args.stack_name, args.yaml_template, args.region,
+                     args.dry_run)
     return
 
 def delete_stack():

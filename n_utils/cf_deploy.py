@@ -155,7 +155,7 @@ def delete(stack_name, region):
             else:
                 raise
 
-def deploy(stack_name, yaml_template, region):
+def deploy(stack_name, yaml_template, region, dry_run=False):
     os.environ['AWS_DEFAULT_REGION'] = region
     os.environ['REGION'] = region
     # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
@@ -234,8 +234,9 @@ def deploy(stack_name, yaml_template, region):
             val = template_parameters[key]['Default']
             log("Parameter " + key + ": using default value " + str(val))
 
-    status = create_or_update_stack(stack_name, json_small, params_doc)
-    if not (status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE"):
-        sys.exit("Stack operation failed: end state " + status)
+    if not dry_run:
+        status = create_or_update_stack(stack_name, json_small, params_doc)
+        if not (status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE"):
+            sys.exit("Stack operation failed: end state " + status)
 
     log("Done!")

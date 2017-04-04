@@ -16,6 +16,10 @@
 
 set -xe
 
+if [ "$1" = "-d" ]; then
+  DRY_RUN="--dry-run"
+  shift
+fi
 image="$1" ; shift
 stackName="$1" ; shift
 AMI_ID="$1"
@@ -32,4 +36,4 @@ if which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(assume-deploy-role.sh)
 fi
 
-cf-update-stack "${STACK_NAME}" "${image}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION"
+cf-update-stack "${STACK_NAME}" "${image}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN
