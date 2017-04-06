@@ -162,11 +162,13 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base):
                                       network_yaml['Resources'], az_name)
             network_yaml['Outputs']['subnetInfra' + zone_upper_letter] = {
                 "Description": "Public Subnet " + zone_upper_letter,
-                "Value": { "Ref": "resourcePubSubnet" + zone_upper_letter }
+                "Value": { "Ref": "resourcePubSubnet" + zone_upper_letter },
+                "Export": { "Name": { "Fn::Join": [":", [{"Ref": "AWS::StackName"}, "publicSubnet" + zone_upper_letter]] } }
             }
             network_yaml['Outputs']['subnetPrivInfra' + zone_upper_letter] = {
                 "Description": "Private Subnet " + zone_upper_letter,
-                "Value": { "Ref": "resourcePrivSubnet" + zone_upper_letter }
+                "Value": { "Ref": "resourcePrivSubnet" + zone_upper_letter },
+                "Export": { "Name": { "Fn::Join": [":", [{"Ref": "AWS::StackName"}, "privateSubnet" + zone_upper_letter]] } }
             }
     return network_yaml
 
