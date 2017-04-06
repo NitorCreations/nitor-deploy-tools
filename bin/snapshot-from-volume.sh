@@ -39,7 +39,7 @@ SNAPSHOT_LOOKUP_TAG_VALUE=$2
 MOUNT_PATH=$3
 
 DEVICE=$(lsblk | egrep " $MOUNT_PATH\$" | awk '{ print "/dev/"$1 }')
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+INSTANCE_ID=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/instance-id)
 VOLUME_ID=$(aws ec2 describe-volumes --output json --query "Volumes[*].Attachments[*]" | jq -r ".[]|.[]|select(.Device==\"$DEVICE\" and .InstanceId==\"$INSTANCE_ID\").VolumeId")
 
 if ! SNAPSHOT_ID=$(create_snapshot $VOLUME_ID $SNAPSHOT_LOOKUP_TAG_KEY $SNAPSHOT_LOOKUP_TAG_VALUE); then

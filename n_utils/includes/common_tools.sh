@@ -46,7 +46,7 @@ set_timezone() {
 # Set aws-cli region to the region of the current instance
 set_region() {
   [ "${REGION}" -o ! "${CF_AWS__Region}" ] || REGION="${CF_AWS__Region}"
-  [ "${REGION}" ] || REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}')
+  [ "${REGION}" ] || REGION=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}')
   aws configure set default.region $REGION
 }
 

@@ -66,4 +66,4 @@ if ! [ "$LOG_TAILER" ]; then
   LOG_TAILER=$!
 fi
 
-[ "${INSTANCE_ID}" ] || INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+[ "${INSTANCE_ID}" ] || INSTANCE_ID=$(curl --connect-timeout 3 http://169.254.169.254/latest/meta-data/instance-id)

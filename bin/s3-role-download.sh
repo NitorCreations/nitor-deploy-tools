@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ! curl -sf http://169.254.169.254/latest/meta-data/iam/security-credentials/$1 > /dev/null; then
-  ROLE=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/ | head -n 1)
+if ! curl -sf --connect-timeout 3 http://169.254.169.254/latest/meta-data/iam/security-credentials/$1 > /dev/null; then
+  ROLE=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/iam/security-credentials/ | head -n 1)
   BUCKET=$1
   shift
   FILE=$1
@@ -43,7 +43,7 @@ CONTENT_TYPE="application/octet-stream"
 DATE=$(date -R)
 RESOURCE="/${BUCKET}/${FILE}"
 TMP=$(mktemp)
-if ! curl -sf http://169.254.169.254/latest/meta-data/iam/security-credentials/${ROLE} \
+if ! curl -sf --connect-timeout 3 http://169.254.169.254/latest/meta-data/iam/security-credentials/${ROLE} \
 | egrep ^[[:space:]]*\" | sed 's/[^\"]*\"\([^\"]*\)\".:.\"\([^\"]*\).*/\1=\2/g' > $TMP; then
   echo "Failed to get credentials"
   exit 1

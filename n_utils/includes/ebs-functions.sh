@@ -49,7 +49,7 @@ create_volume() {
   if [ -n "$SIZE_GB" ]; then
     local SIZE="--size $SIZE_GB"
   fi
-  local AVAILABILITY_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+  local AVAILABILITY_ZONE=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/placement/availability-zone)
   local VOLUME_ID=$(aws ec2 create-volume $SIZE --snapshot-id $SNAPSHOT_ID --availability-zone $AVAILABILITY_ZONE --volume-type gp2 | jq -r '.VolumeId')
   local VOLUME_STATUS=$(aws ec2 describe-volumes --volume-ids $VOLUME_ID | jq -r '.Volumes[].State')
   local COUNTER=0
@@ -71,7 +71,7 @@ create_volume() {
 # Usage: create_empty_volume size_gb
 create_empty_volume() {
   local SIZE_GB=$1
-  local AVAILABILITY_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+  local AVAILABILITY_ZONE=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/placement/availability-zone)
   local VOLUME_ID=$(aws ec2 create-volume --size $SIZE_GB --availability-zone $AVAILABILITY_ZONE --volume-type gp2 | jq -r '.VolumeId')
   local VOLUME_STATUS=$(aws ec2 describe-volumes --volume-ids $VOLUME_ID | jq -r '.Volumes[].State')
   local COUNTER=0
@@ -94,7 +94,7 @@ create_empty_volume() {
 attach_volume() {
   local VOLUME_ID=$1
   local DEVICE_PATH=$2
-  local INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+  local INSTANCE_ID=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/instance-id)
   local VOLUME_ATTACHMENT_STATUS=$(aws ec2 attach-volume --volume-id $VOLUME_ID --instance-id $INSTANCE_ID --device $DEVICE_PATH | jq -r '.State')
   local COUNTER=0
   while [  $COUNTER -lt 180 ] && [ "$VOLUME_ATTACHMENT_STATUS" != "attached" ]; do
@@ -113,7 +113,7 @@ attach_volume() {
 # Set volume to be deleted on instance termination. Snapshots will remain.
 # Usage: delete_on_termination device-path
 delete_on_termination() {
-  local INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+  local INSTANCE_ID=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/instance-id)
   local DEVICE_PATH=$1
   aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --block-device-mappings "[{\"DeviceName\": \"$DEVICE_PATH\",\"Ebs\":{\"DeleteOnTermination\":true}}]"
 }
