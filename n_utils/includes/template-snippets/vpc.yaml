@@ -123,12 +123,24 @@ Outputs:
   VPCCIDR:
     Description: VPC CIDR Block
     Value: {Ref: paramVPCCidr}
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, VPCCIDR]]
   VPC:
     Description: VPC ID
     Value: {Ref: resourceVPC}
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, VPC]]
   subnetInfraA:
-    Description: Private Subnet
-    Value: {Ref: resourcePubSubnetA}
-  subnetPrivInfraA:
     Description: Public Subnet
+    Value: {Ref: resourcePubSubnetA}
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, publicSubnetA]]
+  subnetPrivInfraA:
+    Description: Private Subnet
     Value: {Ref: resourcePrivSubnetA}
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, privateSubnetA]]
