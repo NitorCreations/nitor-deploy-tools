@@ -183,7 +183,7 @@ def _get_include_yaml(name, network_yaml, include_data):
         if output_name == "VPCCIDR":
             include_data['paramVPCCidr'] = {
                 "Description": "VPC Cidr",
-                "Type": "Sting",
+                "Type": "String",
                 "Default": {
                     "StackRef": {
                         "region": {"Ref": "AWS::Region"},
@@ -202,10 +202,32 @@ def _get_include_yaml(name, network_yaml, include_data):
                         "paramName": output_name}
                 }
             }
+        elif output_name == "publicSubnetGroup":
+            include_data['paramPublicSubnetGroup'] = {
+                "Description": "Public subnet group",
+                "Type": "String",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
+        elif output_name == "privateSubnetGroup":
+            include_data['paramPrivateSubnetGroup'] = {
+                "Description": "Private subnet group",
+                "Type": "String",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
         elif output_name.startswith("subnetInfra"):
             include_data['paramSubnetInfra' + output_name[-1:]] = {
                 "Description": "Public subnet " + output_name[-1:],
-                "Type": "AWS::EC2::VPC::Id",
+                "Type": "AWS::EC2::Subnet::Id",
                 "Default": {
                     "StackRef": {
                         "region": {"Ref": "AWS::Region"},
@@ -216,7 +238,7 @@ def _get_include_yaml(name, network_yaml, include_data):
         elif output_name.startswith("subnetPrivInfra"):
             include_data['paramSubnetPrivInfra' + output_name[-1:]] = {
                 "Description": "Private subnet " + output_name[-1:],
-                "Type": "AWS::EC2::VPC::Id",
+                "Type": "AWS::EC2::Subnet::Id",
                 "Default": {
                     "StackRef": {
                         "region": {"Ref": "AWS::Region"},
