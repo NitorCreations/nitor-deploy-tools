@@ -90,6 +90,16 @@ Resources:
     Properties:
       RouteTableId: {Ref: resourcePubRouteTable}
       SubnetId: {Ref: resourcePubSubnetA}
+  resourcePubSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Public subnet group
+      SubnetIds:
+      - {Ref: resourcePubSubnetA}
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join: ['', [{Ref: 'AWS::StackName'}, ' public subnet group']]
   resourcePrivRouteTableA:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -119,6 +129,16 @@ Resources:
     Properties:
       RouteTableId: {Ref: resourcePrivRouteTableA}
       SubnetId: {Ref: resourcePrivSubnetA}
+  resourcePrivSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnet group
+      SubnetIds:
+      - {Ref: resourcePrivSubnetA}
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join: ['', [{Ref: 'AWS::StackName'}, ' private subnet group']]
 Outputs:
   VPCCIDR:
     Description: VPC CIDR Block
@@ -144,3 +164,15 @@ Outputs:
     Export:
       Name:
         Fn::Join: [":", [{Ref: "AWS::StackName"}, privateSubnetA]]
+  publicSubnetGroup:
+    Description: Public subnet group
+    Value: {Ref: resourcePubSubnetGroup}
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, publicSubnetGroup]]
+  privateSubnetGroup:
+    Description: Private subnet group
+    Value: {Ref: resourcePrivSubnetGroup}
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, privateSubnetGroup]]

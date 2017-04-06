@@ -99,18 +99,22 @@ def _append_network_resources(public, letter, resources, availability_zone):
         subnet_resource = "resourcePubSubnetA"
         route_table_assoc = "resourcePubSubnetRouteTableAssocA"
         cidr_param = "paramPub"  + letter + "Cidr"
+        db_subnet = "resourcePubSubnetGroup"
     else:
         subnet_resource = "resourcePrivSubnetA"
         route_table_assoc = "resourcePrivSubnetRouteTableAssocA"
         cidr_param = "paramPriv"  + letter + "Cidr"
         route_table = "resourcePrivRouteTableA"
+        db_subnet = "resourcePrivSubnetGroup"
+
+    subnet_to_create = subnet_resource[:-1] + letter
 
     subnet_res_dict = deepcopy(resources[subnet_resource])
     subnet_res_dict['Properties']['CidrBlock']['Ref'] = cidr_param
     subnet_res_dict['Properties']['AvailabilityZone'] = availability_zone
     subnet_res_dict['Properties']['Tags'][0]['Value']['Fn::Join'][1][1] += \
         availability_zone
-    resources.update({subnet_resource[:-1] + letter: subnet_res_dict})
+    resources.update({subnet_to_create: subnet_res_dict})
     if not public:
         route_table_dict = deepcopy(resources[route_table])
         route_table_dict['Properties']['Tags'][0]['Value']['Fn::Join'][1][1] = \
@@ -121,8 +125,10 @@ def _append_network_resources(public, letter, resources, availability_zone):
         route_table_assoc_dict['Properties']['RouteTableId']['Ref'] = \
             route_table[:-1] + letter
     route_table_assoc_dict['Properties']['SubnetId']['Ref'] = \
-        subnet_resource[:-1] + letter
+        subnet_to_create
     resources.update({route_table_assoc[:-1] + letter: route_table_assoc_dict})
+
+    resources[db_subnet]['Properties']['SubnetIds'].append({"Ref": subnet_to_create})
 
 def _get_network_yaml(network, subnet_prefixlen, subnet_base):
     subnet_bits = 32 - subnet_prefixlen
