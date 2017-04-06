@@ -273,7 +273,8 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
                 os.makedirs(include_dir)
             network_include_yaml = os.path.join(include_dir, "network.yaml")
             if os.path.isfile(network_include_yaml):
-                include_data = yaml_load(network_include_yaml)
+                with open(network_include_yaml, "r") as network_include_file:
+                    include_data = yaml_load(network_include_file)
             else:
                 include_data = collections.OrderedDict()
             _get_include_yaml(name, network_yaml, include_data)
