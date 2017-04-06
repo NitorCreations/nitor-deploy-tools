@@ -99,18 +99,22 @@ def _append_network_resources(public, letter, resources, availability_zone):
         subnet_resource = "resourcePubSubnetA"
         route_table_assoc = "resourcePubSubnetRouteTableAssocA"
         cidr_param = "paramPub"  + letter + "Cidr"
+        db_subnet = "resourcePubSubnetGroup"
     else:
         subnet_resource = "resourcePrivSubnetA"
         route_table_assoc = "resourcePrivSubnetRouteTableAssocA"
         cidr_param = "paramPriv"  + letter + "Cidr"
         route_table = "resourcePrivRouteTableA"
+        db_subnet = "resourcePrivSubnetGroup"
+
+    subnet_to_create = subnet_resource[:-1] + letter
 
     subnet_res_dict = deepcopy(resources[subnet_resource])
     subnet_res_dict['Properties']['CidrBlock']['Ref'] = cidr_param
     subnet_res_dict['Properties']['AvailabilityZone'] = availability_zone
     subnet_res_dict['Properties']['Tags'][0]['Value']['Fn::Join'][1][1] += \
         availability_zone
-    resources.update({subnet_resource[:-1] + letter: subnet_res_dict})
+    resources.update({subnet_to_create: subnet_res_dict})
     if not public:
         route_table_dict = deepcopy(resources[route_table])
         route_table_dict['Properties']['Tags'][0]['Value']['Fn::Join'][1][1] = \
@@ -121,8 +125,10 @@ def _append_network_resources(public, letter, resources, availability_zone):
         route_table_assoc_dict['Properties']['RouteTableId']['Ref'] = \
             route_table[:-1] + letter
     route_table_assoc_dict['Properties']['SubnetId']['Ref'] = \
-        subnet_resource[:-1] + letter
+        subnet_to_create
     resources.update({route_table_assoc[:-1] + letter: route_table_assoc_dict})
+
+    resources[db_subnet]['Properties']['SubnetIds'].append({"Ref": subnet_to_create})
 
 def _get_network_yaml(network, subnet_prefixlen, subnet_base):
     subnet_bits = 32 - subnet_prefixlen
@@ -177,7 +183,7 @@ def _get_include_yaml(name, network_yaml, include_data):
         if output_name == "VPCCIDR":
             include_data['paramVPCCidr'] = {
                 "Description": "VPC Cidr",
-                "Type": "Sting",
+                "Type": "String",
                 "Default": {
                     "StackRef": {
                         "region": {"Ref": "AWS::Region"},
@@ -196,10 +202,32 @@ def _get_include_yaml(name, network_yaml, include_data):
                         "paramName": output_name}
                 }
             }
+        elif output_name == "publicSubnetGroup":
+            include_data['paramPublicSubnetGroup'] = {
+                "Description": "Public subnet group",
+                "Type": "String",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
+        elif output_name == "privateSubnetGroup":
+            include_data['paramPrivateSubnetGroup'] = {
+                "Description": "Private subnet group",
+                "Type": "String",
+                "Default": {
+                    "StackRef": {
+                        "region": {"Ref": "AWS::Region"},
+                        "stackName": name,
+                        "paramName": output_name}
+                }
+            }
         elif output_name.startswith("subnetInfra"):
             include_data['paramSubnetInfra' + output_name[-1:]] = {
                 "Description": "Public subnet " + output_name[-1:],
-                "Type": "AWS::EC2::VPC::Id",
+                "Type": "AWS::EC2::Subnet::Id",
                 "Default": {
                     "StackRef": {
                         "region": {"Ref": "AWS::Region"},
@@ -210,7 +238,7 @@ def _get_include_yaml(name, network_yaml, include_data):
         elif output_name.startswith("subnetPrivInfra"):
             include_data['paramSubnetPrivInfra' + output_name[-1:]] = {
                 "Description": "Private subnet " + output_name[-1:],
-                "Type": "AWS::EC2::VPC::Id",
+                "Type": "AWS::EC2::Subnet::Id",
                 "Default": {
                     "StackRef": {
                         "region": {"Ref": "AWS::Region"},
@@ -267,7 +295,8 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
                 os.makedirs(include_dir)
             network_include_yaml = os.path.join(include_dir, "network.yaml")
             if os.path.isfile(network_include_yaml):
-                include_data = yaml_load(network_include_yaml)
+                with open(network_include_yaml, "r") as network_include_file:
+                    include_data = yaml_load(network_include_file)
             else:
                 include_data = collections.OrderedDict()
             _get_include_yaml(name, network_yaml, include_data)
