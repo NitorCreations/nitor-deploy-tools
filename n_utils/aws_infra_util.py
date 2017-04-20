@@ -28,11 +28,12 @@ PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
 include_dirs = []
 if "CF_TEMPLATE_INCLUDE" in os.environ:
     for next_dir in os.environ["CF_TEMPLATE_INCLUDE"].split(":"):
-        if not next_dir.endswith("/"):
-            next_dir = next_dir + "/"
+        if not next_dir.endswith(os.path.sep):
+            next_dir = next_dir + os.path.sep
         include_dirs.append(next_dir)
 
-include_dirs.append(os.path.dirname(__file__) + "/includes/")
+include_dirs.append(os.path.join(os.path.dirname(__file__), "includes") +\
+                    os.path.sep)
 ############################################################################
 # _THE_ yaml & json deserialize/serialize functions
 def yaml_load(stream):
