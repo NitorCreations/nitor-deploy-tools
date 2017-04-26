@@ -13,6 +13,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  case $COMP_CWORD in
+    2)
+      DEVICES=$(lsblk -pnlo name)
+      compgen -W "$DEVICES" -- $COMP_CUR
+      ;;
+    3)
+      compgen -f -- $COMP_CUR
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
 
 usage() {
   if [ -n "$1" ]; then

@@ -14,6 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  case $COMP_CWORD in
+    2)
+      exit 0
+      ;;
+    *)
+      echo '--optional'
+      compgen -f -- $COMP_CUR
+      ;;
+  esac
+  exit 0
+fi
+
 mode="$1"
 shift
 

@@ -19,17 +19,18 @@
 import json
 import os
 import random
-import requests
 import stat
 import string
+import sys
 import time
+from collections import deque
+from datetime import datetime, timedelta
 from threading import Event, Lock, Thread
 
 import boto3
 from botocore.exceptions import ClientError
-from collections import deque
-from datetime import datetime, timedelta
 from dateutil import tz
+import requests
 from requests.exceptions import ConnectionError
 from termcolor import colored
 
@@ -84,12 +85,13 @@ class InstanceInfo(object):
                 self._info = json.load(open('C:/nitor/instance-data.json'))
             except:
                 pass
-        if not self._info:
+        if not self._info and is_ec2():
             try:
                 retry = 0
                 while not (self._info and self.instance_id) and retry < 5:
                     retry += 1
-                    response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
+                    response = requests.get('http://169.254.169.254/latest/d' +\
+                                            'ynamic/instance-identity/document')
                     if not response.text:
                         time.sleep(1)
                         continue
@@ -351,13 +353,14 @@ def assume_role(role_arn):
     return response['Credentials']
 
 def resolve_account():
-    try:
-        response = requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document')
+    if is_ec2():
+        response = requests.get('http://169.254.169.254/latest/dynamic/insta' +\
+                                'nce-identity/document')
         instance_data = json.loads(response.text)
         account_id = instance_data['accountId']
         if 'AWS_DEFAULT_REGION' not in os.environ:
             os.environ['AWS_DEFAULT_REGION'] = instance_data['region']
-    except ConnectionError:
+    else:
         iam = boto3.client("iam")
         arn = iam.get_user()['User']['Arn']
         account_id = arn.split(':')[4]
@@ -397,3 +400,16 @@ def clean_snapshots(days, tags):
                               time.strftime("%a, %d %b %Y %H:%M:%S",
                                             print_time) +\
                               " || " + json.dumps(tags)
+
+def is_ec2():
+    if "win" in sys.platform:
+        import wmi
+        systeminfo = wmi.WMI().Win32_ComputerSystem()[0]
+        return "EC2" == systeminfo.PrimaryOwnerName
+    elif "linux" in sys.platform:
+        if os.path.isfile("/sys/hypervisor/uuid"):
+            with open("/sys/hypervisor/uuid") as uuid:
+                uuid_str = uuid.read()
+                return uuid_str.startswith("ec2")
+        else:
+            return False

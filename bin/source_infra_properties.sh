@@ -35,11 +35,8 @@ source "${infrapropfile}"
 [ -e "${image}/stack-${ORIG_STACK_NAME}/${sharedpropfile}" ] && source "${image}/stack-${ORIG_STACK_NAME}/${sharedpropfile}"
 [ -e "${image}/stack-${ORIG_STACK_NAME}/${infrapropfile}" ] && source "${image}/stack-${ORIG_STACK_NAME}/${infrapropfile}"
 
-#If region not set in infra files, get the region of the instance
-[ "$REGION" ] || REGION=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}')
-#If not running on an AWS instance, get the region configured for aws tools
-[ "$REGION" ] || REGION=$(aws configure list | grep region | awk '{ print $2 }')
+#If region not set in infra files, get the region of the instance or from env
+[ "$REGION" ] || REGION=$(ec2-region)
 
 # Same logic as above for account id
-[ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/dynamic/instance-identity/document | grep accountId | awk -F\" '{print $4}')
-[ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(aws iam get-user | grep Arn | awk -NF: '{ print $6 }')
+[ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(account-id)

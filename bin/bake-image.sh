@@ -14,6 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  case $COMP_CWORD in
+    2)
+      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find . -name 'infra-*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u | tr "\n" " "; fi)" -- $COMP_CUR
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
+
 set -xe
 
 die () {
@@ -30,7 +43,11 @@ source source_infra_properties.sh "$image" ""
 mkdir .cache
 
 cache () {
-  cachefile=.cache/"${*// /_}"
+  if ! [ -d .cache ]; then
+      mkdir -p .cache
+  fi
+  args=${*}
+  cachefile=.cache/"${args//[\"\'\ -\*]/_}"
   if [ -e "$cachefile" ]; then
     cat $cachefile
   else

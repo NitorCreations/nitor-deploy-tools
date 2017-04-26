@@ -13,8 +13,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  echo '--help'
+  compgen -f -- $COMP_CUR
+  exit 0
+fi
 
-if [ "$1" = "--help" ]; then
+if [ "$1" = "--help" -o "$1" == "-h" ]; then
     echo "usage: $0 [<file> ...]" >&2
     echo "Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes" >&2
     exit 1

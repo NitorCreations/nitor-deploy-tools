@@ -17,18 +17,98 @@
 
 import argparse
 import json
+import locale
 import os
 import sys
+import subprocess
 import time
-
+from subprocess import PIPE, Popen
+import argcomplete
 from . import aws_infra_util
 from . import cf_bootstrap
 from . import cf_deploy
 from . import cf_utils
-from .cf_utils import InstanceInfo
+from . import COMMAND_MAPPINGS
+from .cf_utils import InstanceInfo, is_ec2
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
+from argcomplete import USING_PYTHON2, ensure_str, split_line
 
+sys_encoding = locale.getpreferredencoding()
+
+def ndt_register_complete():
+    print """_ndt_complete() {
+    local IFS=$'\\013'
+    local COMP_CUR="${COMP_WORDS[COMP_CWORD]}"
+    local COMP_PREV="${COMP_WORDS[COMP_CWORD-1]}"
+    local SUPPRESS_SPACE=0
+    if compopt +o nospace 2> /dev/null; then
+        SUPPRESS_SPACE=1
+    fi
+    COMPREPLY=( $(IFS="$IFS" \\
+                  COMP_LINE="$COMP_LINE" \\
+                  COMP_POINT="$COMP_POINT" \\
+                  COMP_TYPE="$COMP_TYPE" \\
+                  COMP_CUR="$COMP_CUR" \\
+                  COMP_PREV="$COMP_PREV" \\
+                  COMP_CWORD=$COMP_CWORD \\
+                  _ARGCOMPLETE_COMP_WORDBREAKS="$COMP_WORDBREAKS" \\
+                  _ARGCOMPLETE=1 \\
+                  _ARGCOMPLETE_SUPPRESS_SPACE=$SUPPRESS_SPACE \\
+                  "$1" 8>&1 9>&2 1>/dev/null 2>/dev/null) )
+    if [[ $? != 0 ]]; then
+        unset COMPREPLY
+    elif [[ $SUPPRESS_SPACE == 1 ]] && [[ "$COMPREPLY" =~ [=/:]$ ]]; then
+        compopt -o nospace
+    fi
+}
+complete -o nospace -F _ndt_complete "ndt"
+"""
+
+def ndt():
+    if "_ARGCOMPLETE" in os.environ:
+        output_stream = os.fdopen(8, "wb")
+        ifs = os.environ.get("_ARGCOMPLETE_IFS", "\v")
+        if len(ifs) != 1:
+            sys.exit(1)
+        current = os.environ["COMP_CUR"]
+        prev = os.environ["COMP_PREV"]
+        comp_line = os.environ["COMP_LINE"]
+        comp_point = int(os.environ["COMP_POINT"])
+
+        # Adjust comp_point for wide chars
+        if USING_PYTHON2:
+            comp_point = len(comp_line[:comp_point].decode(sys_encoding))
+        else:
+            comp_point = len(comp_line.encode(sys_encoding)[:comp_point].decode(sys_encoding))
+
+        comp_line = ensure_str(comp_line)
+        cword_prequote, cword_prefix, cword_suffix, comp_words, \
+                          last_wordbreak_pos = split_line(comp_line, comp_point)
+        if "COMP_CWORD" in os.environ and os.environ["COMP_CWORD"] == "1":
+            keys = [x for x in COMMAND_MAPPINGS.keys() if x.startswith(current)]
+            output_stream.write(ifs.join(keys).encode(sys_encoding))
+            output_stream.flush()
+        else:
+            command = prev
+            if len(comp_words) > 1:
+                command = comp_words[1]
+            if not command in COMMAND_MAPPINGS:
+                sys.exit(1)
+            command_type = COMMAND_MAPPINGS[command]
+            if command_type == "shell":
+                proc = Popen([command + ".sh"], stderr=PIPE, stdout=PIPE)
+                output = proc.communicate()[0]
+                if proc.returncode == 0:
+                    output_stream.write(output.replace("\n", ifs).decode(sys_encoding))
+                    output_stream.flush()
+                else:
+                    sys.exit(1)
+            sys.exit(0)
+        sys.exit(0)
+    else:
+        print "bar"
+    os._exit(0)      
 
 def list_file_to_json():
     """ Convert a file with an entry on each line to a json document with
@@ -39,6 +119,7 @@ def list_file_to_json():
     parser.add_argument("arrayname", help="The name in the json object given" +\
                                           "to the array")
     parser.add_argument("file", help="The file to parse")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
@@ -214,20 +295,38 @@ def associate_eip():
 def instance_id():
     """ Get id for instance
     """
-    info = InstanceInfo()
-    print info.instance_id()
+    if is_ec2():
+        info = InstanceInfo()
+        print info.instance_id()
+    else:
+        sys.exit(1)
 
 def region():
-    """ Get region for instance
+    """ Get default region - the region of the instance if run in an EC2 instance
     """
-    info = InstanceInfo()
-    print info.region()
+    if is_ec2():
+        info = InstanceInfo()
+        print info.region()
+    else:
+        if 'AWS_DEFAULT_REGION' in os.environ:
+            print os.environ['AWS_DEFAULT_REGION']
+        else:
+            cli_call = subprocess.Popen(["aws", "configure", "get", "region"],
+                                        stderr=PIPE, stdout=PIPE)
+            output = cli_call.communicate()[0]
+            if output and cli_call.returncode == 0:
+                print output.rstrip()
+            else:
+                print os.environ.get('AWS_DEFAULT_REGION', 'eu-west-1')
 
 def stack_name():
     """ Get name of the stack that created this instance
     """
-    info = InstanceInfo()
-    print info.stack_name()
+    if is_ec2():
+        info = InstanceInfo()
+        print info.stack_name()
+    else:
+        sys.exit(1)
 
 def stack_id():
     """ Get id of the stack the creted this instance

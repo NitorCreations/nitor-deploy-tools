@@ -14,4 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ "$_ARGCOMPLETE" ]; then
+  exit 0
+fi
 LPASS_DISABLE_PINENTRY=1 lpass logout -f 2>&1 >/dev/null

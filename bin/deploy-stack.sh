@@ -13,6 +13,47 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+cache () {
+  if ! [ -d .cache ]; then
+      mkdir -p .cache
+  fi
+  args=${*}
+  cachefile=.cache/"${args//[\"\'\ -\*]/_}"
+  if [ -e "$cachefile" ]; then
+    cat $cachefile
+  else
+    "$@" | tee $cachefile
+  fi
+}
+
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  case $COMP_CWORD in
+    2)
+      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find . -name 'infra-*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u | tr "\n" " "; fi)" -- $COMP_CUR
+      ;;
+    3)
+      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find $COMP_PREV -name 'stack-*' | sed 's/.*stack-\(.*\)/\1/g' | tr "\n" " "; fi)" -- $COMP_CUR
+      ;;
+    4)
+      COMP_WORDS=( $COMP_LINE )
+      IMAGE=$(echo ${COMP_WORDS[2]} | tr "-" "_")
+      source source_infra_properties.sh ${COMP_WORDS[2]} ${COMP_WORDS[3]}
+      JOB_NAME="${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
+      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then cache aws ec2 describe-images --filters "Name=name,Values=[${JOB_NAME}*]" --query "Images[*].{ID:ImageId}" | jq -r .[].ID | tr "\n" " "; fi)" -- $COMP_CUR
+      ;;
+    5)
+      COMP_WORDS=( $COMP_LINE )
+      IMAGE=$(echo ${COMP_WORDS[2]} | tr "-" "_")
+      source source_infra_properties.sh ${COMP_WORDS[2]} ${COMP_WORDS[3]}
+      echo "${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
 
 set -xe
 
