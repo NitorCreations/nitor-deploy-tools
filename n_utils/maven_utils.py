@@ -39,14 +39,14 @@ def add_server(pomfile, server_id, username):
     servers = settings.find("./servers")
     if servers is None:
         servers = ET.SubElement(settings, "servers")
-    deployer_server = servers.find("./server[server_id='" + server_id + "']")
+    deployer_server = servers.find("./server[id='" + server_id + "']")
     if deployer_server is None:
         deployer_server = ET.SubElement(servers, "server")
-        ET.SubElement(deployer_server, "server_id").text = server_id
+        ET.SubElement(deployer_server, "id").text = server_id
         ET.SubElement(deployer_server, "username")
     password = deployer_server.find("./password")
-    usernameEl = deployer_server.find("./username")
-    usernameEl.text = username
+    username_el = deployer_server.find("./username")
+    username_el.text = username
     if password is None:
         password = ET.SubElement(deployer_server, "password")
     password.text = os.getenv("DEPLOYER_PASSWORD", "password")

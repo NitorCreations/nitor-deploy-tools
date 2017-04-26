@@ -63,8 +63,12 @@ MARKER
 <settings>
 </settings>
 MARKER
-    chmod 600 "$MAVEN_HOME/settings.xml"
-    chown -R jenkins:jenkins "$MAVEN_HOME"
+      chmod 600 "$MAVEN_HOME/settings.xml"
+      chown -R jenkins:jenkins "$MAVEN_HOME"
+    fi
+    if [ "$(set -o | grep xtrace | awk '{ print $2 }')" = "on" ]; then
+      set +x
+      RESET_XTRACE="true"
     fi
     DEPLOYER_PWD=$(fetch-secrets.sh show "$CF_paramMvnDeployId")
     export DEPLOYER_PASSWORD=$(sudo -iu jenkins mvn -ep "$DEPLOYER_PWD")
