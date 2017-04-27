@@ -17,10 +17,10 @@ from setuptools import setup
 from n_utils import SCRIPTS, CONSOLESCRIPTS
 
 setup(name='nitor_deploy_tools',
-      version='0.88',
+      version='0.89',
       description='Utilities for deploying with Nitor aws-utils',
       url='http://github.com/NitorCreations/nitor-deploy-tools',
-      download_url='https://github.com/NitorCreations/nitor-deploy-tools/tarball/0.88',
+      download_url='https://github.com/NitorCreations/nitor-deploy-tools/tarball/0.89',
       author='Pasi Niemi',
       author_email='pasi@nitor.com',
       license='Apache 2.0',
