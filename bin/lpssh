@@ -1,5 +1,30 @@
 #!/bin/bash
 
+if [ "$_ARGCOMPLETE" ]; then
+  cur=${COMP_CUR}
+  prev=${COMP_PREV}
+  if [ "$cur" = "-" ]; then
+    echo "-k"
+    return 0
+  fi
+  case $prev in
+    lpssh)
+      TMP=$(mktemp)
+      if ! lpass show --notes my-ssh-mappings > $TMP; then
+           echo "Could not get mapings"
+           rm -f $TMP
+           return 1
+      fi
+      compgen -W "-k $(cat $TMP | cut -d ":" -f1)" -- "$cur"
+      rm -f $TMP
+      ;;
+    -k)
+      compgen -W "$(lpass ls | egrep '\.rsa\W|\.pem\W' | awk -NF '/|\\ ' '{ print $2 }' | sort -u)" -- "$cur"
+      ;;
+  esac
+  exit 0
+fi
+
 unset SSH_AUTH_SOCK
 unset SSH_AGENT_PID
 cleanup() {

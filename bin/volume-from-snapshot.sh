@@ -13,6 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  exit 0
+fi
 
 fail() {
   echo $1

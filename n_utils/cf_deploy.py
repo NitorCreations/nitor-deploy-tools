@@ -37,7 +37,7 @@ def log(message):
     sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " " \
         + message + os.linesep).encode(locale.getpreferredencoding()))
 
-def update_stack(stack_name, template, params):
+def update_stack(stack_name, template, params, dry_run=False):
     clf = boto3.client('cloudformation')
     chset_name = stack_name + "-" + time.strftime("%Y%m%d%H%M%S",
                                                   time.gmtime())
@@ -60,7 +60,10 @@ def update_stack(stack_name, template, params):
                                                    chset_data['CreationTime'].timetuple())
         log("\033[32;1m*** Changeset ***:\033[m")
         log(aws_infra_util.json_save(chset_data))
-        clf.execute_change_set(ChangeSetName=chset_id)
+        if not dry_run:
+            clf.execute_change_set(ChangeSetName=chset_id)
+        else:
+            clf.delete_change_set(ChangeSetName=chset_id)
     return
 
 def create_stack(stack_name, template, params):
@@ -238,5 +241,6 @@ def deploy(stack_name, yaml_template, region, dry_run=False):
         status = create_or_update_stack(stack_name, json_small, params_doc)
         if not (status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE"):
             sys.exit("Stack operation failed: end state " + status)
-
+    elif get_stack_operation(stack_name).__name__ == "update_stack":
+        update_stack(stack_name, json_small, params_doc, dry_run=True)
     log("Done!")

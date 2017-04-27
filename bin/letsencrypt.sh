@@ -18,7 +18,10 @@
 # Source: https://github.com/lukas2511/letsencrypt.sh
 #
 # This script is licensed under The MIT License (see LICENSE for more information).
-
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  exit 0
+fi
 set -e
 set -u
 set -o pipefail

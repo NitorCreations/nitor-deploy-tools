@@ -14,6 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  case $COMP_CWORD in
+    2)
+      compgen -W "lpass s3 vault" -- $COMP_CUR
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
+
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit 1

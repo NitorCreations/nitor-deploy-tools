@@ -16,7 +16,21 @@
 
 # This script sources the infra*.properties files in the standard fashion. The image and stack name must be provided as arguments if applicable, otherwise an empty argument should be given instead e.g. ""
 # example: source source_infra_properties.sh "jenkins" "bob-jenkins"
-
+if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
+  case $COMP_CWORD in
+    2)
+      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find . -name 'infra*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u | tr "\n" " "; fi)" -- $COMP_CUR
+      ;;
+    3)
+      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find $COMP_PREV -name 'stack-*' | sed 's/.*stack-\(.*\)/\1/g' | tr "\n" " "; fi)" -- $COMP_CUR
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
 [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
 image="$1" ; shift

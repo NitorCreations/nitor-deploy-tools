@@ -13,39 +13,65 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cache () {
-  if ! [ -d .cache ]; then
-      mkdir -p .cache
-  fi
-  args=${*}
-  cachefile=.cache/"${args//[\"\'\ -\*]/_}"
-  if [ -e "$cachefile" ]; then
-    cat $cachefile
-  else
-    "$@" | tee $cachefile
-  fi
-}
 
 if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
-  case $COMP_CWORD in
+  unset _ARGCOMPLETE
+  cache () {
+    if ! [ -d .cache ]; then
+        mkdir -p .cache
+    fi
+    args="${*}"
+    cachefile=.cache/"${args//[\"\'\ -\*]/_}"
+    if [ -e "$cachefile" ]; then
+      cat $cachefile
+    else
+      "$@" | tee $cachefile
+    fi
+  }
+  get_images() {
+    if [ -r infra.properties -o -r infra-master.properties ]; then
+      echo $(find . -name 'infra*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u)
+    fi
+  }
+  get_stacks() {
+    if [ -r infra.properties -o -r infra-master.properties ]; then
+      echo $(find $1 -name 'stack-*' | sed 's/.*stack-\(.*\)/\1/g')
+    fi
+  }
+  get_imageids() {
+    if [ -r infra.properties -o -r infra-master.properties ]; then
+      echo $(cache aws ec2 describe-images --filters "Name=name,Values=[${1}*]" --query "Images[*].{ID:ImageId}" | jq -r .[].ID)
+    fi
+  }
+  COMP_WORDS=( $COMP_LINE )
+  if [ "${COMP_WORDS[2]}" = "-d" ]; then 
+    COMP_INDEX=$(($COMP_CWORD - 1))
+    IMAGE=$(echo ${COMP_WORDS[3]} | tr "-" "_")
+    STACK=${COMP_WORDS[4]}
+  else
+    COMP_INDEX=$COMP_CWORD
+    IMAGE=$(echo ${COMP_WORDS[2]} | tr "-" "_")
+    STACK=${COMP_WORDS[3]}
+  fi
+  case $COMP_INDEX in
     2)
-      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find . -name 'infra-*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u | tr "\n" " "; fi)" -- $COMP_CUR
+      if [ "$COMP_INDEX" = "$COMP_CWORD" ]; then
+        DRY="-d "
+      fi
+      compgen -W "$DRY$(get_images)" -- $COMP_CUR
       ;;
     3)
-      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find $COMP_PREV -name 'stack-*' | sed 's/.*stack-\(.*\)/\1/g' | tr "\n" " "; fi)" -- $COMP_CUR
+      compgen -W "$(get_stacks $COMP_PREV)" -- $COMP_CUR
       ;;
     4)
-      COMP_WORDS=( $COMP_LINE )
-      IMAGE=$(echo ${COMP_WORDS[2]} | tr "-" "_")
-      source source_infra_properties.sh ${COMP_WORDS[2]} ${COMP_WORDS[3]}
+      source source_infra_properties.sh $IMAGE $STACK
       JOB_NAME="${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
-      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then cache aws ec2 describe-images --filters "Name=name,Values=[${JOB_NAME}*]" --query "Images[*].{ID:ImageId}" | jq -r .[].ID | tr "\n" " "; fi)" -- $COMP_CUR
+      IMAGE_IDS="$(get_imageids $JOB_NAME)"
+      compgen -W "$IMAGE_IDS" -- $COMP_CUR
       ;;
     5)
-      COMP_WORDS=( $COMP_LINE )
-      IMAGE=$(echo ${COMP_WORDS[2]} | tr "-" "_")
-      source source_infra_properties.sh ${COMP_WORDS[2]} ${COMP_WORDS[3]}
+      source source_infra_properties.sh $IMAGE $STACK
       echo "${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
       ;;
     *)

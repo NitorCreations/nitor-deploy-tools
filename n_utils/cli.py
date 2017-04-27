@@ -97,18 +97,48 @@ def ndt():
                 sys.exit(1)
             command_type = COMMAND_MAPPINGS[command]
             if command_type == "shell":
-                proc = Popen([command + ".sh"], stderr=PIPE, stdout=PIPE)
+                command = command + ".sh"
+            if command_type == "shell" or command_type == "script":
+                proc = Popen([command], stderr=PIPE, stdout=PIPE)
                 output = proc.communicate()[0]
                 if proc.returncode == 0:
                     output_stream.write(output.replace("\n", ifs).decode(sys_encoding))
                     output_stream.flush()
                 else:
                     sys.exit(1)
+            else:
+                orig_line = os.environ['COMP_LINE']
+                orig_point = int(os.environ['COMP_POINT'])
+                line = orig_line[3:].rstrip()
+                os.environ['COMP_POINT'] = str(orig_point - len(orig_line) - \
+                                               len(line))
+                os.environ['COMP_LINE'] = line
+                parts = command_type.split(":")
+                my_func = getattr(__import__(parts[0], fromlist=[parts[1]]),
+                                  parts[1])
+                my_func()
             sys.exit(0)
         sys.exit(0)
     else:
-        print "bar"
-    os._exit(0)      
+        command = sys.argv[1]
+        if command not in COMMAND_MAPPINGS:
+            sys.stderr.writelines([u'usage: ndt <command> [args...]\n'])
+            sys.stderr.writelines([u'\tcommand shoud be one of:\n'])
+            for command in COMMAND_MAPPINGS.keys():
+                sys.stderr.writelines([u'\t\t' + command + '\n'])
+            sys.exit(1)
+        command_type = COMMAND_MAPPINGS[command]
+        if command_type == "shell":
+            command = command + ".sh"
+        if command_type == "shell" or command_type == "script":
+            sys.exit(Popen([command] + sys.argv[2:]).wait())
+        else:
+            parts = command_type.split(":")
+            my_func = getattr(__import__(parts[0], fromlist=[parts[1]]),
+                              parts[1])
+            sys.argv = sys.argv[1:]
+            sys.argv[0] = "ndt " + sys.argv[0]
+            my_func()
 
 def list_file_to_json():
     """ Convert a file with an entry on each line to a json document with
