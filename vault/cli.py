@@ -11,40 +11,65 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from vault import Vault
 import argparse
 import os
-import boto3
 import sys
-import requests
 import json
+import argcomplete
+import boto3
+import requests
 from requests.exceptions import ConnectionError
+from .vault import Vault
 
 def main():
-    parser = argparse.ArgumentParser(description="Store and lookup locally encrypted data stored in S3")
+    parser = argparse.ArgumentParser(description="Store and lookup locally " +\
+                                     "encrypted data stored in S3")
     action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-s', '--store', help="Name of element to store. Optionally read from file name", nargs='?', default="")
+    action.add_argument('-s', '--store', help="Name of element to store. Opt" +\
+                                              "ionally read from file name",
+                        nargs='?', default="")
     action.add_argument('-l', '--lookup', help="Name of element to lookup")
-    action.add_argument('-i', '--init', action='store_true', help="Initializes a kms key and an s3 bucket with some roles for reading and writing on a fresh account via CloudFormation. Means that the account used has to have rights to create the resources")
+    action.add_argument('-i', '--init', action='store_true',
+                        help="Initializes a kms key and a s3 bucket with som" +\
+                              "e roles for reading and writing on a fresh ac" +\
+                              "count via CloudFormation. Means that the acco" +\
+                              "unt used has to have rights to create the res" +\
+                              "ources")
     action.add_argument('-d', '--delete', help="Name of element to delete")
-    action.add_argument('-a', '--all', action='store_true', help="List available secrets")
-    parser.add_argument('-w', '--overwrite', action='store_true', help="Add this argument if you want to overwrite an existing element")
+    action.add_argument('-a', '--all', action='store_true', help="List avail" +\
+                                                                 "able secrets")
+    parser.add_argument('-w', '--overwrite', action='store_true',
+                        help="Add this argument if you want to overwrite an " +\
+                             "existing element")
     data = parser.add_mutually_exclusive_group(required=False)
     data.add_argument('-v', '--value', help="Value to store")
-    data.add_argument('-f', '--file', help="File to store. If no -s argument given, the name of the file is used as the default name. Give - for stdin")
+    data.add_argument('-f', '--file', help="File to store. If no -s argument" +\
+                                           " given, the name of the file is " +\
+                                           "used as the default name. Give -" +\
+                                           " for stdin")
     parser.add_argument('-o', "--outfile", help="The file to write the data to")
-    parser.add_argument('-p', '--prefix', help="Optional prefix to store value under. empty by default")
-    parser.add_argument('--vaultstack', help="Optional CloudFormation stack to lookup key and bucket. 'vault' by default")
-    parser.add_argument('-b', '--bucket', help="Override the bucket name either for initialization or storing and looking up values")
-    parser.add_argument('-k', '--key-arn', help="Override the KMS key arn for storinig or looking up")
-    parser.add_argument('--id', help="Give an IAM access key id to override those defined by environent")
-    parser.add_argument('--secret', help="Give an IAM secret access key to override those defined by environent")
-    parser.add_argument('-r', '--region', help="Give a region for the stack and bucket")
+    parser.add_argument('-p', '--prefix', help="Optional prefix to store val" +\
+                                               "ue under. empty by default")
+    parser.add_argument('--vaultstack', help="Optional CloudFormation stack " +\
+                                             "to lookup key and bucket. 'vau" +\
+                                             "lt' by default")
+    parser.add_argument('-b', '--bucket', help="Override the bucket name eit" +\
+                                               "her for initialization or st" +\
+                                               "oring and looking up values")
+    parser.add_argument('-k', '--key-arn', help="Override the KMS key arn fo" +\
+                                                "r storinig or looking up")
+    parser.add_argument('--id', help="Give an IAM access key id to override " +\
+                                     "those defined by environent")
+    parser.add_argument('--secret', help="Give an IAM secret access key to o" +\
+                                         "verride those defined by environent")
+    parser.add_argument('-r', '--region', help="Give a region for the stack" +\
+                                               "and bucket")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if args.store and not (args.value or args.file):
         parser.error("--store requires --value or --file")
-    store_with_no_name = not args.store and not args.lookup and not args.init and not args.delete and not args.all
+    store_with_no_name = not args.store and not args.lookup and not args.init \
+                         and not args.delete and not args.all
     if store_with_no_name and not args.file:
         parser.error("--store requires a name or a --file argument to get the name to store")
     elif store_with_no_name:
