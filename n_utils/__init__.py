@@ -14,7 +14,6 @@
 
 """ Main module for nitor-deploy-tools
 """
-from . import aws_infra_util
 
 SCRIPTS = [
     'bin/bake-image.sh',
