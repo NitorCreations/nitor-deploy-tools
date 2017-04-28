@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import sys
 from setuptools import setup
 from n_utils import SCRIPTS, CONSOLESCRIPTS
@@ -24,7 +23,7 @@ setup(name='nitor_deploy_tools',
       author='Pasi Niemi',
       author_email='pasi@nitor.com',
       license='Apache 2.0',
-      packages=['vault', 'n_utils'],
+      packages=['n_utils'],
       include_package_data=True,
       scripts=SCRIPTS,
       entry_points={
@@ -38,7 +37,8 @@ setup(name='nitor_deploy_tools',
           'requests',
           'termcolor',
           'ipaddr',
-          'argcomplete'
+          'argcomplete',
+          'nitor-vault'
       ] + ([
           'win-unicode-console',
           'wmi',
