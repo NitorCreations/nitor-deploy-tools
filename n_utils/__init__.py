@@ -38,7 +38,6 @@ SCRIPTS = [
     'bin/volume-from-snapshot.sh'
 ]
 CONSOLESCRIPTS = [
-    'vault=vault.cli:main',
     'assume-role=n_utils.cli:assume_role',
     'list-file-to-json=n_utils.cli:list_file_to_json',
     'create-userid-list=n_utils.cli:create_userid_list',
