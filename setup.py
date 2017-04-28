@@ -43,5 +43,5 @@ setup(name='nitor_deploy_tools',
           'win-unicode-console',
           'wmi',
           'pypiwin32'
-          ] if "win" in sys.platform else []),
+          ] if sys.platform.startswith('win') else []),
       zip_safe=False)

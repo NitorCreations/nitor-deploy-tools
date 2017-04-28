@@ -402,11 +402,11 @@ def clean_snapshots(days, tags):
                               " || " + json.dumps(tags)
 
 def is_ec2():
-    if "win" in sys.platform:
+    if sys.platform.startswith("win"):
         import wmi
         systeminfo = wmi.WMI().Win32_ComputerSystem()[0]
         return "EC2" == systeminfo.PrimaryOwnerName
-    elif "linux" in sys.platform:
+    elif sys.platform.startswith("linux"):
         if os.path.isfile("/sys/hypervisor/uuid"):
             with open("/sys/hypervisor/uuid") as uuid:
                 uuid_str = uuid.read()
