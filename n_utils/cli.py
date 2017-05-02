@@ -33,6 +33,7 @@ from .cf_utils import InstanceInfo, is_ec2
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 from argcomplete import USING_PYTHON2, ensure_str, split_line
+from argcomplete.completers import ChoicesCompleter, FilesCompleter
 
 sys_encoding = locale.getpreferredencoding()
 
@@ -109,9 +110,9 @@ def ndt():
             else:
                 orig_line = os.environ['COMP_LINE']
                 orig_point = int(os.environ['COMP_POINT'])
-                line = orig_line[3:].rstrip()
-                os.environ['COMP_POINT'] = str(orig_point - len(orig_line) - \
-                                               len(line))
+                line = orig_line[3:].lstrip()
+                os.environ['COMP_POINT'] = str(orig_point - (len(orig_line) - \
+                                               len(line)))
                 os.environ['COMP_LINE'] = line
                 parts = command_type.split(":")
                 my_func = getattr(__import__(parts[0], fromlist=[parts[1]]),
@@ -147,8 +148,10 @@ def list_file_to_json():
     parser = argparse.ArgumentParser(description="Ouput a file with one item" +\
                                                  " per line as a json object")
     parser.add_argument("arrayname", help="The name in the json object given" +\
-                                          "to the array")
-    parser.add_argument("file", help="The file to parse")
+                                          "to the array").completer = \
+                                                            ChoicesCompleter(())
+    parser.add_argument("file", help="The file to parse").completer = \
+                                                            FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
@@ -166,7 +169,9 @@ def create_userid_list():
                                                  "in scripts used to share " +\
                                                  "AWS AMI images with other " +\
                                                  "AWS accounts and regions")
-    parser.add_argument("user_ids", help="User ids to dump", nargs="+")
+    parser.add_argument("user_ids", help="User ids to dump",
+                        nargs="+").completer = ChoicesCompleter(())
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     ret = {"Add": []}
     for user_id in args.user_ids:
@@ -182,12 +187,17 @@ def add_deployer_server():
                                                  "Password is taken from the" +\
                                                  " environment variable " +\
                                                  "'DEPLOYER_PASSWORD'")
-    parser.add_argument("file", help="The file to modify")
-    parser.add_argument("username", help="The username to access the server.")
+    parser.add_argument("file", help="The file to modify").completer = \
+                                                                FilesCompleter()
+    parser.add_argument("username",
+                        help="The username to access the server.").completer = \
+                                                            ChoicesCompleter(())
     parser.add_argument("--id", help="Optional id for the server. Default is" +\
                                      " deploy. One server with this id is " +\
                                      "added and another with '-release' " +\
-                                     "appended", default="deploy")
+                                     "appended", default="deploy").completer = \
+                                                            ChoicesCompleter(())
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
