@@ -165,7 +165,7 @@ else
   extra_args=( -e '{"repos": []}' -e '{"keys": []}' )
 fi
 
-JOB=$(echo $JOB_NAME | sed 's/\W/_/g' | tr '[:upper:]' '[:lower:]')
+JOB=$(echo $JOB_NAME | sed 's/[^[:alnum:]_]/_/g' | tr '[:upper:]' '[:lower:]')
 NAME="${JOB}_$BUILD_NUMBER"
 AMI_TAG="$NAME"
 echo "$AMI_TAG" > ami-tag.txt
