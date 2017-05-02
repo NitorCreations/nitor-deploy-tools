@@ -41,7 +41,10 @@ if [ "$_ARGCOMPLETE" ]; then
   }
   get_imageids() {
     if [ -r infra.properties -o -r infra-master.properties ]; then
-      echo $(cache aws ec2 describe-images --filters "Name=name,Values=[${1}*]" --query "Images[*].{ID:ImageId}" | jq -r .[].ID)
+      source source_infra_properties.sh $1
+      if [ -d "$1/image" ] && [ -r "$1/infra.properties" -o -r "$1/infra-$GIT_BRANCH.properties" ]; then
+        echo $(cache aws ec2 describe-images --filters "Name=name,Values=[${1}*]" --query "Images[*].{ID:ImageId}" | jq -r .[].ID)
+      fi
     fi
   }
   COMP_WORDS=( $COMP_LINE )

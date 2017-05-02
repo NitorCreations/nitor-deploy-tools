@@ -36,7 +36,7 @@ SCRIPTS = [
     'bin/undeploy-stack.sh',
     'bin/volume-from-snapshot.sh'
 ]
-CONSOLESCRIPTS = [
+NDT_AND_CONSOLE=[
     'assume-role=n_utils.cli:assume_role',
     'list-file-to-json=n_utils.cli:list_file_to_json',
     'create-userid-list=n_utils.cli:create_userid_list',
@@ -45,10 +45,8 @@ CONSOLESCRIPTS = [
     'json-to-yaml=n_utils.cli:json_to_yaml',
     'pytail=n_utils.cli:read_and_follow',
     'n-utils-init=n_utils.cf_utils:init',
-    'n-utils-resolve-include=n_utils.cli:resolve_include',
     'n-include=n_utils.cli:resolve_include',
     'account-id=n_utils.cli:get_account_id',
-    'cf-delete-stack=n_utils.cli:delete_stack',
     'cf-follow-logs=n_utils.cli:tail_stack_logs',
     'cf-logical-id=n_utils.cli:logical_id',
     'logs-to-cloudwatch=n_utils.cli:logs_to_cloudwatch',
@@ -59,18 +57,24 @@ CONSOLESCRIPTS = [
     'cf-signal-status=n_utils.cli:signal_cf_status',
     'cf-stack-name=n_utils.cli:stack_name',
     'cf-stack-id=n_utils.cli:stack_id',
-    'cf-update-stack=n_utils.cli:update_stack',
     'associate-eip=n_utils.cli:associate_eip',
     'ec2-associate-eip=n_utils.cli:associate_eip',
     'ec2-clean-snapshots=n_utils.cli:clean_snapshots',
     'ec2-instance-id=n_utils.cli:instance_id',
     'ec2-region=n_utils.cli:region',
-    'ec2-get-userdata=n_utils.cli:get_userdata',
+    'ec2-get-userdata=n_utils.cli:get_userdata'
+]
+NDT_ONLY=[
     'setup-cli=n_utils.cli:setup_cli',
-    'setup-networks=n_utils.cli:setup_networks',
+    'setup-networks=n_utils.cli:setup_networks'
+]
+CONSOLE_ONLY=[
+    'cf-delete-stack=n_utils.cli:delete_stack',
+    'cf-update-stack=n_utils.cli:update_stack',
     'ndt=n_utils.cli:ndt',
     'nitor-dt-register-complete=n_utils.cli:ndt_register_complete'
 ]
+CONSOLESCRIPTS = CONSOLE_ONLY + NDT_AND_CONSOLE
 COMMAND_MAPPINGS = {}
 for script in SCRIPTS:
     name = script.split("/")[-1]
@@ -79,7 +83,7 @@ for script in SCRIPTS:
         name = name[:-3]
         value = "shell"
     COMMAND_MAPPINGS[name] = value
-for script in CONSOLESCRIPTS:
+for script in NDT_AND_CONSOLE + NDT_ONLY:
     name = script.split("=")[0]
     value = script.split("=")[1]
     COMMAND_MAPPINGS[name] = value

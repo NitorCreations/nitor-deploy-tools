@@ -209,7 +209,9 @@ def get_userdata():
     """
     parser = argparse.ArgumentParser(description="Get userdata defined for " +\
                                                  "an instance into a file")
-    parser.add_argument("file", help="File to write userdata into")
+    parser.add_argument("file", help="File to write userdata into").completer =\
+                                                                FilesCompleter()
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     dirname = os.path.dirname(args.file)
     if dirname:
@@ -234,7 +236,8 @@ def yaml_to_json():
                                                  "CloudFormation yaml to " +\
                                                  "CloudFormation json with " +\
                                                  "some preprosessing")
-    parser.add_argument("file", help="File to parse")
+    parser.add_argument("file", help="File to parse").completer = FilesCompleter()
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
@@ -249,7 +252,8 @@ def json_to_yaml():
                                                  "of a Nitor CloudFormation " +\
                                                  "yaml with for example " +\
                                                  "scripts externalized")
-    parser.add_argument("file", help="File to parse")
+    parser.add_argument("file", help="File to parse").completer = FilesCompleter()
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
@@ -261,7 +265,8 @@ def read_and_follow():
     parser = argparse.ArgumentParser(description="Read and print a file and" +\
                                                  " keep following the end " +\
                                                  "for new data")
-    parser.add_argument("file", help="File to follow")
+    parser.add_argument("file", help="File to follow").completer = FilesCompleter()
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
@@ -275,7 +280,8 @@ def logs_to_cloudwatch():
                                                  "to cloudwatch and keep " +\
                                                  "following the end for new " +\
                                                  "data")
-    parser.add_argument("file", help="File to follow")
+    parser.add_argument("file", help="File to follow").completer = FilesCompleter()
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
@@ -293,11 +299,14 @@ def signal_cf_status():
                                                  "the command line or " +\
                                                  "resolved from " +\
                                                  "CloudFormation tags")
-    parser.add_argument("status", help="Status to indicate: SUCCESS | FAILURE")
-    parser.add_argument("-r", "--resource", help="Logical resource name to" +\
-                                                 " signal. Looked up for" +\
-                                                 "cloudformation tags by" +\
+    parser.add_argument("status",
+                        help="Status to indicate: SUCCESS | FAILURE").completer\
+                                      = ChoicesCompleter(("SUCCESS", "FAILURE"))
+    parser.add_argument("-r", "--resource", help="Logical resource name to " +\
+                                                 "signal. Looked up from " +\
+                                                 "cloudformation tags by " +\
                                                  "default")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if args.status != "SUCCESS" and args.status != "FAILURE":
         parser.error("Status needs to be SUCCESS or FAILURE")
@@ -327,6 +336,7 @@ def associate_eip():
                                                           "paramEipAllocatio" +\
                                                           "nId",
                         default="paramEipAllocationId")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     cf_utils.associate_eip(eip=args.ip, allocation_id=args.allocationid,
                            eip_param=args.eipparam,
@@ -335,6 +345,8 @@ def associate_eip():
 def instance_id():
     """ Get id for instance
     """
+    parser = argparse.ArgumentParser(description=instance_id.__doc__)
+    argcomplete.autocomplete(parser)
     if is_ec2():
         info = InstanceInfo()
         print info.instance_id()
@@ -344,6 +356,8 @@ def instance_id():
 def region():
     """ Get default region - the region of the instance if run in an EC2 instance
     """
+    parser = argparse.ArgumentParser(description=region.__doc__)
+    argcomplete.autocomplete(parser)
     if is_ec2():
         info = InstanceInfo()
         print info.region()
@@ -362,29 +376,46 @@ def region():
 def stack_name():
     """ Get name of the stack that created this instance
     """
+    parser = argparse.ArgumentParser(description=stack_name.__doc__)
+    argcomplete.autocomplete(parser)
     if is_ec2():
         info = InstanceInfo()
         print info.stack_name()
     else:
-        sys.exit(1)
+        parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
 def stack_id():
     """ Get id of the stack the creted this instance
     """
-    info = InstanceInfo()
-    print info.stack_id()
+    parser = argparse.ArgumentParser(description=stack_id.__doc__)
+    argcomplete.autocomplete(parser)
+    if is_ec2():
+        info = InstanceInfo()
+        print info.stack_id()
+    else:
+        parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
 def logical_id():
     """ Get the logical id that is expecting a signal from this instance
     """
-    info = InstanceInfo()
-    print info.logical_id()
+    parser = argparse.ArgumentParser(description=logical_id.__doc__)
+    argcomplete.autocomplete(parser)
+    if is_ec2():
+        info = InstanceInfo()
+        print info.logical_id()
+    else:
+        parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
 def cf_region():
     """ Get region of the stack that created this instance
     """
-    info = InstanceInfo()
-    print info.stack_id().split(":")[3]
+    parser = argparse.ArgumentParser(description=cf_region.__doc__)
+    argcomplete.autocomplete(parser)
+    if is_ec2():
+        info = InstanceInfo()
+        print info.stack_id().split(":")[3]
+    else:
+        parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
 def update_stack():
     """ Create or update existing CloudFormation stack
@@ -427,6 +458,7 @@ def tail_stack_logs():
                                            "for")
     parser.add_argument("-s", "--start", help="Start time in seconds since" +\
                                               "epoc")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     cwlogs = CloudWatchLogs(args.stack_name, start_time=args.start)
     cwlogs.start()
@@ -447,6 +479,7 @@ def resolve_include():
     parser = argparse.ArgumentParser(description="Find a file from the first" +\
                                                 " of the defined include paths")
     parser.add_argument("file", help="The file to find")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     inc_file = aws_infra_util.find_include(args.file)
     if not inc_file:
@@ -466,6 +499,7 @@ def assume_role():
                                                  "'arn:aws:iam::43243246645:" +\
                                                  "role/DeployRole')")
     parser.add_argument("role_arn", help="The ARN of the role to assume")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     creds = cf_utils.assume_role(args.role_arn)
     print "AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\""
@@ -479,6 +513,7 @@ def get_parameter():
     parser = argparse.ArgumentParser(description="Get a parameter value from" +\
                                                  " the stack")
     parser.add_argument("parameter", help="The name of the parameter to print")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     info = InstanceInfo()
     print info.stack_data(args.parameter)
@@ -503,6 +538,7 @@ def clean_snapshots():
                                              "be deleted", type=int, default=30)
     parser.add_argument("tags", help="The tag values to select deleted " +\
                                      "snapshots", nargs="+")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if args.region:
         os.environ['AWS_DEFAULT_REGION'] = args.region
@@ -524,6 +560,7 @@ def setup_cli():
     parser.add_argument("-k", "--key-id", help="Key id for the profile")
     parser.add_argument("-s", "--secret", help="Secret to set for the profile")
     parser.add_argument("-r", "--region", help="Default region for the profile")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     cf_bootstrap.setup_cli(**vars(args))
 
@@ -545,5 +582,6 @@ def setup_networks():
                         type=int)
     parser.add_argument("-b", "--subnet-base", help="Base address for " + \
                                                     "subnets within the VPC")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     print cf_bootstrap.setup_networks(**vars(args))
