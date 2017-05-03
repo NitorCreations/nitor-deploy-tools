@@ -20,10 +20,12 @@ import json
 import locale
 import os
 import sys
-import subprocess
 import time
+import subprocess
 from subprocess import PIPE, Popen
 import argcomplete
+from argcomplete import USING_PYTHON2, ensure_str, split_line
+from argcomplete.completers import ChoicesCompleter, FilesCompleter
 from . import aws_infra_util
 from . import cf_bootstrap
 from . import cf_deploy
@@ -32,12 +34,12 @@ from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
-from argcomplete import USING_PYTHON2, ensure_str, split_line
-from argcomplete.completers import ChoicesCompleter, FilesCompleter
 
-sys_encoding = locale.getpreferredencoding()
+SYS_ENCODING = locale.getpreferredencoding()
 
 def ndt_register_complete():
+    """Print out shell function and command to register ndt command completion
+    """
     print """_ndt_complete() {
     local IFS=$'\\013'
     local COMP_CUR="${COMP_WORDS[COMP_CWORD]}"
@@ -66,67 +68,70 @@ def ndt_register_complete():
 complete -o nospace -F _ndt_complete "ndt"
 """
 
-def ndt():
-    if "_ARGCOMPLETE" in os.environ:
-        output_stream = os.fdopen(8, "wb")
-        ifs = os.environ.get("_ARGCOMPLETE_IFS", "\v")
-        if len(ifs) != 1:
-            sys.exit(1)
-        current = os.environ["COMP_CUR"]
-        prev = os.environ["COMP_PREV"]
-        comp_line = os.environ["COMP_LINE"]
-        comp_point = int(os.environ["COMP_POINT"])
+def do_command_completion():
+    """ ndt command completion function
+    """
+    output_stream = os.fdopen(8, "wb")
+    ifs = os.environ.get("_ARGCOMPLETE_IFS", "\v")
+    if len(ifs) != 1:
+        sys.exit(1)
+    current = os.environ["COMP_CUR"]
+    prev = os.environ["COMP_PREV"]
+    comp_line = os.environ["COMP_LINE"]
+    comp_point = int(os.environ["COMP_POINT"])
 
-        # Adjust comp_point for wide chars
-        if USING_PYTHON2:
-            comp_point = len(comp_line[:comp_point].decode(sys_encoding))
-        else:
-            comp_point = len(comp_line.encode(sys_encoding)[:comp_point].decode(sys_encoding))
+    # Adjust comp_point for wide chars
+    if USING_PYTHON2:
+        comp_point = len(comp_line[:comp_point].decode(SYS_ENCODING))
+    else:
+        comp_point = len(comp_line.encode(SYS_ENCODING)[:comp_point].decode(SYS_ENCODING))
 
-        comp_line = ensure_str(comp_line)
-        cword_prequote, cword_prefix, cword_suffix, comp_words, \
-                          last_wordbreak_pos = split_line(comp_line, comp_point)
-        if "COMP_CWORD" in os.environ and os.environ["COMP_CWORD"] == "1":
-            keys = [x for x in COMMAND_MAPPINGS.keys() if x.startswith(current)]
-            output_stream.write(ifs.join(keys).encode(sys_encoding))
-            output_stream.flush()
-        else:
-            command = prev
-            if len(comp_words) > 1:
-                command = comp_words[1]
-            if not command in COMMAND_MAPPINGS:
-                sys.exit(1)
-            command_type = COMMAND_MAPPINGS[command]
-            if command_type == "shell":
-                command = command + ".sh"
-            if command_type == "shell" or command_type == "script":
-                proc = Popen([command], stderr=PIPE, stdout=PIPE)
-                output = proc.communicate()[0]
-                if proc.returncode == 0:
-                    output_stream.write(output.replace("\n", ifs).decode(sys_encoding))
-                    output_stream.flush()
-                else:
-                    sys.exit(1)
-            else:
-                orig_line = os.environ['COMP_LINE']
-                orig_point = int(os.environ['COMP_POINT'])
-                line = orig_line[3:].lstrip()
-                os.environ['COMP_POINT'] = str(orig_point - (len(orig_line) - \
-                                               len(line)))
-                os.environ['COMP_LINE'] = line
-                parts = command_type.split(":")
-                my_func = getattr(__import__(parts[0], fromlist=[parts[1]]),
-                                  parts[1])
-                my_func()
-            sys.exit(0)
+    comp_line = ensure_str(comp_line)
+    comp_words = split_line(comp_line, comp_point)[3]
+    if "COMP_CWORD" in os.environ and os.environ["COMP_CWORD"] == "1":
+        keys = [x for x in COMMAND_MAPPINGS.keys() if x.startswith(current)]
+        output_stream.write(ifs.join(keys).encode(SYS_ENCODING))
+        output_stream.flush()
         sys.exit(0)
+    else:
+        command = prev
+        if len(comp_words) > 1:
+            command = comp_words[1]
+        if not command in COMMAND_MAPPINGS:
+            sys.exit(1)
+        command_type = COMMAND_MAPPINGS[command]
+        if command_type == "shell":
+            command = command + ".sh"
+        if command_type == "shell" or command_type == "script":
+            proc = Popen([command], stderr=PIPE, stdout=PIPE)
+            output = proc.communicate()[0]
+            if proc.returncode == 0:
+                output_stream.write(output.replace("\n", ifs).decode(SYS_ENCODING))
+                output_stream.flush()
+            else:
+                sys.exit(1)
+        else:
+            line = comp_line[3:].lstrip()
+            os.environ['COMP_POINT'] = str(comp_point - (len(comp_line) - \
+                                           len(line)))
+            os.environ['COMP_LINE'] = line
+            parts = command_type.split(":")
+            getattr(__import__(parts[0], fromlist=[parts[1]]), parts[1])()
+        sys.exit(0)
+
+def ndt():
+    """ The main nitor deploy tools command that provides bash command
+    completion and subcommand execution
+    """
+    if "_ARGCOMPLETE" in os.environ:
+        do_command_completion()
     else:
         command = sys.argv[1]
         if command not in COMMAND_MAPPINGS:
             sys.stderr.writelines([u'usage: ndt <command> [args...]\n'])
             sys.stderr.writelines([u'\tcommand shoud be one of:\n'])
-            for command in COMMAND_MAPPINGS.keys():
-                sys.stderr.writelines([u'\t\t' + command + '\n'])
+            for command in COMMAND_MAPPINGS:
+                sys.stderr.writelines([u'\t\t' + command[0] + '\n'])
             sys.exit(1)
         command_type = COMMAND_MAPPINGS[command]
         if command_type == "shell":
@@ -145,8 +150,7 @@ def list_file_to_json():
     """ Convert a file with an entry on each line to a json document with
     a single element (name as argument) containg file rows as  list.
     """
-    parser = argparse.ArgumentParser(description="Ouput a file with one item" +\
-                                                 " per line as a json object")
+    parser = argparse.ArgumentParser(description=list_file_to_json.__doc__)
     parser.add_argument("arrayname", help="The name in the json object given" +\
                                           "to the array").completer = \
                                                             ChoicesCompleter(())
@@ -163,12 +167,7 @@ def create_userid_list():
     """Ouput arguments as a json object containing one array named 'Add'. Used
     in scripts used to share AWS AMI images with other AWS accounts and regions
     """
-    parser = argparse.ArgumentParser(description="Ouput arguments as a " +\
-                                                 "json object containing one" +\
-                                                 " array named 'Add'. Used " +\
-                                                 "in scripts used to share " +\
-                                                 "AWS AMI images with other " +\
-                                                 "AWS accounts and regions")
+    parser = argparse.ArgumentParser(description=create_userid_list.__doc__)
     parser.add_argument("user_ids", help="User ids to dump",
                         nargs="+").completer = ChoicesCompleter(())
     argcomplete.autocomplete(parser)
@@ -182,11 +181,7 @@ def add_deployer_server():
     """Add a server into a maven configuration file. Password is taken from the
     environment variable 'DEPLOYER_PASSWORD'
     """
-    parser = argparse.ArgumentParser(description="Add a server into a maven" +\
-                                                 " configuration file. " +\
-                                                 "Password is taken from the" +\
-                                                 " environment variable " +\
-                                                 "'DEPLOYER_PASSWORD'")
+    parser = argparse.ArgumentParser(description=add_deployer_server.__doc__)
     parser.add_argument("file", help="The file to modify").completer = \
                                                                 FilesCompleter()
     parser.add_argument("username",
@@ -207,8 +202,7 @@ def add_deployer_server():
 def get_userdata():
     """Get userdata defined for an instance into a file
     """
-    parser = argparse.ArgumentParser(description="Get userdata defined for " +\
-                                                 "an instance into a file")
+    parser = argparse.ArgumentParser(description=get_userdata.__doc__)
     parser.add_argument("file", help="File to write userdata into").completer =\
                                                                 FilesCompleter()
     argcomplete.autocomplete(parser)
@@ -232,10 +226,7 @@ def yaml_to_json():
     """"Convert Nitor CloudFormation yaml to CloudFormation json with some
     preprosessing
     """
-    parser = argparse.ArgumentParser(description="Convert Nitor" +\
-                                                 "CloudFormation yaml to " +\
-                                                 "CloudFormation json with " +\
-                                                 "some preprosessing")
+    parser = argparse.ArgumentParser(description=yaml_to_json.__doc__)
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -247,11 +238,7 @@ def json_to_yaml():
     """Convert CloudFormation json to an approximation of a Nitor CloudFormation
     yaml with for example scripts externalized
     """
-    parser = argparse.ArgumentParser(description="Convert CloudFormation " +\
-                                                 "json to an approximation " +\
-                                                 "of a Nitor CloudFormation " +\
-                                                 "yaml with for example " +\
-                                                 "scripts externalized")
+    parser = argparse.ArgumentParser(description=json_to_yaml.__doc__)
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -262,9 +249,7 @@ def json_to_yaml():
 def read_and_follow():
     """Read and print a file and keep following the end for new data
     """
-    parser = argparse.ArgumentParser(description="Read and print a file and" +\
-                                                 " keep following the end " +\
-                                                 "for new data")
+    parser = argparse.ArgumentParser(description=read_and_follow.__doc__)
     parser.add_argument("file", help="File to follow").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -276,10 +261,7 @@ def logs_to_cloudwatch():
     """Read a file and send rows to cloudwatch and keep following the end for
     new data
     """
-    parser = argparse.ArgumentParser(description="Read a file and send rows " +\
-                                                 "to cloudwatch and keep " +\
-                                                 "following the end for new " +\
-                                                 "data")
+    parser = argparse.ArgumentParser(description=logs_to_cloudwatch.__doc__)
     parser.add_argument("file", help="File to follow").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -292,13 +274,7 @@ def signal_cf_status():
     that is either given on the command line or resolved from CloudFormation
     tags
     """
-    parser = argparse.ArgumentParser(description="Signal CloudFormation " +\
-                                                 "status to a logical " +\
-                                                 "resource in CloudFormation" +\
-                                                 " that is either given on " +\
-                                                 "the command line or " +\
-                                                 "resolved from " +\
-                                                 "CloudFormation tags")
+    parser = argparse.ArgumentParser(description=signal_cf_status.__doc__)
     parser.add_argument("status",
                         help="Status to indicate: SUCCESS | FAILURE").completer\
                                       = ChoicesCompleter(("SUCCESS", "FAILURE"))
@@ -315,8 +291,7 @@ def signal_cf_status():
 def associate_eip():
     """Associate an Elastic IP for the instance
     """
-    parser = argparse.ArgumentParser(description="Associate an Elastic IP " +\
-                                                 "for the instance")
+    parser = argparse.ArgumentParser(description=associate_eip.__doc__)
     parser.add_argument("-i", "--ip", help="Elastic IP to allocate - default" +\
                                            " is to get paramEip from stack")
     parser.add_argument("-a", "--allocationid", help="Elastic IP allocation " +\
@@ -440,8 +415,7 @@ def update_stack():
 def delete_stack():
     """Create or update existing CloudFormation stack
     """
-    parser = argparse.ArgumentParser(description="Create or update existing " +\
-                                                 "CloudFormation stack")
+    parser = argparse.ArgumentParser(description=delete_stack.__doc__)
     parser.add_argument("stack_name", help="Name of the stack to delete")
     parser.add_argument("region", help="The region to delete the stack from")
     args = parser.parse_args()
@@ -451,9 +425,7 @@ def delete_stack():
 def tail_stack_logs():
     """Tail logs from the log group of a cloudformation stack
     """
-    parser = argparse.ArgumentParser(description="Tail logs from the log " +\
-                                                 "group of a cloudformation " +\
-                                                 "stack")
+    parser = argparse.ArgumentParser(description=tail_stack_logs.__doc__)
     parser.add_argument("stack_name", help="Name of the stack to watch logs " +\
                                            "for")
     parser.add_argument("-s", "--start", help="Start time in seconds since" +\
@@ -476,8 +448,7 @@ def tail_stack_logs():
 def resolve_include():
     """Find a file from the first of the defined include paths
     """
-    parser = argparse.ArgumentParser(description="Find a file from the first" +\
-                                                " of the defined include paths")
+    parser = argparse.ArgumentParser(description=resolve_include.__doc__)
     parser.add_argument("file", help="The file to find")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -490,14 +461,9 @@ def resolve_include():
 def assume_role():
     """Assume a defined role. Prints out environment variables
     to be eval'd to current context for use:
-    eval $(assume-role 'arn:aws:iam::43243246645:role/DeployRole')"""
-    parser = argparse.ArgumentParser(description="Assume a defined role. " +\
-                                                 "Prints out environment " +\
-                                                 "variables to be eval'd " +\
-                                                 "to current context for " +\
-                                                 "use:\neval $(assume-role " +\
-                                                 "'arn:aws:iam::43243246645:" +\
-                                                 "role/DeployRole')")
+    eval $(assume-role 'arn:aws:iam::43243246645:role/DeployRole')
+    """
+    parser = argparse.ArgumentParser(description=assume_role.__doc__)
     parser.add_argument("role_arn", help="The ARN of the role to assume")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -510,8 +476,7 @@ def assume_role():
 def get_parameter():
     """Get a parameter value from the stack
     """
-    parser = argparse.ArgumentParser(description="Get a parameter value from" +\
-                                                 " the stack")
+    parser = argparse.ArgumentParser(description=get_parameter.__doc__)
     parser.add_argument("parameter", help="The name of the parameter to print")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -522,11 +487,7 @@ def clean_snapshots():
     """Clean snapshots that are older than a number of days (30 by default) and
     have one of specified tag values
     """
-    parser = argparse.ArgumentParser(description="Clean snapshots that are " +\
-                                                 "older than a number of " +\
-                                                 "days (30 by default) and " +\
-                                                 "have one of specified tag " +\
-                                                 "values")
+    parser = argparse.ArgumentParser(description=clean_snapshots.__doc__)
     parser.add_argument("-r", "--region", help="The region to delete " +\
                                                "snapshots from. Can also be " +\
                                                "set with env variable " +\
@@ -549,13 +510,7 @@ def setup_cli():
     the given name and credentials. If an identically named profile exists,
     it will not be overwritten.
     """
-    parser = argparse.ArgumentParser(description="Setup the command line " +\
-                                                 "environment to define an " +\
-                                                 "aws cli profile with the " +\
-                                                 "given name and credentials" +\
-                                                 ". If an identically named" +\
-                                                 " profile exists, it will " +\
-                                                 "not be overwritten.")
+    parser = argparse.ArgumentParser(description=setup_cli.__doc__)
     parser.add_argument("-n", "--name", help="Name for the profile to create")
     parser.add_argument("-k", "--key-id", help="Key id for the profile")
     parser.add_argument("-s", "--secret", help="Secret to set for the profile")
@@ -567,9 +522,7 @@ def setup_cli():
 def setup_networks():
     """Setup a VPC and a private and public network in each availability zone.
     """
-    parser = argparse.ArgumentParser(description="Setup a VPC and a private " +\
-                                                 "and public network in each" +\
-                                                 " availability zone.")
+    parser = argparse.ArgumentParser(description=setup_networks.__doc__)
     parser.add_argument("-y", "--yes", help="Answer yes and go with defaults" +\
                                             " for all questions",
                         action="store_true")
