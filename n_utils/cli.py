@@ -21,7 +21,6 @@ import locale
 import os
 import sys
 import time
-import subprocess
 from subprocess import PIPE, Popen
 import argcomplete
 from argcomplete import USING_PYTHON2, ensure_str, split_line
@@ -30,8 +29,9 @@ from . import aws_infra_util
 from . import cf_bootstrap
 from . import cf_deploy
 from . import cf_utils
+from . import volumes
 from . import COMMAND_MAPPINGS
-from .cf_utils import InstanceInfo, is_ec2
+from .cf_utils import InstanceInfo, is_ec2, region
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -328,25 +328,12 @@ def instance_id():
     else:
         sys.exit(1)
 
-def region():
+def ec2_region():
     """ Get default region - the region of the instance if run in an EC2 instance
     """
     parser = argparse.ArgumentParser(description=region.__doc__)
     argcomplete.autocomplete(parser)
-    if is_ec2():
-        info = InstanceInfo()
-        print info.region()
-    else:
-        if 'AWS_DEFAULT_REGION' in os.environ:
-            print os.environ['AWS_DEFAULT_REGION']
-        else:
-            cli_call = subprocess.Popen(["aws", "configure", "get", "region"],
-                                        stderr=PIPE, stdout=PIPE)
-            output = cli_call.communicate()[0]
-            if output and cli_call.returncode == 0:
-                print output.rstrip()
-            else:
-                print os.environ.get('AWS_DEFAULT_REGION', 'eu-west-1')
+    print region()
 
 def stack_name():
     """ Get name of the stack that created this instance
@@ -503,7 +490,7 @@ def clean_snapshots():
     args = parser.parse_args()
     if args.region:
         os.environ['AWS_DEFAULT_REGION'] = args.region
-    cf_utils.clean_snapshots(args.days, args.tags)
+    volumes.clean_snapshots(args.days, args.tags)
 
 def setup_cli():
     """Setup the command line environment to define an aws cli profile with

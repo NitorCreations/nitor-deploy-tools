@@ -21,18 +21,17 @@ import os
 import random
 import stat
 import string
+import subprocess
+from subprocess import PIPE
 import sys
 import time
 from collections import deque
-from datetime import datetime, timedelta
 from threading import Event, Lock, Thread
 
 import boto3
 from botocore.exceptions import ClientError
-from dateutil import tz
 import requests
 from requests.exceptions import ConnectionError
-from termcolor import colored
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -73,7 +72,12 @@ class InstanceInfo(object):
             return self._info['logical_id']
         else:
             return None
-  
+    def availability_zone(self):
+        if 'availabilityZone' in self._info:
+            return self._info['availabilityZone']
+        else:
+            return None
+
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
             try:
@@ -366,41 +370,6 @@ def resolve_account():
         account_id = arn.split(':')[4]
     return account_id
 
-def clean_snapshots(days, tags):
-    ec2 = boto3.client("ec2")
-    account_id = resolve_account()
-    newest_timestamp = datetime.utcnow() - timedelta(days=days)
-    newest_timestamp = newest_timestamp .replace(tzinfo=None)
-    paginator = ec2.get_paginator('describe_snapshots')
-    for page in paginator.paginate(OwnerIds=[account_id],
-                                   Filters=[{'Name': 'tag-value',
-                                             'Values': tags}],
-                                   PaginationConfig={'PageSize': 1000}):
-        for snapshot in page['Snapshots']:
-            tags = {}
-            for tag in snapshot['Tags']:
-                tags[tag['Key']] = tag['Value']
-            print_time = snapshot['StartTime'].replace(tzinfo=\
-                                                       tz.tzlocal()).timetuple()
-            compare_time = snapshot['StartTime'].replace(tzinfo=None)
-            if compare_time < newest_timestamp:
-                print colored("Deleting " + snapshot['SnapshotId'], "yellow") +\
-                              " || " +\
-                              time.strftime("%a, %d %b %Y %H:%M:%S",
-                                            print_time) + \
-                              " || " + json.dumps(tags)
-                try:
-                    ec2.delete_snapshot(SnapshotId=snapshot['SnapshotId'])
-                except ClientError as err:
-                    print colored("Delete failed: " + \
-                                  err.response['Error']['Message'], "red")
-            else:
-                print colored("Skipping " + snapshot['SnapshotId'], "cyan") +\
-                              " || " + \
-                              time.strftime("%a, %d %b %Y %H:%M:%S",
-                                            print_time) +\
-                              " || " + json.dumps(tags)
-
 def is_ec2():
     if sys.platform.startswith("win"):
         import wmi
@@ -413,3 +382,25 @@ def is_ec2():
                 return uuid_str.startswith("ec2")
         else:
             return False
+
+def region():
+    """ Get default region - the region of the instance if run in an EC2 instance
+    """
+    if 'AWS_DEFAULT_REGION' in os.environ:
+        return os.environ['AWS_DEFAULT_REGION']
+    elif is_ec2():
+        info = InstanceInfo()
+        return info.region()
+    else:
+        cli_call = subprocess.Popen(["aws", "configure", "get", "region"],
+                                    stderr=PIPE, stdout=PIPE)
+        output = cli_call.communicate()[0]
+        if output and cli_call.returncode == 0:
+            return output.rstrip()
+        else:
+            return os.environ.get('AWS_DEFAULT_REGION', 'eu-west-1')
+
+
+def set_region():
+    if 'AWS_DEFAULT_REGION' not in os.environ:
+        os.environ['AWS_DEFAULT_REGION'] = region()

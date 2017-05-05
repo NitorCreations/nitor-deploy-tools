@@ -90,7 +90,7 @@ create_empty_volume() {
 }
 
 # Attach volume
-# Usage: attach_volume volume-id
+# Usage: attach_volume volume-id device-path
 attach_volume() {
   local VOLUME_ID=$1
   local DEVICE_PATH=$2

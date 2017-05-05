@@ -61,7 +61,7 @@ NDT_AND_CONSOLE=[
     'ec2-associate-eip=n_utils.cli:associate_eip',
     'ec2-clean-snapshots=n_utils.cli:clean_snapshots',
     'ec2-instance-id=n_utils.cli:instance_id',
-    'ec2-region=n_utils.cli:region',
+    'ec2-region=n_utils.cli:ec2_region',
     'ec2-get-userdata=n_utils.cli:get_userdata'
 ]
 NDT_ONLY=[
@@ -72,7 +72,8 @@ CONSOLE_ONLY=[
     'cf-delete-stack=n_utils.cli:delete_stack',
     'cf-update-stack=n_utils.cli:update_stack',
     'ndt=n_utils.cli:ndt',
-    'nitor-dt-register-complete=n_utils.cli:ndt_register_complete'
+    'nitor-dt-register-complete=n_utils.cli:ndt_register_complete',
+    'latest-snapshot=n_utils.volumes:latest_snapshot'
 ]
 CONSOLESCRIPTS = CONSOLE_ONLY + NDT_AND_CONSOLE
 COMMAND_MAPPINGS = {}
