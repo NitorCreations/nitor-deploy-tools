@@ -1,4 +1,4 @@
-.#!/usr/bin/env python
+#!/usr/bin/env python
 
 import argparse
 import time
@@ -6,6 +6,8 @@ import json
 import sys
 import os
 import subprocess
+from subprocess import PIPE, Popen
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from dateutil import tz
 from termcolor import colored
@@ -14,6 +16,64 @@ import boto3
 from botocore.exceptions import ClientError
 import psutil
 from .cf_utils import set_region, resolve_account, InstanceInfo
+from .aws_infra_util import find_include
+
+def letter_to_target_id(letter):
+    return ord(letter)-ord("f")+5
+
+def target_id_to_letter(target_id):
+    return str(unichr(target_id-5+ord("f")))
+
+def wmic_partition_get():
+    return wmic_get("partition")
+
+def wmic_diskdrive_get():
+    return wmic_get("diskdrive")
+
+def wmic_volume_get():
+    return wmic_get("volume")
+
+def wmic_get(command):
+    ret = []
+    proc = Popen(["wmic", command, "get",
+                  "/format:rawxml"], stdout=PIPE, stderr=PIPE)
+    output = proc.communicate()[0]
+    tree = ET.fromstring(output)
+    for elem in tree.iter("RESULTS"):
+        for inst in elem.iter("INSTANCE"):
+            disk={}
+            for prop in inst.iter("PROPERTY"):
+                try:
+                    disk[prop.attrib['NAME']] = int(prop.findtext("*"))
+                except ValueError:
+                    disk[prop.attrib['NAME']] = prop.findtext("*")
+                except TypeError:
+                    continue
+            ret.append(disk)
+    return ret
+
+def wmic_disk_with_target_id(target_id):
+    return [x for x in wmic_diskdrive_get() if x['SCSITargetId'] == target_id][0]
+
+def wmic_max_target_id():
+    return sorted([x['SCSITargetId'] for x in wmic_diskdrive_get()],
+                  reverse=True)[0]
+
+def disk_by_drive_letter(drive_letter):
+    ret = {}
+    proc = Popen(["powershell.exe", find_include("disk-by-drive-letter.ps1"),
+                  drive_letter.upper() + ":"], stdout=PIPE, stderr=PIPE)
+    output = proc.communicate()[0]
+    tree = ET.fromstring(output)
+    for obj in tree.iter("Object"):
+        for prop in obj.iter("Property"):
+            try:
+                ret[prop.attrib['Name']] = int(prop.findtext("."))
+            except ValueError:
+                ret[prop.attrib['Name']] = prop.findtext(".")
+            except TypeError:
+                continue
+    return ret
 
 def latest_snapshot():
     """Get the latest snapshot with a given tag
@@ -49,46 +109,65 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
     if not snapshot:
         #empty device
         if sys.platform.startswith('win'):
-            #format win disk_partition
-            import windll
-            from ctypes import *
-
-            def myFmtCallback(command, modifier, arg):
-                print "FmtCallback: " + str(command)
-                return 1
-            
-            def format_drive(Drive, Format, Title):
-                fm = windll.LoadLibrary('fmifs.dll')
-                FMT_CB_FUNC = WINFUNCTYPE(c_int, c_int, c_int, c_void_p)
-                FMIFS_UNKNOWN = 0
-                fm.FormatEx(c_wchar_p(Drive), FMIFS_UNKNOWN, c_wchar_p(Format),
-                            c_wchar_p(Title), True, c_int(0),
-                            FMT_CB_FUNC(myFmtCallback))
-            print "Formatting Z:\\ as NTFS"
-            format_drive("Z:\\", "NTFS", "EBS")
+            #Windows format
+            disk = wmic_disk_with_target_id(letter_to_target_id(device[-1:]))
+            drive_letter = mount_path[0].upper()
+            disk_number = str(disk['Index'])
+            subprocess.check_call(["powershell.exe", "Get-Disk", disk_number,
+                                   "|", "Set-Disk", "-IsOffline", "$False"])
+            subprocess.check_call(["powershell.exe", "Initialize-Disk",
+                                   disk_number, "-PartitionStyle", "MBR"])
+            subprocess.check_call(["powershell.exe", "New-Partition",
+                                   "-DiskNumber", disk_number,
+                                   "-UseMaximumSize", "-DriveLetter",
+                                   drive_letter])
+            subprocess.check_call(["powershell.exe", "Format-Volume",
+                                   "-DriveLetter", drive_letter, "-FileSystem",
+                                   "NTFS", "-Force", "-Confirm:$False"])
         else:
             #linux format
             print "Formatting " + device
             subprocess.check_call(["mkfs.ext4", device])
     else:
         if sys.platform.startswith('win'):
+            disk = wmic_disk_with_target_id(letter_to_target_id(device[-1:]))
+            drive_letter = mount_path[0].upper()
+            disk_number = str(disk['Index'])
+            subprocess.check_call(["powershell.exe", "Get-Disk", disk_number,
+                                   "|", "Set-Disk", "-IsOffline", "$False"])
             #resize win partition if necessary
-            print "win"
+            if size_gb and not size_gb == snapshot.volume_size:
+                proc = subprocess.Popen(["powershell.exe",
+                                         "$((Get-PartitionSupportedSize -Dri" +\
+                                         "veLetter " + drive_letter + \
+                                         ").SizeMax)"],
+                                         stdout=subprocess.PIPE)
+                max_size = proc.communicate()[0]
+                subprocess.check_call(["powershell.exe", "Resize-Partition",
+                                       "-DriveLetter", drive_letter,"-Size",
+                                       max_size])
         else:
             if size_gb and not size_gb == snapshot.volume_size:
                 print "Resizing " + device + " from " + snapshot.volume_size +\
                       "GB to " + size_gb
                 subprocess.check_call(["e2fsck", "-f", "-p", device])
                 subprocess.check_call(["resize2fs",  device])
-            
+
 
 def first_free_device():
-    devices = [x.device for x in psutil.disk_partitions()]
-    print devices
-    for letter in "fghijklmnopqrstuvxyz":
-        device = "/dev/xvd" + letter
-        if device not in devices and not os.path.exists(device):
-            return device
+    if sys.platform.startswith('win'):
+        max_target = wmic_max_target_id()
+        if max_target == 0:
+            return "/dev/xvdf"
+        else:
+            return "/dev/xvd" + target_id_to_letter(max_target + 1)
+    else:
+        devices = [x.device for x in psutil.disk_partitions()]
+        print devices
+        for letter in "fghijklmnopqrstuvxyz":
+            device = "/dev/xvd" + letter
+            if device not in devices and not os.path.exists(device):
+                return device
     return None
 
 def get_latest_snapshot(tag_name, tag_value):
@@ -143,7 +222,10 @@ def wait_for_volume_status(volume_id, status, timeout_sec=300):
         if time.time() - start > timeout_sec:
             raise Exception("Failed waiting for status '" + status + "' for " +\
                             volume_id + " (timeout: " + str(timeout_sec) + ")")
-        volume = ec2.describe_volumes(VolumeIds=[volume_id]).Volumes[0]
+        resp = ec2.describe_volumes(VolumeIds=[volume_id])
+        if "Volumes" in resp:
+            volume = resp['Volumes'][0]
+
 
 def match_volume_state(volume, status):
     if not volume:
@@ -173,10 +255,45 @@ def delete_on_termination(device_path):
                                       "DeviceName": device_path,
                                       "Ebs":{"DeleteOnTermination": True}}])
 
-# Usage: create_snapshot volume_id tag_key tag_value
-def create_snapshot(volume_id, tag_key, tag_value):
+def detach_volume(mount_path):
     set_region()
+    if sys.platform.startswith('win'):
+        device = "/dev/xvd" + \
+                 target_id_to_letter(disk_by_drive_letter(
+                    mount_path[0])['TargetId'])
+        subprocess.check_call(["mountvol", mount_path, "/p"])
+    else:
+        device = [x for x in psutil.disk_partitions() \
+                      if x.mountpoint == mount_path][0].device
+        subprocess.check_call(["umount", mount_path])
+
     ec2 = boto3.client("ec2")
+    instance_id = InstanceInfo().instance_id()
+    volume = ec2.describe_volumes(Filters=[{"Name": "attachment.device",
+                                            "Values": [device]},
+                                            {"Name": "attachment.instance-id",
+                                             "Values": [instance_id]}])
+    volume_id = volume['Volumes'][0]['VolumeId']
+    ec2.detach_volume(VolumeId=volume_id, InstanceId=instance_id)
+
+# Usage: create_snapshot volume_id tag_key tag_value
+def create_snapshot(mount_path, tag_key, tag_value):
+    set_region()
+    if sys.platform.startswith('win'):
+        device = "/dev/xvd" + \
+                 target_id_to_letter(disk_by_drive_letter(
+                    mount_path[0])['TargetId'])
+    else:
+        device = [x for x in psutil.disk_partitions() \
+                      if x.mountpoint == mount_path][0].device
+
+    ec2 = boto3.client("ec2")
+    instance_id = InstanceInfo().instance_id()
+    volume = ec2.describe_volumes(Filters=[{"Name": "attachment.device",
+                                            "Values": [device]},
+                                            {"Name": "attachment.instance-id",
+                                             "Values": [instance_id]}])
+    volume_id = volume['Volumes'][0]['VolumeId']
     snap = ec2.create_snapshot(VolumeId=volume_id)
     ec2.create_tags(Resources=[snap['SnapshotId']],
                     Tags=[{'Key': tag_key, 'Value': tag_value}])
