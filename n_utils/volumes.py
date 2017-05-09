@@ -133,8 +133,17 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
             disk = wmic_disk_with_target_id(letter_to_target_id(device[-1:]))
             drive_letter = mount_path[0].upper()
             disk_number = str(disk['Index'])
+            with open(os.devnull, 'w') as devnull:
+                subprocess.call(["powershell.exe", "Initialize-Disk",
+                                    disk_number, "-PartitionStyle", "MBR"],
+                                    stderr=devnull, stdout=devnull)
             subprocess.check_call(["powershell.exe", "Get-Disk", disk_number,
                                    "|", "Set-Disk", "-IsOffline", "$False"])
+            subprocess.check_call(["powershell.exe", "Get-Partition",
+                                   "-DiskNumber", disk_number,
+                                   "-PartitionNumber", "1"
+                                   "|", "Set-Partition", "-NewDriveLetter",
+                                   drive_letter])
             #resize win partition if necessary
             if size_gb and not size_gb == snapshot.volume_size:
                 proc = subprocess.Popen(["powershell.exe",

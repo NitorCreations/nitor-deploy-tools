@@ -476,14 +476,14 @@ def volume_from_snapshot():
     found, an empty volume is created, attached, formatted and mounted.
     """
     parser = argparse.ArgumentParser(description=volume_from_snapshot.__doc__)
-    parser.add_argument("tag-key", help="Key of the tag to find volume with")
-    parser.add_argument("tag-value", help="Value of the tag to find volume with")
-    parser.add_argument("mount-path", help="Where to mount the volume")
-    parser.add_argument("size-gb", nargs="?", help="Size in GB for the volum" +\
+    parser.add_argument("tag_key", help="Key of the tag to find volume with")
+    parser.add_argument("tag_value", help="Value of the tag to find volume with")
+    parser.add_argument("mount_path", help="Where to mount the volume")
+    parser.add_argument("size_gb", nargs="?", help="Size in GB for the volum" +\
                                                    "e. If different from sna" +\
                                                    "pshot size, volume and " +\
                                                    "filesystem are resized",
-                        default=None)
+                        default=None, type=int)
     argcomplete.autocomplete(parser)
     if is_ec2():
         args = parser.parse_args()
@@ -496,15 +496,28 @@ def snapshot_from_volume():
     """ Create a snapshot of a volume identified by it's mount path
     """
     parser = argparse.ArgumentParser(description=snapshot_from_volume.__doc__)
-    parser.add_argument("tag-key", help="Key of the tag to find volume with")
-    parser.add_argument("tag-value", help="Value of the tag to find volume with")
-    parser.add_argument("mount-path", help="Where to mount the volume")
+    parser.add_argument("tag_key", help="Key of the tag to find volume with")
+    parser.add_argument("tag_value", help="Value of the tag to find volume with")
+    parser.add_argument("mount_path", help="Where to mount the volume")
     argcomplete.autocomplete(parser)
     if is_ec2():
         args = parser.parse_args()
         volumes.create_snapshot(args.tag_key, args.tag_value, args.mount_path)
     else:
         parser.error("Only makes sense on an EC2 instance")
+
+def detach_volume():
+    """ Create a snapshot of a volume identified by it's mount path
+    """
+    parser = argparse.ArgumentParser(description=snapshot_from_volume.__doc__)
+    parser.add_argument("mount_path", help="Where to mount the volume")
+    argcomplete.autocomplete(parser)
+    if is_ec2():
+        args = parser.parse_args()
+        volumes.detach_volume(args.mount_path)
+    else:
+        parser.error("Only makes sense on an EC2 instance")
+
 
 def clean_snapshots():
     """Clean snapshots that are older than a number of days (30 by default) and

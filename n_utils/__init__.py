@@ -64,7 +64,8 @@ NDT_AND_CONSOLE=[
     'ec2-region=n_utils.cli:ec2_region',
     'ec2-get-userdata=n_utils.cli:get_userdata',
     'volume-from-snapshot=n_utils.cli:volume_from_snapshot',
-    'snapshot-from-volume=n_utils.cli:snapshot_from_volume'
+    'snapshot-from-volume=n_utils.cli:snapshot_from_volume',
+    'detach-volume=n_utils.cli:detach_volume',
 ]
 NDT_ONLY=[
     'setup-cli=n_utils.cli:setup_cli',
