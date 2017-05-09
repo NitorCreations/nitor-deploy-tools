@@ -41,7 +41,7 @@ def wmic_get(command):
     tree = ET.fromstring(output)
     for elem in tree.iter("RESULTS"):
         for inst in elem.iter("INSTANCE"):
-            disk={}
+            disk = {}
             for prop in inst.iter("PROPERTY"):
                 try:
                     disk[prop.attrib['NAME']] = int(prop.findtext("*"))
@@ -135,8 +135,8 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
             disk_number = str(disk['Index'])
             with open(os.devnull, 'w') as devnull:
                 subprocess.call(["powershell.exe", "Initialize-Disk",
-                                    disk_number, "-PartitionStyle", "MBR"],
-                                    stderr=devnull, stdout=devnull)
+                                 disk_number, "-PartitionStyle", "MBR"],
+                                stderr=devnull, stdout=devnull)
             subprocess.check_call(["powershell.exe", "Get-Disk", disk_number,
                                    "|", "Set-Disk", "-IsOffline", "$False"])
             subprocess.check_call(["powershell.exe", "Get-Partition",
@@ -150,17 +150,17 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                          "$((Get-PartitionSupportedSize -Dri" +\
                                          "veLetter " + drive_letter + \
                                          ").SizeMax)"],
-                                         stdout=subprocess.PIPE)
+                                        stdout=subprocess.PIPE)
                 max_size = proc.communicate()[0]
                 subprocess.check_call(["powershell.exe", "Resize-Partition",
-                                       "-DriveLetter", drive_letter,"-Size",
+                                       "-DriveLetter", drive_letter, "-Size",
                                        max_size])
         else:
             if size_gb and not size_gb == snapshot.volume_size:
                 print "Resizing " + device + " from " + snapshot.volume_size +\
                       "GB to " + size_gb
                 subprocess.check_call(["e2fsck", "-f", "-p", device])
-                subprocess.check_call(["resize2fs",  device])
+                subprocess.check_call(["resize2fs", device])
 
 
 def first_free_device():
