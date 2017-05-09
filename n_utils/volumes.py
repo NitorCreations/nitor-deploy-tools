@@ -130,7 +130,8 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
             subprocess.check_call(["mkfs.ext4", device])
     else:
         if sys.platform.startswith('win'):
-            disk = wmic_disk_with_target_id(letter_to_target_id(device[-1:]))
+            target_id = letter_to_target_id(device[-1:])
+            disk = wmic_disk_with_target_id(target_id)
             drive_letter = mount_path[0].upper()
             disk_number = str(disk['Index'])
             with open(os.devnull, 'w') as devnull:
@@ -139,11 +140,13 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                 stderr=devnull, stdout=devnull)
             subprocess.check_call(["powershell.exe", "Get-Disk", disk_number,
                                    "|", "Set-Disk", "-IsOffline", "$False"])
-            subprocess.check_call(["powershell.exe", "Get-Partition",
-                                   "-DiskNumber", disk_number,
-                                   "-PartitionNumber", "1"
-                                   "|", "Set-Partition", "-NewDriveLetter",
-                                   drive_letter])
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call(["powershell.exe", "Get-Partition",
+                                       "-DiskNumber", disk_number,
+                                       "-PartitionNumber", "1"
+                                       "|", "Set-Partition", "-NewDriveLetter",
+                                       drive_letter], stdout=devnull,
+                                       stderr=devnull)
             #resize win partition if necessary
             if size_gb and not size_gb == snapshot.volume_size:
                 proc = subprocess.Popen(["powershell.exe",
@@ -280,6 +283,9 @@ def detach_volume(mount_path):
 def create_snapshot(tag_key, tag_value, mount_path):
     set_region()
     device = device_from_mount_path(mount_path)
+    with open(os.devnull, 'w') as devnull:
+        subprocess.call(["sync", mount_path[0]], stdout=devnull,
+                              stderr=devnull)
     ec2 = boto3.client("ec2")
     instance_id = InstanceInfo().instance_id()
     volume = ec2.describe_volumes(Filters=[{"Name": "attachment.device",

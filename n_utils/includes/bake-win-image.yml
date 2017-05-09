@@ -102,7 +102,7 @@
       dest: "C:\\nitor\\"
     with_items: "{{ files }}"
   - win_chocolatey: name="{{ item }}"
-    with_items: [ "python2", "awscli" ]
+    with_items: [ "python2", "awscli", "sync" ]
   - win_shell: "C:\\nitor\\prepare.ps1"
     args:
       chdir: "C:\\"
