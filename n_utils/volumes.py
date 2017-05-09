@@ -257,46 +257,39 @@ def delete_on_termination(device_path):
 
 def detach_volume(mount_path):
     set_region()
-    if sys.platform.startswith('win'):
-        device = "/dev/xvd" + \
-                 target_id_to_letter(disk_by_drive_letter(
-                    mount_path[0])['TargetId'])
-        subprocess.check_call(["mountvol", mount_path, "/p"])
-    else:
-        device = [x for x in psutil.disk_partitions() \
-                      if x.mountpoint == mount_path][0].device
-        subprocess.check_call(["umount", mount_path])
-
+    device = device_from_mount_path(mount_path)
     ec2 = boto3.client("ec2")
     instance_id = InstanceInfo().instance_id()
     volume = ec2.describe_volumes(Filters=[{"Name": "attachment.device",
                                             "Values": [device]},
-                                            {"Name": "attachment.instance-id",
-                                             "Values": [instance_id]}])
+                                           {"Name": "attachment.instance-id",
+                                            "Values": [instance_id]}])
     volume_id = volume['Volumes'][0]['VolumeId']
     ec2.detach_volume(VolumeId=volume_id, InstanceId=instance_id)
 
 # Usage: create_snapshot volume_id tag_key tag_value
-def create_snapshot(mount_path, tag_key, tag_value):
+def create_snapshot(tag_key, tag_value, mount_path):
     set_region()
-    if sys.platform.startswith('win'):
-        device = "/dev/xvd" + \
-                 target_id_to_letter(disk_by_drive_letter(
-                    mount_path[0])['TargetId'])
-    else:
-        device = [x for x in psutil.disk_partitions() \
-                      if x.mountpoint == mount_path][0].device
-
+    device = device_from_mount_path(mount_path)
     ec2 = boto3.client("ec2")
     instance_id = InstanceInfo().instance_id()
     volume = ec2.describe_volumes(Filters=[{"Name": "attachment.device",
                                             "Values": [device]},
-                                            {"Name": "attachment.instance-id",
-                                             "Values": [instance_id]}])
+                                           {"Name": "attachment.instance-id",
+                                            "Values": [instance_id]}])
     volume_id = volume['Volumes'][0]['VolumeId']
     snap = ec2.create_snapshot(VolumeId=volume_id)
     ec2.create_tags(Resources=[snap['SnapshotId']],
                     Tags=[{'Key': tag_key, 'Value': tag_value}])
+
+def device_from_mount_path(mount_path):
+    if sys.platform.startswith('win'):
+        return "/dev/xvd" + \
+                 target_id_to_letter(disk_by_drive_letter(
+                     mount_path[0])['TargetId'])
+    else:
+        return [x for x in psutil.disk_partitions() \
+                      if x.mountpoint == mount_path][0].device
 
 def clean_snapshots(days, tags):
     set_region()
