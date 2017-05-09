@@ -146,7 +146,7 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                        "-PartitionNumber", "1"
                                        "|", "Set-Partition", "-NewDriveLetter",
                                        drive_letter], stdout=devnull,
-                                       stderr=devnull)
+                                      stderr=devnull)
             #resize win partition if necessary
             if size_gb and not size_gb == snapshot.volume_size:
                 proc = subprocess.Popen(["powershell.exe",
@@ -285,7 +285,7 @@ def create_snapshot(tag_key, tag_value, mount_path):
     device = device_from_mount_path(mount_path)
     with open(os.devnull, 'w') as devnull:
         subprocess.call(["sync", mount_path[0]], stdout=devnull,
-                              stderr=devnull)
+                        stderr=devnull)
     ec2 = boto3.client("ec2")
     instance_id = InstanceInfo().instance_id()
     volume = ec2.describe_volumes(Filters=[{"Name": "attachment.device",
