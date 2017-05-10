@@ -25,6 +25,7 @@ import yaml
 
 stacks = dict()
 PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
+CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
 include_dirs = []
 if "CF_TEMPLATE_INCLUDE" in os.environ:
     for next_dir in os.environ["CF_TEMPLATE_INCLUDE"].split(":"):
@@ -81,22 +82,22 @@ def import_script(filename):
     embed_decl_re = re.compile(
         r'^(.*?=\s*)?(.*?)(?:(?:\`?#|//)CF([^#\`]*))[\"\`\s]*(#optional)?')
     arr = []
-    with open(filename) as f:
-        for line in f:
+    with open(filename) as fd:
+        for line in fd:
             result = var_decl_re.match(line)
             if result:
-                jsPrefix = result.group(1)
-                encodedVarName = result.group(2)
-                varName = decode_parameter_name(encodedVarName)
+                js_prefix = result.group(1)
+                encoded_varname = result.group(2)
+                var_name = decode_parameter_name(encoded_varname)
                 ref = collections.OrderedDict()
-                ref['Ref'] = varName
+                ref['Ref'] = var_name
                 ref['__source'] = filename
-                if "#optional" == str(result.group(4)):
+                if str(result.group(4)) == "#optional":
                     ref['__optional'] = "true"
                     ref['__default'] = str(result.group(3)).strip(" \"'")
                 arr.append(line[0:result.end(2)] + "='")
                 arr.append(ref)
-                if jsPrefix:
+                if js_prefix:
                     arr.append("';\n")
                 else:
                     arr.append("'\n")
@@ -106,12 +107,13 @@ def import_script(filename):
                     prefix = result.group(1)
                     if not prefix:
                         prefix = result.group(2)
-                        defaultVal = ""
+                        default_val = ""
                     else:
-                        defaultVal = str(result.group(2)).strip(" \"'")
+                        default_val = str(result.group(2)).strip(" \"'")
                     arr.append(prefix + "'")
                     for entry in yaml_load("[" + result.group(3) + "]"):
-                        apply_source(entry, filename, str(result.group(4)), defaultVal)
+                        apply_source(entry, filename, str(result.group(4)),
+                                     default_val)
                         arr.append(entry)
                     arr.append("'\n")
                 else:
@@ -140,16 +142,16 @@ def resolve_file(filename, basefile):
 
 PARAM_NOT_AVAILABLE = "N/A"
 
-def addParams(target, source, sourceProp, useValue):
-    if sourceProp in source:
-        for k, v in source[sourceProp].items():
-            target[k] = v['Default'] if useValue else PARAM_NOT_AVAILABLE
+def _add_params(target, source, source_prop, use_value):
+    if source_prop in source:
+        for k, val in source[source_prop].items():
+            target[k] = val['Default'] if use_value else PARAM_NOT_AVAILABLE
 
-def get_params(data, template):
+def _get_params(data, template):
     params = dict()
 
     # first load defaults for all parameters in "Parameters"
-    addParams(params, data, 'Parameters', True)
+    _add_params(params, data, 'Parameters', True)
     params['REGION'] = PARAM_NOT_AVAILABLE
     params['ACCOUNT_ID'] = PARAM_NOT_AVAILABLE
     params['STACK_NAME'] = PARAM_NOT_AVAILABLE
@@ -158,13 +160,13 @@ def get_params(data, template):
     template_dir = os.path.dirname(os.path.abspath(template))
     image_dir = os.path.dirname(template_dir)
 
-    imageName = os.path.basename(image_dir)
-    stackName = os.path.basename(template_dir)
-    stackName = re.sub('^stack-', '', stackName)
+    image_name = os.path.basename(image_dir)
+    stack_name = os.path.basename(template_dir)
+    stack_name = re.sub('^stack-', '', stack_name)
 
     get_vars_command = ['env', '-i', 'bash', '-c',
                         'source source_infra_properties.sh "' + \
-                        imageName + '" "' + stackName + '" ; set']
+                        image_name + '" "' + stack_name + '" ; set']
 
     if 'GIT_BRANCH' in os.environ:
         get_vars_command.insert(2, 'GIT_BRANCH=' + os.environ['GIT_BRANCH'])
@@ -173,19 +175,19 @@ def get_params(data, template):
     if 'ACCOUNT_ID' in os.environ:
         get_vars_command.insert(2, 'ACCOUNT_ID=' + os.environ['ACCOUNT_ID'])
 
-    p = subprocess.Popen(get_vars_command, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, universal_newlines=True)
-    output = p.communicate()
-    if p.returncode:
+    proc = subprocess.Popen(get_vars_command, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, universal_newlines=True)
+    output = proc.communicate()
+    if proc.returncode:
         sys.exit("Failed to retrieve infra*.properties")
 
     for line in output[0].split('\n'):
         line = line.strip()
         if line:
-            k, v = line.split('=', 1)
+            k, val = line.split('=', 1)
             if k in params:
-                v = v.strip("'").strip('"')
-                params[k] = v
+                val = val.strip("'").strip('"')
+                params[k] = val
 
     # source_infra_properties.sh always resolves a region, account id and stack
     # name
@@ -197,7 +199,7 @@ def get_params(data, template):
     params["AWS::NotificationARNs"] = PARAM_NOT_AVAILABLE
     params["AWS::NoValue"] = PARAM_NOT_AVAILABLE
     params["AWS::StackId"] = PARAM_NOT_AVAILABLE
-    addParams(params, data, 'Resources', False)
+    _add_params(params, data, 'Resources', False)
 
     return params
 
@@ -205,30 +207,30 @@ def get_params(data, template):
 # Param references with no association in `params` are left as-is.
 def apply_params(data, params):
     if isinstance(data, collections.OrderedDict):
-        for k, v in data.items():
-            k2 = apply_params(k, params)
-            v2 = apply_params(v, params)
-            if k != k2:
+        for k, val in data.items():
+            key2 = apply_params(k, params)
+            val2 = apply_params(val, params)
+            if k != key2:
                 del data[k]
-            data[k2] = v2
+            data[key2] = val2
     elif isinstance(data, list):
         for i in range(0, len(data)):
             data[i] = apply_params(data[i], params)
     elif isinstance(data, str):
-        prevEnd = None
+        prev_end = None
         res = ''
-        for m in PARAM_REF_RE.finditer(data):
-            k = m.group(1)
+        for match in PARAM_REF_RE.finditer(data):
+            k = match.group(1)
             if k in params:
-                span = m.span()
+                span = match.span()
                 # support non-string values only when value contains nothing but
                 # the reference
                 if span[0] == 0 and span[1] == len(data):
                     return params[k]
-                res += data[prevEnd:span[0]]
+                res += data[prev_end:span[0]]
                 res += params[k]
-                prevEnd = span[1]
-        data = res + data[prevEnd:]
+                prev_end = span[1]
+        data = res + data[prev_end:]
     return data
 
 # Applies recursively source to script inline expression
@@ -236,41 +238,41 @@ def apply_source(data, filename, optional, default):
     if isinstance(data, collections.OrderedDict):
         if 'Ref' in data:
             data['__source'] = filename
-            if "#optional" == optional:
+            if optional == "#optional":
                 data['__optional'] = "true"
                 data['__default'] = default
-        for k, v in data.items():
+        for k, val in data.items():
             apply_source(k, filename, optional, default)
-            apply_source(v, filename, optional, default)
+            apply_source(val, filename, optional, default)
 
 # returns new data
 def import_scripts_pass1(data, basefile, path):
     global gotImportErrors
     if isinstance(data, collections.OrderedDict):
         if 'Fn::ImportFile' in data:
-            v = data['Fn::ImportFile']
-            script_import = resolve_file(v, basefile)
+            val = data['Fn::ImportFile']
+            script_import = resolve_file(val, basefile)
             if script_import:
                 data.clear()
                 contents = import_script(script_import)
                 data['Fn::Join'] = ["", contents]
             else:
-                print "ERROR: " + v + ": Can't import file \"" + v + \
+                print "ERROR: " + val + ": Can't import file \"" + val + \
                       "\" - file not found on include paths or relative to " + \
                       basefile
                 gotImportErrors = True
         elif 'Fn::ImportYaml' in data:
-            v = data['Fn::ImportYaml']
+            val = data['Fn::ImportYaml']
             del data['Fn::ImportYaml']
-            yaml_file = resolve_file(v, basefile)
+            yaml_file = resolve_file(val, basefile)
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
                 contents = apply_params(contents, data)
                 data.clear()
                 if isinstance(contents, collections.OrderedDict):
-                    for k, v in contents.items():
-                        data[k] = import_scripts_pass1(v, yaml_file, path + k +\
-                                                       "_")
+                    for k, val in contents.items():
+                        data[k] = import_scripts_pass1(val, yaml_file, path + \
+                                                       k + "_")
                 elif isinstance(contents, list):
                     data = contents
                     for i in range(0, len(data)):
@@ -282,19 +284,19 @@ def import_scripts_pass1(data, basefile, path):
                           " a list in file " + basefile
                     gotImportErrors = True
             else:
-                print "ERROR: " + v + ": Can't import file \"" + v + \
+                print "ERROR: " + val + ": Can't import file \"" + val + \
                       "\" - file not found on include paths or relative to " + \
                       basefile
                 gotImportErrors = True
         elif 'Fn::Merge' in data:
-            mergeList = data['Fn::Merge']
-            if not isinstance(mergeList, list):
+            merge_list = data['Fn::Merge']
+            if not isinstance(merge_list, list):
                 print "ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile
                 gotImportErrors = True
                 return data
-            data = import_scripts_pass1(mergeList[0], basefile, path + "0_")
-            for i in range(1, len(mergeList)):
-                merge = import_scripts_pass1(mergeList[i], basefile, path + str(i) + "_")
+            data = import_scripts_pass1(merge_list[0], basefile, path + "0_")
+            for i in range(1, len(merge_list)):
+                merge = import_scripts_pass1(merge_list[i], basefile, path + str(i) + "_")
                 if isinstance(data, collections.OrderedDict):
                     if not isinstance(merge, collections.OrderedDict):
                         print "ERROR: " + path + ": First Fn::Merge entry " +\
@@ -303,8 +305,8 @@ def import_scripts_pass1(data, basefile, path):
                               basefile
                         gotImportErrors = True
                     else:
-                        for k, v in merge.items():
-                            data[k] = v
+                        for k, val in merge.items():
+                            data[k] = val
                 elif isinstance(data, list):
                     if not isinstance(merge, list):
                         print "ERROR: " + path + ": First Fn::Merge entry " +\
@@ -321,8 +323,8 @@ def import_scripts_pass1(data, basefile, path):
         elif 'Ref' in data:
             data['__source'] = basefile
         else:
-            for k, v in data.items():
-                data[k] = import_scripts_pass1(v, basefile, path + k + "_")
+            for k, val in data.items():
+                data[k] = import_scripts_pass1(val, basefile, path + k + "_")
     elif isinstance(data, list):
         for i in range(0, len(data)):
             data[i] = import_scripts_pass1(data[i], basefile, path + str(i) + "_")
@@ -333,27 +335,27 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
     global gotImportErrors
     if isinstance(data, collections.OrderedDict):
         if 'Ref' in data:
-            varName = data['Ref']
+            var_name = data['Ref']
             if '__source' in data:
                 filename = data['__source']
                 del data['__source']
             else:
                 filename = "unknown"
-            if not varName in templateParams:
+            if not var_name in templateParams:
                 if '__optional' in data:
                     data = data['__default']
                 else:
                     print "ERROR: " + path + ": Referenced parameter \"" + \
-                          varName + "\" in file " + filename + \
+                          var_name + "\" in file " + filename + \
                           " not declared in template parameters in " + \
                           templateFile
                     gotImportErrors = True
             else:
                 if resolveRefs:
-                    data = templateParams[varName]
+                    data = templateParams[var_name]
                     if data == PARAM_NOT_AVAILABLE:
                         print "ERROR: " + path + ": Referenced parameter \"" +\
-                              varName + "\" in file " + filename +\
+                              var_name + "\" in file " + filename +\
                               " is resolved later by AWS; cannot resolve its" +\
                               " value now"
                         gotImportErrors = True
@@ -367,7 +369,7 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                                              True)
             data.clear()
             region = stack_var['region']
-            stack_name = stack_var['stackName']
+            stack_name = stack_var['stack_name']
             stack_param = stack_var['paramName']
             stack_key = region + "." + stack_name
             if stack_key in stacks:
@@ -376,17 +378,17 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                 describe_stack_command = ['show-stack-params-and-outputs.sh',
                                           region, stack_name]
                 try:
-                    p = subprocess.Popen(describe_stack_command,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE,
-                                         universal_newlines=True)
-                    output = p.communicate()
-                    if p.returncode:
+                    proc = subprocess.Popen(describe_stack_command,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE,
+                                            universal_newlines=True)
+                    output = proc.communicate()
+                    if proc.returncode:
                         sys.exit("Describe stack failed: " + output[1])
                     stack_params = json_load(output[0])
                     stacks[stack_key] = stack_params
-                except OSError as e:
-                    sys.exit("Describe stack failed: " + e.strerror +\
+                except OSError as err:
+                    sys.exit("Describe stack failed: " + err.strerror +\
                              "\nIs show-stack-params-and-outputs.sh " +\
                              "available on your $PATH?")
             if not stack_param in stack_params:
@@ -394,8 +396,8 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                          " in stack " + stack_name)
             data = stack_params[stack_param]
         else:
-            for k, v in data.items():
-                data[k] = import_scripts_pass2(v, templateFile, path + k +\
+            for k, val in data.items():
+                data[k] = import_scripts_pass2(val, templateFile, path + k +\
                                                "_", templateParams, resolveRefs)
     elif isinstance(data, list):
         for i in range(0, len(data)):
@@ -409,7 +411,7 @@ def import_scripts(data, basefile):
     gotImportErrors = False
 
     data = import_scripts_pass1(data, basefile, "")
-    data = import_scripts_pass2(data, basefile, "", get_params(data, basefile),
+    data = import_scripts_pass2(data, basefile, "", _get_params(data, basefile),
                                 False)
     if gotImportErrors:
         sys.exit(1)
@@ -423,40 +425,39 @@ def bash_encode_parameter_name(name):
 def encode_script_filename(prefix, path):
     if path.find("UserData_Fn::Base64") != -1:
         return prefix + "-userdata.sh"
-    CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
     idx = path.find(CFG_PREFIX)
     if idx != -1:
         soff = idx + len(CFG_PREFIX)
         eoff = path.find("_content_", soff)
-        cfgPath = path[soff:eoff]
-        return prefix + "-" + cfgPath[cfgPath.rfind("/") + 1:]
+        cfg_path = path[soff:eoff]
+        return prefix + "-" + cfg_path[cfg_path.rfind("/") + 1:]
     return prefix + "-" + path
 
-def extract_script(prefix, path, joinArgs):
+def extract_script(prefix, path, join_args):
     # print prefix, path
     # "before" and "after" code blocks, placed before and after var declarations
     code = ["", ""]
-    varDecls = collections.OrderedDict()
-    codeIdx = 0
-    for s in joinArgs:
-        if type(s) is collections.OrderedDict:
-            if not 'Ref' in s:
+    var_decls = collections.OrderedDict()
+    code_idx = 0
+    for element in join_args:
+        if isinstance(element) is collections.OrderedDict:
+            if not 'Ref' in element:
                 print "Dict with no ref"
-                json_save(s)
+                json_save(element)
             else:
-                varName = s['Ref']
-                if not len(varName) > 0:
+                var_name = element['Ref']
+                if not len(var_name) > 0:
                     raise Exception("Failed to convert reference inside " +\
-                                    "script: " + str(s))
-                bashVarName = bash_encode_parameter_name(varName)
-                varDecl = ""
-                #varDecl += "#" + varName + "\n"
-                varDecl += bashVarName + "=\"\";\n"
-                varDecls[varName] = varDecl
-                code[codeIdx] += "${" + bashVarName + "}"
+                                    "script: " + str(element))
+                bash_varname = bash_encode_parameter_name(var_name)
+                var_decl = ""
+                #var_decl += "#" + var_name + "\n"
+                var_decl += bash_varname + "=\"\";\n"
+                var_decls[var_name] = var_decl
+                code[code_idx] += "${" + bash_varname + "}"
         else:
-            code[codeIdx] += s
-        codeIdx = 1 # switch to "after" block
+            code[code_idx] += element
+        code_idx = 1 # switch to "after" block
 
     filename = encode_script_filename(prefix, path)
     sys.stderr.write(prefix + ": Exported path '" + path + \
@@ -464,8 +465,8 @@ def extract_script(prefix, path, joinArgs):
     with open(filename, "w") as script_file: #opens file with name of "test.txt"
         script_file.write(code[0])
         script_file.write("\n")
-        for varName, varDecl in varDecls.items():
-            script_file.write(varDecl)
+        for var_name, var_decl in var_decls.items():
+            script_file.write(var_decl)
         script_file.write("\n")
         script_file.write(code[1])
     return filename
@@ -474,14 +475,14 @@ def extract_script(prefix, path, joinArgs):
 def extract_scripts(data, prefix, path=""):
     if not isinstance(data, collections.OrderedDict):
         return
-    for k, v in data.items():
-        extract_scripts(v, prefix, path + k + "_")
+    for k, val in data.items():
+        extract_scripts(val, prefix, path + k + "_")
         if k == "Fn::Join":
-            if not v[0] == "":
+            if not val[0] == "":
                 continue
-            if isinstance(v[1][0], basestring) and (v[1][0].find("#!") != 0):
+            if isinstance(val[1][0], basestring) and (val[1][0].find("#!") != 0):
                 continue
-            script_file = extract_script(prefix, path, v[1])
+            script_file = extract_script(prefix, path, val[1])
             del data[k]
             data['Fn::ImportFile'] = script_file
 
@@ -490,7 +491,7 @@ def extract_scripts(data, prefix, path=""):
 def yaml_to_dict(yaml_file_to_convert):
     data = yaml_load(open(yaml_file_to_convert))
     data = import_scripts(data, yaml_file_to_convert)
-    patch_launchconf_userdata_with_metadata_hash_and_params(data)
+    _patch_launchconf(data)
     return data
 
 def yaml_to_json(yaml_file_to_convert):
@@ -530,11 +531,11 @@ def get_refs(data, reflist=None):
         for val in data.values():
             get_refs(val, reflist)
     elif isinstance(data, list):
-        for e in data:
-            get_refs(e, reflist)
+        for ref in data:
+            get_refs(ref, reflist)
     return reflist
 
-def patch_launchconf_userdata_with_metadata_hash_and_params(data):
+def _patch_launchconf(data):
     lc_meta = locate_launchconf_metadata(data)
     if lc_meta is not None:
         lc_userdata = locate_launchconf_userdata(data)
@@ -542,8 +543,8 @@ def patch_launchconf_userdata_with_metadata_hash_and_params(data):
         lc_meta_refs = set(get_refs(lc_meta))
         if len(lc_meta_refs) > 0:
             first = 1
-            for e in lc_meta_refs:
+            for ref in lc_meta_refs:
                 lc_userdata.append("# metadata params: " if first else ", ")
-                lc_userdata.append({"Ref" : e})
+                lc_userdata.append({"Ref" : ref})
                 first = 0
             lc_userdata.append("\n")
