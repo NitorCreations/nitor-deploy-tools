@@ -39,7 +39,8 @@ setup(name='nitor_deploy_tools',
           'ipaddr',
           'argcomplete',
           'nitor-vault',
-          'psutil'
+          'psutil',
+          'Pygments'
       ] + ([
           'win-unicode-console',
           'wmi',

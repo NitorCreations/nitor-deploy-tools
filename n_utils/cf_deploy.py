@@ -21,17 +21,29 @@ import os
 import re
 import sys
 import time
+from datetime import datetime
+from operator import itemgetter
 
 import boto3
 
 from botocore.exceptions import ClientError
-from datetime import datetime
-from operator import itemgetter
+from pygments import highlight, lexers, formatters
 from termcolor import colored
 
 from . import aws_infra_util
 from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
 
+
+def log_data(data, format="yaml"):
+    if format == "yaml":
+        formatted = aws_infra_util.yaml_save(data)
+    else:
+        formatted = aws_infra_util.json_save(data)
+    lexer = lexers.get_lexer_by_name(format)
+    formatter = formatters.get_formatter_by_name('terminal')
+    colored_yaml = os.linesep + highlight(unicode(formatted, 'UTF-8'),
+                                          lexer, formatter)
+    log(colored_yaml)
 
 def log(message):
     sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " " \
@@ -59,7 +71,7 @@ def update_stack(stack_name, template, params, dry_run=False):
         chset_data['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
                                                    chset_data['CreationTime'].timetuple())
         log("\033[32;1m*** Changeset ***:\033[m")
-        log(aws_infra_util.json_save(chset_data))
+        log_data(chset_data)
         if not dry_run:
             clf.execute_change_set(ChangeSetName=chset_id)
         else:
@@ -158,20 +170,15 @@ def delete(stack_name, region):
             else:
                 raise
 
-def deploy(stack_name, yaml_template, region, dry_run=False):
-    os.environ['AWS_DEFAULT_REGION'] = region
-    os.environ['REGION'] = region
-    # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+def resolve_ami(template_doc):
     ami_id = ""
     ami_name = ""
     ami_created = ""
     if 'AMI_ID' in os.environ and os.environ['AMI_ID']:
         ami_id = os.environ['AMI_ID']
 
-    template_doc = aws_infra_util.yaml_to_dict(yaml_template)
     if not ami_id and 'Parameters' in template_doc and \
-      'paramAmi'in template_doc['Parameters'] and \
+      'paramAmi' in template_doc['Parameters'] and \
       'IMAGE_JOB' in os.environ:
         image_job = re.sub(r'\W', '_', os.environ['IMAGE_JOB'].lower())
         log("Looking for ami with name prefix " + image_job)
@@ -197,6 +204,15 @@ def deploy(stack_name, yaml_template, region, dry_run=False):
         image = ami_meta['Images'][0]
         ami_name = image['Name']
         ami_created = image['CreationDate']
+    return ami_id, ami_name, ami_created
+
+def deploy(stack_name, yaml_template, region, dry_run=False):
+    os.environ['AWS_DEFAULT_REGION'] = region
+    os.environ['REGION'] = region
+    # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    template_doc = aws_infra_util.yaml_to_dict(yaml_template)
+    ami_id, ami_name, ami_created = resolve_ami(template_doc)
 
     log("**** Deploying stack '" + stack_name + "' with template '" + \
           yaml_template + "' and ami_id '" + str(ami_id) + "'")
@@ -219,11 +235,10 @@ def deploy(stack_name, yaml_template, region, dry_run=False):
                 collections.OrderedDict([("Description", "AMI Creation Date"),
                                          ("Type", "String"), ("Default", "")])
 
-    json_template = aws_infra_util.json_save(template_doc)
     json_small = aws_infra_util.json_save_small(template_doc)
 
-    log("*** Final template ***")
-    log(json_template)
+    log("**** Final template ****")
+    log_data(template_doc, format="json")
 
     # Create/update stack
     params_doc = []
