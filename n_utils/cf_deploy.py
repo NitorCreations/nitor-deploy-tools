@@ -28,19 +28,20 @@ import boto3
 
 from botocore.exceptions import ClientError
 from pygments import highlight, lexers, formatters
+from pygments.styles import get_style_by_name
 from termcolor import colored
 
 from . import aws_infra_util
 from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
 
-
-def log_data(data, format="yaml"):
-    if format == "yaml":
+def log_data(data, output_format="yaml"):
+    if output_format == "yaml":
         formatted = aws_infra_util.yaml_save(data)
     else:
         formatted = aws_infra_util.json_save(data)
-    lexer = lexers.get_lexer_by_name(format)
-    formatter = formatters.get_formatter_by_name('terminal')
+    lexer = lexers.get_lexer_by_name(output_format)
+    formatter = formatters.get_formatter_by_name("256")
+    formatter.__init__(style=get_style_by_name('emacs'))
     colored_yaml = os.linesep + highlight(unicode(formatted, 'UTF-8'),
                                           lexer, formatter)
     log(colored_yaml)
@@ -58,7 +59,7 @@ def update_stack(stack_name, template, params, dry_run=False):
     chset_id = clf.create_change_set(**params)['Id']
     chset_data = clf.describe_change_set(ChangeSetName=chset_id)
     status = chset_data['Status']
-    while "_COMPLETE" not in status and "FAILED" != status:
+    while "_COMPLETE" not in status and status != "FAILED":
         time.sleep(5)
         chset_data = clf.describe_change_set(ChangeSetName=chset_id)
         status = chset_data['Status']
@@ -238,7 +239,7 @@ def deploy(stack_name, yaml_template, region, dry_run=False):
     json_small = aws_infra_util.json_save_small(template_doc)
 
     log("**** Final template ****")
-    log_data(template_doc, format="json")
+    log_data(template_doc, output_format="json")
 
     # Create/update stack
     params_doc = []
