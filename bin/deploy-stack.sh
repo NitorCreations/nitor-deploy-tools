@@ -15,62 +15,34 @@
 # limitations under the License.
 
 if [ "$_ARGCOMPLETE" ]; then
-  # Handle command completion executions
   unset _ARGCOMPLETE
-  cache () {
-    if ! [ -d .cache ]; then
-        mkdir -p .cache
-    fi
-    args="${*}"
-    cachefile=.cache/"${args//[\"\'\ -\*]/_}"
-    if [ -e "$cachefile" ]; then
-      cat $cachefile
-    else
-      "$@" | tee $cachefile
-    fi
-  }
-  get_images() {
-    if [ -r infra.properties -o -r infra-master.properties ]; then
-      echo $(find . -name 'infra*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u)
-    fi
-  }
-  get_stacks() {
-    if [ -r infra.properties -o -r infra-master.properties ]; then
-      echo $(find $1 -name 'stack-*' | sed 's/.*stack-\(.*\)/\1/g')
-    fi
-  }
-  get_imageids() {
-    if [ -r infra.properties -o -r infra-master.properties ]; then
-      source source_infra_properties.sh $1
-      if [ -d "$1/image" ] && [ -r "$1/infra.properties" -o -r "$1/infra-$GIT_BRANCH.properties" ]; then
-        echo $(cache aws ec2 describe-images --filters "Name=name,Values=[${1}*]" --query "Images[*].{ID:ImageId}" | jq -r .[].ID)
-      fi
-    fi
-  }
+  source $(n-include autocomplete-helpers.sh)
+  # Handle command completion executions
   COMP_WORDS=( $COMP_LINE )
   if [ "${COMP_WORDS[2]}" = "-d" ]; then 
     COMP_INDEX=$(($COMP_CWORD - 1))
-    IMAGE=$(echo ${COMP_WORDS[3]} | tr "-" "_")
+    IMAGE_DIR=${COMP_WORDS[3]}
     STACK=${COMP_WORDS[4]}
   else
     COMP_INDEX=$COMP_CWORD
-    IMAGE=$(echo ${COMP_WORDS[2]} | tr "-" "_")
+    IMAGE_DIR=${COMP_WORDS[2]}
     STACK=${COMP_WORDS[3]}
   fi
+  IMAGE=$(echo $IMAGE_DIR| tr "-" "_")
   case $COMP_INDEX in
     2)
       if [ "$COMP_INDEX" = "$COMP_CWORD" ]; then
         DRY="-d "
       fi
-      compgen -W "$DRY$(get_images)" -- $COMP_CUR
+      compgen -W "$DRY$(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
-      compgen -W "$(get_stacks $COMP_PREV)" -- $COMP_CUR
+      compgen -W "$(get_stacks $IMAGE_DIR)" -- $COMP_CUR
       ;;
     4)
       source source_infra_properties.sh $IMAGE $STACK
       JOB_NAME="${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
-      IMAGE_IDS="$(get_imageids $JOB_NAME)"
+      IMAGE_IDS="$(get_imageids $IMAGE_DIR $JOB_NAME)"
       compgen -W "$IMAGE_IDS" -- $COMP_CUR
       ;;
     5)

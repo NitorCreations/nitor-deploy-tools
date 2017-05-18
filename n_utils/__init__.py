@@ -36,7 +36,7 @@ SCRIPTS = [
     'bin/undeploy-stack.sh',
     'bin/volume-from-snapshot.sh'
 ]
-NDT_AND_CONSOLE=[
+NDT_AND_CONSOLE = [
     'assume-role=n_utils.cli:assume_role',
     'list-file-to-json=n_utils.cli:list_file_to_json',
     'create-userid-list=n_utils.cli:create_userid_list',
@@ -67,11 +67,11 @@ NDT_AND_CONSOLE=[
     'snapshot-from-volume=n_utils.cli:snapshot_from_volume',
     'detach-volume=n_utils.cli:detach_volume',
 ]
-NDT_ONLY=[
+NDT_ONLY = [
     'setup-cli=n_utils.cli:setup_cli',
     'setup-networks=n_utils.cli:setup_networks'
 ]
-CONSOLE_ONLY=[
+CONSOLE_ONLY = [
     'cf-delete-stack=n_utils.cli:delete_stack',
     'cf-update-stack=n_utils.cli:update_stack',
     'ndt=n_utils.cli:ndt',

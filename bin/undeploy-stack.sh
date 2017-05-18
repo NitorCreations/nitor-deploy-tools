@@ -15,12 +15,14 @@
 # limitations under the License.
 if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
+  unset _ARGCOMPLETE
+  source $(n-include autocomplete-helpers.sh)
   case $COMP_CWORD in
     2)
-      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find . -name 'infra*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u | tr "\n" " "; fi)" -- $COMP_CUR
+      compgen -W "$(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
-      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find $COMP_PREV -name 'stack-*' | sed 's/.*stack-\(.*\)/\1/g' | tr "\n" " "; fi)" -- $COMP_CUR
+      compgen -W "$(get_stacks $COMP_PREV)" -- $COMP_CUR
       ;;
     *)
       exit 1

@@ -14,11 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 if [ "$_ARGCOMPLETE" ]; then
+  unset _ARGCOMPLETE
+  source $(n-include autocomplete-helpers.sh)
   # Handle command completion executions
   case $COMP_CWORD in
     2)
-      compgen -W "$(if [ -r infra.properties -o -r infra-master.properties ]; then find . -name 'infra-*.properties' | cut -d '/' -f 2 | grep -v 'infra.*.properties' | sort -u | tr "\n" " "; fi)" -- $COMP_CUR
+      compgen -W "$(get_bakeable_images)" -- $COMP_CUR
       ;;
     *)
       exit 1
