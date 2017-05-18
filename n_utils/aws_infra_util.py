@@ -369,7 +369,7 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                                              True)
             data.clear()
             region = stack_var['region']
-            stack_name = stack_var['stack_name']
+            stack_name = stack_var['stackName']
             stack_param = stack_var['paramName']
             stack_key = region + "." + stack_name
             if stack_key in stacks:
