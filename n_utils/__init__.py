@@ -34,7 +34,8 @@ SCRIPTS = [
     'bin/source_infra_properties.sh',
     'bin/ssh-hostkeys-collect.sh',
     'bin/undeploy-stack.sh',
-    'bin/volume-from-snapshot.sh'
+    'bin/volume-from-snapshot.sh',
+    'bin/list-jobs.sh'
 ]
 NDT_AND_CONSOLE = [
     'assume-role=n_utils.cli:assume_role',
