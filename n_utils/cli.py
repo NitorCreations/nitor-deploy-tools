@@ -25,6 +25,8 @@ from subprocess import PIPE, Popen
 import argcomplete
 from argcomplete import USING_PYTHON2, ensure_str, split_line
 from argcomplete.completers import ChoicesCompleter, FilesCompleter
+from pygments import highlight, lexers, formatters
+from pygments.styles import get_style_by_name
 from . import aws_infra_util
 from . import cf_bootstrap
 from . import cf_deploy
@@ -222,29 +224,50 @@ def get_account_id():
     """
     print cf_utils.resolve_account()
 
+def colorprint(data, output_format="yaml"):
+    """ Colorized print for either a yaml or a json document given as argument
+    """
+    lexer = lexers.get_lexer_by_name(output_format)
+    formatter = formatters.get_formatter_by_name("256")
+    formatter.__init__(style=get_style_by_name('emacs'))
+    colored = highlight(unicode(data, 'UTF-8'), lexer, formatter)
+    sys.stdout.write(colored.encode(locale.getpreferredencoding()))
+
 def yaml_to_json():
     """"Convert Nitor CloudFormation yaml to CloudFormation json with some
     preprosessing
     """
     parser = argparse.ArgumentParser(description=yaml_to_json.__doc__)
+    parser.add_argument("--colorize", "-c", help="Colorize output",
+                        action="store_true")
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
-    print aws_infra_util.yaml_to_json(args.file)
+    doc = aws_infra_util.yaml_to_json(args.file)
+    if args.colorize:
+        colorprint(doc)
+    else:
+        print doc
 
 def json_to_yaml():
     """Convert CloudFormation json to an approximation of a Nitor CloudFormation
     yaml with for example scripts externalized
     """
     parser = argparse.ArgumentParser(description=json_to_yaml.__doc__)
+    parser.add_argument("--colorize", "-c", help="Colorize output",
+                        action="store_true")
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
-    print aws_infra_util.json_to_yaml(args.file)
+    doc = aws_infra_util.json_to_yaml(args.file)
+    if args.colorize:
+        colorprint(doc)
+    else:
+        print doc
 
 def read_and_follow():
     """Read and print a file and keep following the end for new data
