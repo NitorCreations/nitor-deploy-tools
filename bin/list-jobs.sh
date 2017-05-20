@@ -9,7 +9,6 @@ source $(n-include autocomplete-helpers.sh)
 buildable_branches() {
   for BRANCH in $(git branch -r | grep -v origin/HEAD | cut -d/ -f 2-); do
     mkdir -p "$BRANCH-checkout" > /dev/null 2>&1
-    cd "$BRANCH-checkout"
     git archive "$BRANCH" | tar -xC "$BRANCH-checkout" > /dev/null 2>&1
     if [ -r "infra-$BRANCH.properties" ]; then
       echo $BRANCH
