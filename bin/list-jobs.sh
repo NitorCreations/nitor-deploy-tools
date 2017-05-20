@@ -22,13 +22,25 @@ list_jobs() {
     cd "$GIT_BRANCH-checkout"
     for IMAGE_DIR in $(get_bakeable_images); do
       source source_infra_properties.sh $IMAGE_DIR
-      IMAGE=$(echo $IMAGE_DIR| tr "-" "_")
-      echo "$GIT_BRANCH:image:$IMAGE_DIR:${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
+      if ! [ "$JENKINS_JOB_NAME" ]; then
+        JENKINS_JOB_NAME="${JENKINS_JOB_PREFIX}-${IMAGE_DIR}-bake"
+      fi
+      if ! [ "$SKIP_BAKE_JOB" = "y" ]; then
+        if ! [ "$MANUAL_DEPLOY" = "y" ]; then
+          MANUAL_DEPLOY="n"
+        fi
+        echo "$GIT_BRANCH:image:$IMAGE_DIR:$MANUAL_DEPLOY:$JENKINS_JOB_PREFIX:$JENKINS_JOB_NAME"
+      fi
     done
     for IMAGE_DIR in $(get_stack_dirs); do
-      IMAGE=$(echo $IMAGE_DIR| tr "-" "_")
       for STACK in $(get_stacks $IMAGE_DIR); do
-        echo "$GIT_BRANCH:stack:$STACK:$IMAGE_DIR:${JENKINS_JOB_PREFIX}_${IMAGE}_${STACK}_deploy"
+        if ! [ "$JENKINS_JOB_NAME" ]; then
+          JENKINS_JOB_NAME="${JENKINS_JOB_PREFIX}-${IMAGE_DIR}-${STACK}-deploy"
+        fi
+        source source_infra_properties.sh $IMAGE_DIR $STACK
+        if ! [ "$SKIP_DEPLOY_JOB" = "y" ]; then
+          echo "$GIT_BRANCH:stack:$IMAGE_DIR:$STACK:$JENKINS_JOB_PREFIX:$JENKINS_JOB_NAME"
+        fi
       done
     done
     cd ..
