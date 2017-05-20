@@ -10,13 +10,10 @@ buildable_branches() {
   for BRANCH in $(git branch -r | grep -v origin/HEAD | cut -d/ -f 2-); do
     mkdir -p "$BRANCH-checkout" > /dev/null 2>&1
     cd "$BRANCH-checkout"
-    git --git-dir ../.git checkout "$BRANCH" > /dev/null 2>&1
-    git --git-dir ../.git checkout . > /dev/null 2>&1
+    git archive "$BRANCH" | tar -xC "$BRANCH-checkout" > /dev/null 2>&1
     if [ -r "infra-$BRANCH.properties" ]; then
-      cd ..
       echo $BRANCH
     else
-      cd ..
       rm -rf "$BRANCH-checkout" > /dev/null 2>&1
     fi
   done
