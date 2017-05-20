@@ -30,6 +30,7 @@ list_jobs() {
           MANUAL_DEPLOY="n"
         fi
         echo "$GIT_BRANCH:image:$IMAGE_DIR:$MANUAL_DEPLOY:$JENKINS_JOB_PREFIX:$JENKINS_JOB_NAME"
+        unset JENKINS_JOB_NAME
       fi
     done
     for IMAGE_DIR in $(get_stack_dirs); do
@@ -41,6 +42,7 @@ list_jobs() {
         if ! [ "$SKIP_DEPLOY_JOB" = "y" ]; then
           echo "$GIT_BRANCH:stack:$IMAGE_DIR:$STACK:$JENKINS_JOB_PREFIX:$JENKINS_JOB_NAME"
         fi
+        unset JENKINS_JOB_NAME
       done
     done
     cd ..
