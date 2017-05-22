@@ -128,13 +128,13 @@ def ndt():
     if "_ARGCOMPLETE" in os.environ:
         do_command_completion()
     else:
-        command = sys.argv[1]
-        if command not in COMMAND_MAPPINGS:
+        if len(sys.argv) < 2 or sys.argv[1] not in COMMAND_MAPPINGS:
             sys.stderr.writelines([u'usage: ndt <command> [args...]\n'])
             sys.stderr.writelines([u'\tcommand shoud be one of:\n'])
             for command in sorted(COMMAND_MAPPINGS):
                 sys.stderr.writelines([u'\t\t' + command + '\n'])
             sys.exit(1)
+        command = sys.argv[1]
         command_type = COMMAND_MAPPINGS[command]
         if command_type == "shell":
             command = command + ".sh"
