@@ -40,7 +40,7 @@ list_jobs() {
       done
     done
     cd ..
-#    rm -rf "$GIT_BRANCH-checkout"
+    rm -rf "$GIT_BRANCH-checkout"
   done
 }
 list_jobs | sort
