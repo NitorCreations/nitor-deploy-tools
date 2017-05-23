@@ -29,7 +29,7 @@ list_jobs() {
       TMP=$(mktemp -p .)
       env -i REGION="$REGION" ACCOUNT_ID="$ACCOUNT_ID" GIT_BRANCH="$GIT_BRANCH" \
         bash -c "source source_infra_properties.sh $IMAGE_DIR ; set" | egrep -v "$IGNORE_PROPS" > $TMP 
-      mv $TMP ../job-properties/image-$IMAGE_DIR.properties
+      mv $TMP ../job-properties/image-$GIT_BRANCH-$IMAGE_DIR.properties
       echo "$IMAGE_DIR:$GIT_BRANCH:image:-"
     done
     for IMAGE_DIR in $(get_stack_dirs); do
@@ -37,7 +37,7 @@ list_jobs() {
         TMP=$(mktemp -p .)
         env -i REGION="$REGION" ACCOUNT_ID="$ACCOUNT_ID" GIT_BRANCH="$GIT_BRANCH" \
           bash -c "source source_infra_properties.sh $IMAGE_DIR $STACK; set" | egrep -v "$IGNORE_PROPS" > $TMP 
-        mv $TMP ../job-properties/stack-$IMAGE_DIR-$STACK.properties
+        mv $TMP ../job-properties/stack-$GIT_BRANCH-$IMAGE_DIR-$STACK.properties
         echo "$IMAGE_DIR:$GIT_BRANCH:stack:$STACK"
       done
     done
