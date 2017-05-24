@@ -104,7 +104,12 @@ def do_command_completion():
         command_type = COMMAND_MAPPINGS[command]
         if command_type == "shell":
             command = command + ".sh"
-        if command_type == "shell" or command_type == "script":
+        if command_type == "ndtshell":
+            command = command + ".sh"
+        if command_type == "ndtshell" or command_type == "ndtscript":
+            command = aws_infra_util.find_include(command)
+        if command_type == "shell" or command_type == "script" or \
+           command_type == "ndtshell" or command_type == "ndtscript":
             proc = Popen([command], stderr=PIPE, stdout=PIPE)
             output = proc.communicate()[0]
             if proc.returncode == 0:
@@ -138,7 +143,12 @@ def ndt():
         command_type = COMMAND_MAPPINGS[command]
         if command_type == "shell":
             command = command + ".sh"
-        if command_type == "shell" or command_type == "script":
+        if command_type == "ndtshell":
+            command = command + ".sh"
+        if command_type == "ndtshell" or command_type == "ndtscript":
+            command = aws_infra_util.find_include(command)
+        if command_type == "shell" or command_type == "script" or \
+           command_type == "ndtshell" or command_type == "ndtscript":
             sys.exit(Popen([command] + sys.argv[2:]).wait())
         else:
             parts = command_type.split(":")

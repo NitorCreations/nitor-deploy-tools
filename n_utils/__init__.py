@@ -34,8 +34,7 @@ SCRIPTS = [
     'bin/source_infra_properties.sh',
     'bin/ssh-hostkeys-collect.sh',
     'bin/undeploy-stack.sh',
-    'bin/volume-from-snapshot.sh',
-    'bin/list-jobs.sh'
+    'bin/volume-from-snapshot.sh'
 ]
 NDT_AND_CONSOLE = [
     'assume-role=n_utils.cli:assume_role',
@@ -72,6 +71,9 @@ NDT_ONLY = [
     'setup-cli=n_utils.cli:setup_cli',
     'setup-networks=n_utils.cli:setup_networks'
 ]
+NDT_ONLY_SCRIPT = [
+    'list-jobs.sh'
+]
 CONSOLE_ONLY = [
     'cf-delete-stack=n_utils.cli:delete_stack',
     'cf-update-stack=n_utils.cli:update_stack',
@@ -87,6 +89,13 @@ for script in SCRIPTS:
     if name.endswith(".sh"):
         name = name[:-3]
         value = "shell"
+    COMMAND_MAPPINGS[name] = value
+for script in NDT_ONLY_SCRIPT:
+    name = script
+    value = "ndtscript"
+    if name.endswith(".sh"):
+        name = name[:-3]
+        value = "ndtshell"
     COMMAND_MAPPINGS[name] = value
 for script in NDT_AND_CONSOLE + NDT_ONLY:
     name = script.split("=")[0]
