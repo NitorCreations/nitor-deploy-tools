@@ -116,7 +116,10 @@ def import_script(filename):
                         apply_source(entry, filename, str(result.group(4)),
                                      default_val)
                         arr.append(entry)
-                    arr.append("'\n")
+                    if filename.endswith(".ps1"):
+                        arr.append("'\r\n")
+                    else:
+                        arr.append("'\n")
                 else:
                     arr.append(line)
     return arr
