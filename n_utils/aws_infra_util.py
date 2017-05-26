@@ -22,6 +22,7 @@ import subprocess
 import sys
 import yaml
 
+from .cf_utils import stack_params_and_outputs
 
 stacks = dict()
 PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
@@ -375,22 +376,8 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
             if stack_key in stacks:
                 stack_params = stacks[stack_key]
             else:
-                describe_stack_command = ['show-stack-params-and-outputs.sh',
-                                          region, stack_name]
-                try:
-                    proc = subprocess.Popen(describe_stack_command,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE,
-                                            universal_newlines=True)
-                    output = proc.communicate()
-                    if proc.returncode:
-                        sys.exit("Describe stack failed: " + output[1])
-                    stack_params = json_load(output[0])
-                    stacks[stack_key] = stack_params
-                except OSError as err:
-                    sys.exit("Describe stack failed: " + err.strerror +\
-                             "\nIs show-stack-params-and-outputs.sh " +\
-                             "available on your $PATH?")
+                stack_params = stack_params_and_outputs(region, stack_name)
+                stacks[stack_key] = stack_params
             if not stack_param in stack_params:
                 sys.exit("Did not find value for: " + stack_param +\
                          " in stack " + stack_name)

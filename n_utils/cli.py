@@ -33,7 +33,7 @@ from . import cf_deploy
 from . import cf_utils
 from . import volumes
 from . import COMMAND_MAPPINGS
-from .cf_utils import InstanceInfo, is_ec2, region
+from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, stack_params_and_outputs
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -607,3 +607,16 @@ def setup_networks():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     print cf_bootstrap.setup_networks(**vars(args))
+
+def show_stack_params_and_outputs():
+    """ Show stack parameters and outputs as a single json documents
+    """
+    parser = argparse.ArgumentParser(description=show_stack_params_and_outputs.__doc__)
+    parser.add_argument("-r", "--region", help="Region for the stack to show",
+                        default=region()).completer = ChoicesCompleter(regions())
+    parser.add_argument("stack_name", help="The stack name to show").completer = \
+        ChoicesCompleter(stacks())
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    resp = stack_params_and_outputs(args.region, args.stack_name)
+    print json.dumps(resp, indent=2)

@@ -76,16 +76,16 @@ if ! [ "$NETWORK_PARAMETER" ]; then
     NETWORK_PARAMETER=subnetInfraB
   fi
 fi
-[ "$SUBNET" ] || SUBNET="$(cache show-stack-params-and-outputs.sh $REGION $NETWORK_STACK | jq -r .$NETWORK_PARAMETER)"
+[ "$SUBNET" ] || SUBNET="$(cache ndt show-stack-params-and-outputs -r $REGION $NETWORK_STACK | jq -r .$NETWORK_PARAMETER)"
 if ! [ "$SECURITY_GROUP" ]; then
   if [ "$IMAGETYPE" != "windows" ]; then
     SG_PARAM=".bakeInstanceSg"
   else
     SG_PARAM=".bakeWinInstanceSg"
   fi
-  SECURITY_GROUP="$(cache show-stack-params-and-outputs.sh $REGION bakery-roles | jq -r $SG_PARAM)"
+  SECURITY_GROUP="$(cache ndt show-stack-params-and-outputs -r $REGION bakery-roles | jq -r $SG_PARAM)"
 fi
-[ "$AMIBAKE_INSTANCEPROFILE" ] || AMIBAKE_INSTANCEPROFILE="$(cache show-stack-params-and-outputs.sh $REGION bakery-roles | jq -r .bakeInstanceInstanceprofile)"
+[ "$AMIBAKE_INSTANCEPROFILE" ] || AMIBAKE_INSTANCEPROFILE="$(cache ndt show-stack-params-and-outputs -r $REGION bakery-roles | jq -r .bakeInstanceInstanceprofile)"
 [ "$PAUSE_SECONDS" ] || PAUSE_SECONDS=15
 for var in REGION SUBNET SECURITY_GROUP AMIBAKE_INSTANCEPROFILE ; do
   [ "${!var}" ] || die "Could not determine $var automatically. Please set ${var} manually in ${infrapropfile}"

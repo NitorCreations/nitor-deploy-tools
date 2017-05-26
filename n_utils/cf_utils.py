@@ -400,7 +400,36 @@ def region():
         else:
             return os.environ.get('AWS_DEFAULT_REGION', 'eu-west-1')
 
+def regions():
+    """Get all region names as a list"""
+    ec2 = boto3.client("ec2")
+    response = ec2.describe_regions()
+    for regn in response['Regions']:
+        yield regn['RegionName']
+
+def stacks():
+    """Get list of stack names for the currently default region"""
+    set_region()
+    pages = boto3.client("cloudformation").get_paginator('describe_stacks')
+    for page in pages.paginate():
+        for stack in page.get('Stacks', []):
+            yield stack['StackName']
+
+def stack_params_and_outputs(regn, stack_name):
+    """ Get parameters and outputs from a stack as a single dict
+    """
+    cloudformation = boto3.client("cloudformation", region_name=regn)
+    stack = cloudformation.describe_stacks(StackName=stack_name)['Stacks'][0]
+    resp = {}
+    for param in stack['Parameters']:
+        resp[param['ParameterKey']] = param['ParameterValue']
+    for output in stack['Outputs']:
+        resp[output['OutputKey']] = output['OutputValue']
+    return resp
 
 def set_region():
+    """ Sets the environment variable AWS_DEFAULT_REGION if not already set
+        to a sensible default
+    """
     if 'AWS_DEFAULT_REGION' not in os.environ:
         os.environ['AWS_DEFAULT_REGION'] = region()

@@ -63,13 +63,14 @@ NDT_AND_CONSOLE = [
     'ec2-instance-id=n_utils.cli:instance_id',
     'ec2-region=n_utils.cli:ec2_region',
     'ec2-get-userdata=n_utils.cli:get_userdata',
-    'volume-from-snapshot=n_utils.cli:volume_from_snapshot',
-    'snapshot-from-volume=n_utils.cli:snapshot_from_volume',
     'detach-volume=n_utils.cli:detach_volume',
 ]
 NDT_ONLY = [
     'setup-cli=n_utils.cli:setup_cli',
-    'setup-networks=n_utils.cli:setup_networks'
+    'setup-networks=n_utils.cli:setup_networks',
+    'volume-from-snapshot=n_utils.cli:volume_from_snapshot',
+    'snapshot-from-volume=n_utils.cli:snapshot_from_volume',
+    'show-stack-params-and-outputs=n_utils.cli:show_stack_params_and_outputs'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh'
