@@ -34,7 +34,8 @@ from . import cf_utils
 from . import volumes
 from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
-    stack_params_and_outputs, get_images, promote_image, share_to_another_region
+    stack_params_and_outputs, get_images, promote_image, \
+    share_to_another_region, set_region
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -615,6 +616,7 @@ def cli_get_images():
     parser.add_argument("job_name", help="The job name to look for")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
+    set_region()
     images = get_images(args.job_name)
     for image in images:
         print image['ImageId'] + ":" + image['Name']
