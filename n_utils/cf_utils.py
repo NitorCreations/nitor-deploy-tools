@@ -19,6 +19,7 @@
 import json
 import os
 import random
+import re
 import stat
 import string
 import subprocess
@@ -27,6 +28,7 @@ import sys
 import time
 from collections import deque
 from threading import Event, Lock, Thread
+from operator import itemgetter
 
 import boto3
 from botocore.exceptions import ClientError
@@ -433,3 +435,55 @@ def set_region():
     """
     if 'AWS_DEFAULT_REGION' not in os.environ:
         os.environ['AWS_DEFAULT_REGION'] = region()
+
+def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=600):
+    ec2 = boto3.client('ec2', region_name=regn)
+    if not regn == region():
+        resp = ec2.copy_image(SourceRegion=region(), SourceImageId=ami_id,
+                              Name=ami_name)
+        ami_id = resp['ImageId']
+    status = "initial"
+    start = time.time()
+    while status != 'available':
+        if time.time() - start > timeout_sec:
+            raise Exception("Failed waiting for status 'available' for " +\
+                            ami_id + " (timeout: " + str(timeout_sec) + ")")
+        images_resp = ec2.describe_images(ImageIds=[ami_id])
+        status = images_resp['Images'][0]['State']
+    perms = {"Add": []}
+    my_acco = resolve_account()
+    for acco in account_ids:
+        if not acco == my_acco:
+            perms['Add'].append(acco)
+    if len(perms['Add']) > 0:
+        ec2.modify_image_attribute(ImageId=ami_id, LaunchPermission=perms)
+
+def get_images(image_name_prefix):
+    image_name_prefix = re.sub(r'\W', '_', image_name_prefix)
+    ec2 = boto3.client('ec2')
+    ami_data = ec2.describe_images(Filters=[{'Name': 'tag-value',
+                                             'Values': [image_name_prefix + "_*"]}])
+    if len(ami_data['Images']) > 0:
+        return [image for image in sorted(ami_data['Images'],
+                                          key=itemgetter('CreationDate'),
+                                          reverse=True) \
+                         if _has_job_tag(image, image_name_prefix)]
+    else:
+        return []
+
+def _has_job_tag(image, image_name_prefix):
+    for tag in image['Tags']:
+        if re.match('^' + image_name_prefix + '_\\d{4,14}', tag['Value']):
+            return True
+    return False
+
+def promote_image(ami_id, job_name):
+    image_name_prefix = re.sub(r'\W', '_', job_name)
+    set_region()
+    build_number = time.strftime("%Y%m%d%H%M%S", time.gmtime())
+    if 'BUILD_NUMBER' in os.environ:
+        build_number = "%04d" % int(os.environ['BUILD_NUMBER'])
+    ec2 = boto3.client('ec2')
+    ec2.create_tags(Resources=[ami_id], Tags=[{'Key': image_name_prefix,
+                                               'Value': image_name_prefix + \
+                                               "_" + build_number}])

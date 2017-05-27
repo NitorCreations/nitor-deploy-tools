@@ -33,7 +33,8 @@ from . import cf_deploy
 from . import cf_utils
 from . import volumes
 from . import COMMAND_MAPPINGS
-from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, stack_params_and_outputs
+from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
+    stack_params_and_outputs, get_images, promote_image, share_to_another_region
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -174,20 +175,6 @@ def list_file_to_json():
         parser.error(args.file + " not found")
     content = [line.rstrip('\n') for line in open(args.file)]
     json.dump({args.arrayname : content}, sys.stdout)
-
-def create_userid_list():
-    """Ouput arguments as a json object containing one array named 'Add'. Used
-    in scripts used to share AWS AMI images with other AWS accounts and regions
-    """
-    parser = argparse.ArgumentParser(description=create_userid_list.__doc__)
-    parser.add_argument("user_ids", help="User ids to dump",
-                        nargs="+").completer = ChoicesCompleter(())
-    argcomplete.autocomplete(parser)
-    args = parser.parse_args()
-    ret = {"Add": []}
-    for user_id in args.user_ids:
-        ret['Add'].append({"UserId": user_id})
-    json.dump(ret, sys.stdout)
 
 def add_deployer_server():
     """Add a server into a maven configuration file. Password is taken from the
@@ -620,3 +607,41 @@ def show_stack_params_and_outputs():
     args = parser.parse_args()
     resp = stack_params_and_outputs(args.region, args.stack_name)
     print json.dumps(resp, indent=2)
+
+def cli_get_images():
+    """ Gets a list of images given a bake job name
+    """
+    parser = argparse.ArgumentParser(description=cli_get_images.__doc__)
+    parser.add_argument("job_name", help="The job name to look for")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    images = get_images(args.job_name)
+    for image in images:
+        print image['ImageId'] + ":" + image['Name']
+
+def cli_promote_image():
+    """  Promotes an image for use in another branch
+    """
+    parser = argparse.ArgumentParser(description=cli_promote_image.__doc__)
+    parser.add_argument("image_id", help="The image to promote")
+    parser.add_argument("target_job", help="The job name to promote the image to")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    if ":" in args.image_id:
+        args.image_id = args.image_id.split(":")[0]
+    promote_image(args.image_id, args.target_job)
+
+def cli_share_to_another_region():
+    """ Shares an image to another region for potentially another account
+    """
+    parser = argparse.ArgumentParser(description=cli_share_to_another_region.__doc__)
+    parser.add_argument("ami_id", help="The ami to share")
+    parser.add_argument("to_region", help="The region to share to").completer =\
+        ChoicesCompleter(regions())
+    parser.add_argument("ami_name", help="The name for the ami")
+    parser.add_argument("account_id", nargs="+", help="The account ids to sh" +\
+                                                      "are ami to")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    share_to_another_region(args.ami_id, args.to_region, args.ami_name,
+                            args.account_id)

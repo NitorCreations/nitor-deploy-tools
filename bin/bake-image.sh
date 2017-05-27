@@ -232,7 +232,7 @@ if [ -n "${SHARE_REGIONS}" ]; then
       echo "Missing setting '${var_region_accounts}' in ${infrapropfile}"
       exit 1
     fi
-    aws-utils/share-to-another-region.sh $(cat ami-id.txt) ${region} $(cat name.txt) ${!var_region_accounts}
+    ndt share-to-another-region $(cat ami-id.txt) ${region} $(cat name.txt) ${!var_region_accounts}
   done
 fi
 echo "SUCCESS"

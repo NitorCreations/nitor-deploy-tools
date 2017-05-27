@@ -22,7 +22,6 @@ import re
 import sys
 import time
 from datetime import datetime
-from operator import itemgetter
 
 import boto3
 
@@ -32,6 +31,7 @@ from pygments.styles import get_style_by_name
 from termcolor import colored
 
 from . import aws_infra_util
+from .cf_utils import get_images
 from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
 
 def log_data(data, output_format="yaml"):
@@ -147,8 +147,8 @@ def get_template_arguments(stack_name, template, params):
         params["TemplateBody"] = template
     return params
 
-def delete(stack_name, region):
-    os.environ['AWS_DEFAULT_REGION'] = region
+def delete(stack_name, regn):
+    os.environ['AWS_DEFAULT_REGION'] = regn
     log("**** Deleting stack '" + stack_name + "'")
     clf = boto3.client('cloudformation')
     cf_events = CloudFormationEvents(log_group_name=stack_name)
@@ -183,19 +183,12 @@ def resolve_ami(template_doc):
       'IMAGE_JOB' in os.environ:
         image_job = re.sub(r'\W', '_', os.environ['IMAGE_JOB'].lower())
         log("Looking for ami with name prefix " + image_job)
-        ec2 = boto3.client('ec2')
-        ami_data = ec2.describe_images(Filters=[{'Name': 'name',
-                                                 'Values': [image_job + "_*"]}])
-        if len(ami_data['Images']) > 0:
-            sorted_images = sorted(ami_data['Images'],
-                                   key=itemgetter('CreationDate'), reverse=True)
-            for image in sorted_images:
-                if re.match('^' + image_job + '_\\d{4,14}', image['Name']):
-                    log("Result: " + aws_infra_util.json_save(image))
-                    ami_id = image['ImageId']
-                    ami_name = image['Name']
-                    ami_created = image['CreationDate']
-                    break
+        sorted_images = get_images(image_job)
+        if sorted_images:
+            image = sorted_images[0]
+            ami_id = image['ImageId']
+            ami_name = image['Name']
+            ami_created = image['CreationDate']
     elif ami_id and 'Parameters' in template_doc and \
         'paramAmi'in template_doc['Parameters']:
         log("Looking for ami metadata with id " + ami_id)
@@ -207,9 +200,9 @@ def resolve_ami(template_doc):
         ami_created = image['CreationDate']
     return ami_id, ami_name, ami_created
 
-def deploy(stack_name, yaml_template, region, dry_run=False):
-    os.environ['AWS_DEFAULT_REGION'] = region
-    os.environ['REGION'] = region
+def deploy(stack_name, yaml_template, regn, dry_run=False):
+    os.environ['AWS_DEFAULT_REGION'] = regn
+    os.environ['REGION'] = regn
     # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     template_doc = aws_infra_util.yaml_to_dict(yaml_template)

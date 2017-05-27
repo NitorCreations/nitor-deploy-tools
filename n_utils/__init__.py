@@ -39,7 +39,6 @@ SCRIPTS = [
 NDT_AND_CONSOLE = [
     'assume-role=n_utils.cli:assume_role',
     'list-file-to-json=n_utils.cli:list_file_to_json',
-    'create-userid-list=n_utils.cli:create_userid_list',
     'add-deployer-server=n_utils.cli:add_deployer_server',
     'yaml-to-json=n_utils.cli:yaml_to_json',
     'json-to-yaml=n_utils.cli:json_to_yaml',
@@ -70,7 +69,10 @@ NDT_ONLY = [
     'setup-networks=n_utils.cli:setup_networks',
     'volume-from-snapshot=n_utils.cli:volume_from_snapshot',
     'snapshot-from-volume=n_utils.cli:snapshot_from_volume',
-    'show-stack-params-and-outputs=n_utils.cli:show_stack_params_and_outputs'
+    'show-stack-params-and-outputs=n_utils.cli:show_stack_params_and_outputs',
+    'get-images=n_utils.cli:cli_get_images',
+    'promote-image=n_utils.cli:cli_promote_image',
+    'share-to-another-region=n_utils.cli:cli_share_to_another_region'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh'
