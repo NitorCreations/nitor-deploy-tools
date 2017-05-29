@@ -217,6 +217,8 @@ def deploy(stack_name, yaml_template, regn, dry_run=False):
     template_parameters = template_doc['Parameters']
 
     if ami_id:
+        with open("ami.properties", 'w') as ami_props:
+            ami_props.write("AMI_ID=" + ami_id + "\nNAME=" + ami_name + "\n")
         os.environ["paramAmi"] = ami_id
         os.environ["paramAmiName"] = ami_name
         os.environ["paramAmiCreated"] = ami_created
