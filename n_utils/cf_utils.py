@@ -423,10 +423,12 @@ def stack_params_and_outputs(regn, stack_name):
     cloudformation = boto3.client("cloudformation", region_name=regn)
     stack = cloudformation.describe_stacks(StackName=stack_name)['Stacks'][0]
     resp = {}
-    for param in stack['Parameters']:
-        resp[param['ParameterKey']] = param['ParameterValue']
-    for output in stack['Outputs']:
-        resp[output['OutputKey']] = output['OutputValue']
+    if 'Parameters' in stack:
+        for param in stack['Parameters']:
+            resp[param['ParameterKey']] = param['ParameterValue']
+    if 'Outputs' in stack:
+        for output in stack['Outputs']:
+            resp[output['OutputKey']] = output['OutputValue']
     return resp
 
 def set_region():
