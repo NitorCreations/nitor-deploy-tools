@@ -447,6 +447,7 @@ def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=600
     status = "initial"
     start = time.time()
     while status != 'available':
+        time.sleep(2)
         if time.time() - start > timeout_sec:
             raise Exception("Failed waiting for status 'available' for " +\
                             ami_id + " (timeout: " + str(timeout_sec) + ")")
