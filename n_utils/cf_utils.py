@@ -457,7 +457,7 @@ def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=600
     my_acco = resolve_account()
     for acco in account_ids:
         if not acco == my_acco:
-            perms['Add'].append(acco)
+            perms['Add'].append({"UserId": acco})
     if len(perms['Add']) > 0:
         ec2.modify_image_attribute(ImageId=ami_id, LaunchPermission=perms)
 
