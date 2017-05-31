@@ -22,6 +22,13 @@ else
   DEPLOYTOOLS_VERSION="==$1"
 fi
 rm -f /opt/nitor/instance-data.json
+
+OS_TYPE=$(source /etc/os-release; echo ${ID})
+if [ "$OS_TYPE" = "ubuntu" ]; then
+  export LC_ALL="en_US.UTF-8"
+  export LC_CTYPE="en_US.UTF-8"
+  dpkg-reconfigure locales
+fi
 pip install -U pip setuptools awscli boto3 "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
 aws configure set default.s3.signature_version s3v4
 source $(n-include common_tools.sh)
