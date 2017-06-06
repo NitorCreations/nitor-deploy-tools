@@ -79,6 +79,11 @@ class InstanceInfo(object):
             return self._info['availabilityZone']
         else:
             return None
+    def private_ip(self):
+        if 'privateIp' in self._info:
+            return self._info['privateIp']
+        else:
+            return None
 
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
@@ -490,3 +495,35 @@ def promote_image(ami_id, job_name):
     ec2.create_tags(Resources=[ami_id], Tags=[{'Key': image_name_prefix,
                                                'Value': image_name_prefix + \
                                                "_" + build_number}])
+
+def register_private_dns(dns_name, hosted_zone):
+    set_region()
+    zone_id = None
+    zone_paginator = boto3.client("route53").get_paginator("list_hosted_zones")
+    for page in zone_paginator.paginate():
+        for zone in page.get("HostedZones", []):
+            if zone["Name"] == hosted_zone:
+                zone_id = zone['Id']
+                break
+        if zone_id:
+            break
+    if not zone_id:
+        raise Exception("Failed to get zone id for zone " + hosted_zone)
+    info = InstanceInfo()
+    route53 = boto3.client("route53")
+    route53.change_resource_record_sets(HostedZoneId=zone_id, ChangeBatch={
+        "Changes": [
+            {
+                "Action": "UPSERT",
+                "ResourceRecordSet": {
+                    "Name": dns_name,
+                    "Type": "A",
+                    "TTL": 60,
+                    "ResourceRecords": [
+                        {
+                            "Value": info.private_ip()
+                        }
+                    ]
+                }
+            }
+        ]})

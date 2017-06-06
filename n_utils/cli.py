@@ -35,7 +35,7 @@ from . import volumes
 from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
-    share_to_another_region, set_region
+    share_to_another_region, set_region, register_private_dns
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -647,3 +647,14 @@ def cli_share_to_another_region():
     args = parser.parse_args()
     share_to_another_region(args.ami_id, args.to_region, args.ami_name,
                             args.account_id)
+
+def cli_register_private_dns():
+    """ Register local private IP in route53 hosted zone usually for internal
+    use.
+    """
+    parser = argparse.ArgumentParser(description=cli_register_private_dns.__doc__)
+    parser.add_argument("dns_name", help="The name to update in route 53")
+    parser.add_argument("hosted_zone", help="The name of the hosted zone to update")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    register_private_dns(args.dns_name, args.hosted_zone)

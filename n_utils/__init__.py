@@ -72,7 +72,8 @@ NDT_ONLY = [
     'show-stack-params-and-outputs=n_utils.cli:show_stack_params_and_outputs',
     'get-images=n_utils.cli:cli_get_images',
     'promote-image=n_utils.cli:cli_promote_image',
-    'share-to-another-region=n_utils.cli:cli_share_to_another_region'
+    'share-to-another-region=n_utils.cli:cli_share_to_another_region',
+    'register-private-dns=n_utils.cli:cli_register_private_dns'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh'
