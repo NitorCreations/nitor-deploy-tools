@@ -25,7 +25,6 @@ CF_paramDnsName=
 CF_paramEip=
 CF_paramEBSTag=
 CF_paramEBSSize=32
-CF_resourceDeleteSnapshotsLambda=
 CF_extraScanHosts=`#optional`
 CF_paramMvnDeployId=`#optional`
 

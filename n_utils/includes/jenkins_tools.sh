@@ -99,11 +99,6 @@ jenkins_mount_ebs_home () {
   cat > /etc/cron.d/${CF_paramEBSTag}-snapshot << MARKER
 30 * * * * root /usr/bin/snapshot-from-volume.sh -w ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH >> /var/log/snapshots.log 2>&1
 MARKER
-  if [ -n "${CF_resourceDeleteSnapshotsLambda}" ]; then
-    cat > /etc/cron.d/${CF_paramEBSTag}-clean << MARKER
-45 4 * * * root /usr/bin/clean-snapshots.sh ${CF_resourceDeleteSnapshotsLambda} >> /var/log/snapshots.log 2>&1
-MARKER
-  fi
 }
 
 jenkins_setup_default_gitignore () {
