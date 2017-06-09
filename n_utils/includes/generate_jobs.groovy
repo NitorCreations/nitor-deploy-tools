@@ -21,7 +21,9 @@ public class Settings {
             if ("stack" == jobType) {
                 def imageJobName = getJobName(gitBranch, imageDir)
                 def jobName = getJobName(gitBranch, imageDir, stackName)
-                stackImageMap["$gitBranch-$imageDir-$stackName"] = imageJobName
+                if (imageJobName != null) {
+                    stackImageMap["$gitBranch-$imageDir-$stackName"] = imageJobName
+                }
                 def properties = loadStackProps(gitBranch, imageDir, stackName)
                 def jobPrefix = properties.JENKINS_JOB_PREFIX
                 if ("y" != properties.MANUAL_DEPLOY) {
@@ -130,6 +132,9 @@ public class Settings {
         if (properties.JENKINS_JOB_NAME != null) {
             return properties.JENKINS_JOB_NAME
         } else {
+            if (properties.JENKINS_JOB_PREFIX == null) {
+                return null
+            }
         	def jobPrefix = properties.JENKINS_JOB_PREFIX
             if (stackName != null && stackName != "-") { 
             	return "$jobPrefix-$imageDir-deploy-$stackName"
@@ -199,12 +204,15 @@ for (jobDef in jobDefs) {
     Properties imageProperties = s.loadImageProps(gitBranch, imageDir, true)
     def jobPrefix = imageProperties.JENKINS_JOB_PREFIX
     def jobName = s.getJobName(gitBranch, imageDir, stackName) 
+    if (jobName == null) {
+        continue
+    }
     //def blockOnArray = [SEED_JOB.name]
     def blockOnArray = ["generate-jobs"]
     if (jobType == "stack") {
         properties = s.loadStackProps(gitBranch, imageDir, stackName)
         jobPrefix = properties.JENKINS_JOB_PREFIX
-        if ("y" == properties.SKIP_STACK_JOB) {
+        if ("y" == properties.SKIP_STACK_JOB || (imageDir == "bootstrap" && "n" != properties.SKIP_STACK_JOB)) {
             continue
         }
         println "Generating stack deploy job $jobName"
@@ -322,7 +330,7 @@ ndt undeploy-stack $imageDir $stackName
         }
     } else {
         properties = imageProperties
-        if ("y" == properties.SKIP_IMAGE_JOB) {
+        if ("y" == properties.SKIP_IMAGE_JOB || (imageDir == "bootstrap" && "n" != properties.SKIP_IMAGE_JOB)) {
             continue
         }
         jobPrefix = properties.JENKINS_JOB_PREFIX
