@@ -24,7 +24,17 @@ fetch() {
     fi
     FNAME="$(basename "$path")"
     DNAME="$(dirname "$path")"
-    if ! mkdir -p "$DNAME" || ! vault -l "$FNAME" > "$path"; then
+    mkdir -p "$DNAME"
+    if [ -e "$path" ]; then
+        local TMPDIR=$(mktemp -d $path.XXXXXXX)
+        mv "$path" "$TMPDIR/"
+    fi
+    if ! vault -l "$FNAME" > "$path"; then
+      rm -f "$path"
+      if [ -n "$TMPDIR" ]; then
+          mv "$TMPDIR/$FNAME" "$path"
+          rm -rf "$TMPDIR"
+      fi
       if [ ! "$optional" ]; then
         echo "ERROR: Failed to get file $path"
         exit 1

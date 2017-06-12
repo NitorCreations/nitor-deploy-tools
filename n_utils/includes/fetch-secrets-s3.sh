@@ -50,7 +50,7 @@ for ABS_FILE in "$@"; do
     FILE=$ABS_FILE
     ABS_FILE="-"
   fi
-  if s3-role-download.sh ${CF_paramSecretsBucket} "$FILE" "$ABS_FILE"; then
+  if aws s3 cp "s3://${CF_paramSecretsBucket}/$FILE" "$ABS_FILE"; then
     if [ -z "$SHOW" ]; then
       chmod $MODE $ABS_FILE
     fi
