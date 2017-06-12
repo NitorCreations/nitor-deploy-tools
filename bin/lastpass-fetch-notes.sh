@@ -46,7 +46,7 @@ for path ; do
   DNAME="$(dirname "$path")"
   mkdir -p "$DNAME"
   if [ -e "$path" ]; then
-      local TMPDIR=$(mktemp -d $path.XXXXXXX)
+      TMPDIR=$(mktemp -d $path.XXXXXXX)
       mv "$path" "$TMPDIR/"
   fi
   if ! lpass show --notes "$FNAME" > "$path"; then
