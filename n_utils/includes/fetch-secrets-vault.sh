@@ -26,7 +26,7 @@ fetch() {
     DNAME="$(dirname "$path")"
     mkdir -p "$DNAME"
     if [ -e "$path" ]; then
-        local TMPDIR=$(mktemp -d $path.XXXXXXX)
+        TMPDIR=$(mktemp -d $path.XXXXXXX)
         mv "$path" "$TMPDIR/"
     fi
     if ! vault -l "$FNAME" > "$path"; then
