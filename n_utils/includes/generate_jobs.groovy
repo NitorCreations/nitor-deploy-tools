@@ -226,7 +226,7 @@ for (jobDef in jobDefs) {
         def dryRun = ""
         if ((gitBranch == "prod" && "n" != properties.MANUAL_ACCEPT_DEPLOY) ||
             "y" == properties.MANUAL_ACCEPT_DEPLOY) {
-           dryRun = "stage \"\\u001B[31mDry run to accept changeset\\u001B[0m\"\n" +
+           dryRun = "stage \"Dry run to accept changeset\"\n" +
                     "        sh \"ndt deploy-stack -d $imageDir $stackName \\\"\$AMI_ID\\\" $imageTag\"\n" +
                     "        input(message: \"Does the changeset above look ok?\")\n        "
         }
@@ -258,7 +258,7 @@ node {
               userRemoteConfigs: [[credentialsId: \"$s.gitCredentials\",
               url: \"$s.gitUrl\"]]])
     wrap([\$class: 'AnsiColorBuildWrapper']) {
-        ${dryRun}stage \"\\u001B[31mDeploy or update stack\\u001B[0m\"
+        ${dryRun}stage \"Deploy or update stack\"
         sh \"ndt deploy-stack $imageDir $stackName \\\"\$AMI_ID\\\" $imageTag\"
     }
 }
