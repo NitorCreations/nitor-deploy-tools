@@ -492,6 +492,10 @@ def promote_image(ami_id, job_name):
     if 'BUILD_NUMBER' in os.environ:
         build_number = "%04d" % int(os.environ['BUILD_NUMBER'])
     ec2 = boto3.client('ec2')
+    images_resp = ec2.describe_images(ImageIds=[ami_id])
+    ami_name = images_resp['Images'][0]['Name']
+    with open("ami.properties", 'w') as ami_props:
+        ami_props.write("AMI_ID=" + ami_id + "\nNAME=" + ami_name + "\n")
     ec2.create_tags(Resources=[ami_id], Tags=[{'Key': image_name_prefix,
                                                'Value': image_name_prefix + \
                                                "_" + build_number}])
