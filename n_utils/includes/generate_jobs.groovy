@@ -40,16 +40,6 @@ public class Settings {
      * Runs `ndt list-jobs` and returns the result as a string array
      **/
     public String[] getJobs() {
-        /*
-        def ret = []
-        ret << "centos-jenkins:dev:image:-"
-        ret << "centos-jenkins:dev:stack:amibakery"
-        ret << "centos-jenkins:dev:stack:jenkins"
-        ret << "centos-jenkins:master:image:-"
-        ret << "centos-jenkins:master:stack:amibakery"
-        ret << "centos-jenkins:master:stack:jenkins"
-        return ret
-        */
         def process = new ProcessBuilder(["ndt", "list-jobs"])
                 .redirectErrorStream(true)
                 .directory(this.workspace)
@@ -72,15 +62,6 @@ public class Settings {
             def properties = new Properties()
             this.propFiles[fileName] = properties
             File propertiesF = new File(this.jobPropertiesDir, fileName)
-            /*
-            if (fileName.indexOf("dev") > 0) {
-            	properties.JENKINS_JOB_PREFIX = "awsdev"
-            } else {
-            	properties.JENKINS_JOB_PREFIX = "aws"
-            }
-            properties.BAKE_IMAGE_BRANCH = "dev"
-            properties.AUTOPROMOTE_TO_BRANCH = "master"
-            */
             try {
                 propertiesF.withInputStream {
                     properties.load(it)
@@ -149,12 +130,6 @@ public class Settings {
     }
 }
 remoteConfig = SEED_JOB.scm.userRemoteConfigs[0]
-/*
-def remoteConfig = [:]
-remoteConfig.url = "github.com/foo/bar.git"
-remoteConfig.credentialsId = "bob-jenkins"
-def __FILE__ = './script.groovy'
-*/
 final Settings s = new Settings(remoteConfig, __FILE__)
 
 def private addSCMTriggers(job, properties, s) {
@@ -351,11 +326,11 @@ ndt undeploy-stack $imageDir $stackName
             /**
              * Create a image promotion job instead of a image baking job
              **/
-            println "Generating image promote job $jobName"
-            promotableJob = s.getJobName(properties.BAKE_IMAGE_BRANCH, imageDir)
+            def promotableJob = s.getJobName(properties.BAKE_IMAGE_BRANCH, imageDir)
+            println "Generating image promote job $jobName from $promotableJob"
             job.with {
                 steps {
-                    shell("ndt bake-image " + imageDir)
+                    shell("ndt promote-image \$AMI_ID $jobName")
                 }
                 description("nitor-deploy-tools promote image job")
                 configure { project ->
@@ -369,8 +344,7 @@ ndt undeploy-stack $imageDir $stackName
 .start()
 def ret = []
 process.inputStream.eachLine {
-println it
-ret << it
+  ret << it
 }
 process.waitFor();
 return ret
