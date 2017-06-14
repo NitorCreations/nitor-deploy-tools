@@ -369,7 +369,7 @@ def tag():
         if value is not None:
             print value
         else:
-            sys.exit("Tag " + args.name + "not found")
+            sys.exit("Tag " + args.name + " not found")
     else:
         parser.error("Only makes sense on an EC2 instance")
 
