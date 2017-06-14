@@ -61,6 +61,7 @@ NDT_AND_CONSOLE = [
     'ec2-clean-snapshots=n_utils.cli:clean_snapshots',
     'ec2-instance-id=n_utils.cli:instance_id',
     'ec2-region=n_utils.cli:ec2_region',
+    'ec2-get-tag=n_utils.cli:tag',
     'ec2-get-userdata=n_utils.cli:get_userdata',
     'detach-volume=n_utils.cli:detach_volume',
 ]

@@ -84,7 +84,11 @@ class InstanceInfo(object):
             return self._info['privateIp']
         else:
             return None
-
+    def tag(self, name):
+        if 'Tags' in self._info and name in self._info['Tags']:
+            return self._info['Tags'][name]
+        else:
+            return None
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
             try:

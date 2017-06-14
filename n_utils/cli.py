@@ -356,6 +356,23 @@ def ec2_region():
     argcomplete.autocomplete(parser)
     print region()
 
+def tag():
+    """ Get the value of a tag for an ec2 instance
+    """
+    parser = argparse.ArgumentParser(description=tag.__doc__)
+    parser.add_argument("name", help="The name of the tag to get")
+    args = parser.parse_args()
+    argcomplete.autocomplete(parser)
+    if is_ec2():
+        info = InstanceInfo()
+        value = info.tag(args.name)
+        if value is not None:
+            print value
+        else:
+            sys.exit("Tag " + args.name + "not found")
+    else:
+        parser.error("Only makes sense on an EC2 instance")
+
 def stack_name():
     """ Get name of the stack that created this instance
     """
