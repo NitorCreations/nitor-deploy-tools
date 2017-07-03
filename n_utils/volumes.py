@@ -332,6 +332,7 @@ def clean_snapshots(days, tags):
                               " || " + json.dumps(tags)
                 try:
                     ec2.delete_snapshot(SnapshotId=snapshot['SnapshotId'])
+                    time.sleep(0.2)
                 except ClientError as err:
                     print colored("Delete failed: " + \
                                   err.response['Error']['Message'], "red")
