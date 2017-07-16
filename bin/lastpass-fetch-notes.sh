@@ -64,6 +64,7 @@ for path ; do
     fi
   else
     chmod $mode $path
+    rm -rf "$TMPDIR"
     echo "Fetched $path"
   fi
 done
