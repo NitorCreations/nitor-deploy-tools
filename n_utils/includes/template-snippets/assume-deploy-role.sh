@@ -19,5 +19,11 @@ set -e
 CF_paramBakeRoleStack="bakery-roles"
 CF_AWS__Region="eu-west-1"
 
-ROLE_ARN=$(ndt show-stack-params-and-outputs -r ${CF_AWS__Region} ${CF_paramBakeRoleStack} | jq -r .deployRoleArn)
-assume-role $ROLE_ARN
+
+if [ -n "$DEPLOY_ROLE_ARN" ]; then
+  ROLE_ARN="$DEPLOY_ROLE_ARN"
+else
+  ROLE_ARN=$(ndt show-stack-params-and-outputs -r ${CF_AWS__Region} \
+    ${CF_paramBakeRoleStack} | jq -r .deployRoleArn)
+fi
+ndt assume-role $ROLE_ARN
