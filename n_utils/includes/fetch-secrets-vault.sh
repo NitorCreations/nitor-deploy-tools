@@ -43,6 +43,7 @@ fetch() {
       fi
     else
       chmod $mode $path
+      rm -rf "$TMPDIR"
       echo "Fetched $path"
     fi
   done
