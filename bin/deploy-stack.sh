@@ -71,6 +71,11 @@ shift ||:
 
 source source_infra_properties.sh "$image" "$stackName"
 export $(set | egrep -o '^param[a-zA-Z0-9_]+=' | tr -d '=') # export any param* variable defined in the infra-<branch>.properties files
+
+if [ -z "$AMI_ID" ]; then
+  AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"
+fi
+
 export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
