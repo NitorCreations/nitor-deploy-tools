@@ -619,12 +619,20 @@ def show_stack_params_and_outputs():
     parser = argparse.ArgumentParser(description=show_stack_params_and_outputs.__doc__)
     parser.add_argument("-r", "--region", help="Region for the stack to show",
                         default=region()).completer = ChoicesCompleter(regions())
+    parser.add_argument("-p", "--parameter", help="Name of paremeter if only" +\
+                                                  " one parameter required")
     parser.add_argument("stack_name", help="The stack name to show").completer = \
         ChoicesCompleter(stacks())
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     resp = stack_params_and_outputs(args.region, args.stack_name)
-    print json.dumps(resp, indent=2)
+    if args.parameter:
+        if args.parameter in resp:
+            print resp[args.parameter]
+        else:
+            parser.error("Parameter " + args.parameter + " not found")
+    else:
+        print json.dumps(resp, indent=2)
 
 def cli_get_images():
     """ Gets a list of images given a bake job name
