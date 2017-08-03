@@ -543,8 +543,8 @@ def snapshot_from_volume():
     argcomplete.autocomplete(parser)
     if is_ec2():
         args = parser.parse_args()
-        volumes.create_snapshot(args.tag_key, args.tag_value, args.mount_path,
-                                wait=args.wait)
+        print volumes.create_snapshot(args.tag_key, args.tag_value,
+                                      args.mount_path, wait=args.wait)
     else:
         parser.error("Only makes sense on an EC2 instance")
 

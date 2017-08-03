@@ -262,7 +262,8 @@ def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
             snapshot = resp['Snapshots'][0]
 
 def is_snapshot_complete(snapshot):
-    return snapshot is not None and 'State' in snapshot and ['State'] == 'completed'
+    return snapshot is not None and 'State' in snapshot and \
+           snapshot['State'] == 'completed'
 
 # Usage: attach_volume volume-id device-path
 def attach_volume(volume_id, device_path):
@@ -311,9 +312,11 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False):
     volume_id = volume['Volumes'][0]['VolumeId']
     snap = ec2.create_snapshot(VolumeId=volume_id)
     ec2.create_tags(Resources=[snap['SnapshotId']],
-                    Tags=[{'Key': tag_key, 'Value': tag_value}])
+                    Tags=[{'Key': tag_key, 'Value': tag_value},
+                          {'Key': 'Name', 'Value': tag_value}])
     if wait:
         wait_for_snapshot_complete(snap['SnapshotId'])
+    return snap['SnapshotId']
 
 def device_from_mount_path(mount_path):
     if sys.platform.startswith('win'):
