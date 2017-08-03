@@ -387,19 +387,22 @@ def is_ec2():
 def region():
     """ Get default region - the region of the instance if run in an EC2 instance
     """
+    # If it is set in the environment variable, use that
     if 'AWS_DEFAULT_REGION' in os.environ:
         return os.environ['AWS_DEFAULT_REGION']
-    elif is_ec2():
-        info = InstanceInfo()
-        return info.region()
     else:
-        cli_call = subprocess.Popen(["aws", "configure", "get", "region"],
-                                    stderr=PIPE, stdout=PIPE)
-        output = cli_call.communicate()[0]
-        if output and cli_call.returncode == 0:
-            return output.rstrip()
+        # Otherwise it might be configured in AWS credentials
+        session = boto3.session.Session()
+        if session.region_name:
+            return session.region_name
+        # If not configured and being called from an ec2 instance, use the
+        # region of the instance
+        elif is_ec2():
+            info = InstanceInfo()
+            return info.region()
+        # Otherwise default to Ireland
         else:
-            return os.environ.get('AWS_DEFAULT_REGION', 'eu-west-1')
+            return 'eu-west-1'
 
 def regions():
     """Get all region names as a list"""
