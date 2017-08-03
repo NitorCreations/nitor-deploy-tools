@@ -238,7 +238,6 @@ def wait_for_volume_status(volume_id, status, timeout_sec=300):
         if "Volumes" in resp:
             volume = resp['Volumes'][0]
 
-
 def match_volume_state(volume, status):
     if not volume:
         return False
@@ -247,6 +246,23 @@ def match_volume_state(volume, status):
                volume['Attachments'][0]['State'] == "attached"
     else:
         return volume['State'] == status
+
+def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
+    set_region()
+    start = time.time()
+    ec2 = boto3.client("ec2")
+    snapshot = None
+    while not is_snapshot_complete(snapshot):
+        time.sleep(2)
+        if time.time() - start > timeout_sec:
+            raise Exception("Failed waiting for status 'completed' for " +\
+                            snapshot_id + " (timeout: " + str(timeout_sec) + ")")
+        resp = ec2.describe_snapshots(SnapshotIds=[snapshot_id])
+        if "Snapshots" in resp:
+            snapshot = resp['Snapshots'][0]
+
+def is_snapshot_complete(snapshot):
+    return snapshot is not None and 'State' in snapshot and ['State'] == 'completed'
 
 # Usage: attach_volume volume-id device-path
 def attach_volume(volume_id, device_path):
@@ -280,7 +296,7 @@ def detach_volume(mount_path):
     ec2.detach_volume(VolumeId=volume_id, InstanceId=instance_id)
 
 # Usage: create_snapshot volume_id tag_key tag_value
-def create_snapshot(tag_key, tag_value, mount_path):
+def create_snapshot(tag_key, tag_value, mount_path, wait=False):
     set_region()
     device = device_from_mount_path(mount_path)
     with open(os.devnull, 'w') as devnull:
@@ -296,6 +312,8 @@ def create_snapshot(tag_key, tag_value, mount_path):
     snap = ec2.create_snapshot(VolumeId=volume_id)
     ec2.create_tags(Resources=[snap['SnapshotId']],
                     Tags=[{'Key': tag_key, 'Value': tag_value}])
+    if wait:
+        wait_for_snapshot_complete(snap['SnapshotId'])
 
 def device_from_mount_path(mount_path):
     if sys.platform.startswith('win'):

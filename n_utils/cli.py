@@ -534,13 +534,17 @@ def snapshot_from_volume():
     """ Create a snapshot of a volume identified by it's mount path
     """
     parser = argparse.ArgumentParser(description=snapshot_from_volume.__doc__)
+    parser.add_argument("-w", "--wait", help="Wait for the snapshot to finish" +\
+                                              " before returning",
+                        action="store_true")
     parser.add_argument("tag_key", help="Key of the tag to find volume with")
     parser.add_argument("tag_value", help="Value of the tag to find volume with")
     parser.add_argument("mount_path", help="Where to mount the volume")
     argcomplete.autocomplete(parser)
     if is_ec2():
         args = parser.parse_args()
-        volumes.create_snapshot(args.tag_key, args.tag_value, args.mount_path)
+        volumes.create_snapshot(args.tag_key, args.tag_value, args.mount_path,
+                                wait=args.wait)
     else:
         parser.error("Only makes sense on an EC2 instance")
 
