@@ -59,17 +59,14 @@ apache_replace_domain_vars
 apache_install_certs
 
 jenkins_mount_ebs_home ${CF_paramEBSSize}
+jenkins_discard_default_install
 jenkins_setup_dotssh
 jenkins_fetch_repo
-jenkins_setup_default_gitignore
-jenkins_setup_git_sync_script
-jenkins_setup_git_sync_on_shutdown
-jenkins_setup_git_sync_job
+jenkins_setup_snapshot_script
+jenkins_setup_snapshot_shutdown
+jenkins_setup_snapshot_job
 jenkins_improve_config_security
-jenkins_git_commit
-# Don't push here - we might not want to push the config automatically - enable & run the "push-latest-jenkins-conf-to-github" jenkins job instead
 
-jenkins_discard_default_install
 jenkins_fetch_additional_files
 jenkins_set_home
 jenkins_enable_and_start_service

@@ -81,12 +81,6 @@ MARKER
   chown -R jenkins:jenkins /var/lib/jenkins/ /var/lib/jenkins/jenkins-home/
 }
 
-jenkins_mount_home () {
-  encrypt-and-mount.sh /dev/xvdb /var/lib/jenkins/jenkins-home
-  chown -R jenkins:jenkins /var/lib/jenkins/jenkins-home
-  usermod -d /var/lib/jenkins/jenkins-home jenkins
-}
-
 jenkins_mount_ebs_home () {
   check_parameters CF_paramEBSTag
   local SIZE=$1
@@ -96,41 +90,14 @@ jenkins_mount_ebs_home () {
   local MOUNT_PATH=/var/lib/jenkins/jenkins-home
   volume-from-snapshot.sh ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH  $SIZE
   usermod -d /var/lib/jenkins/jenkins-home jenkins
+  if ! [ -e /var/lib/jenkins/jenkins-home/config.xml ]; then
+    cp -a /var/lib/jenkins-default/* /var/lib/jenkins/jenkins-home/
+    chown -R jenkins:jenkins /var/lib/jenkins/jenkins-home/
+  fi
   cat > /etc/cron.d/${CF_paramEBSTag}-snapshot << MARKER
-30 * * * * root /usr/bin/snapshot-from-volume.sh -w ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH >> /var/log/snapshots.log 2>&1
+30 * * * * root ndt snapshot-from-volume -w ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH >> /var/log/snapshots.log 2>&1
 MARKER
 }
-
-jenkins_setup_default_gitignore () {
-  if [ ! -e /var/lib/jenkins/jenkins-home/.gitignore ]; then
-    cat > /var/lib/jenkins/jenkins-home/.gitignore << EOF
-*.csv
-*.log
-builds
-fingerprints
-htmlreports
-identity.key.enc
-lastFailed
-lastFailedBuild
-lastStable
-lastStable
-lastStableBuild
-lastSuccessful
-lastSuccessfulBuild
-logs
-modules
-outOfOrderBuilds
-secret.key
-secrets
-workspace
-jenkins.war*
-.m2/repository
-.ssh
-EOF
-  fi
-  chown -R jenkins:jenkins /var/lib/jenkins-default/
-}
-
 
 # optional parameters: CF_paramJenkinsGit
 jenkins_fetch_repo () {
@@ -151,57 +118,37 @@ jenkins_fetch_repo () {
   fi
 }
 
-jenkins_setup_git_sync_script () {
-  if [ ! -e /var/lib/jenkins/jenkins-home/sync_git.sh ]; then
-    cat > /var/lib/jenkins/jenkins-home/sync_git.sh << EOF
+jenkins_setup_snapshot_script () {
+  if [ ! -e /var/lib/jenkins/jenkins-home/snapshot_jenkins_home.sh ]; then
+    cat > /var/lib/jenkins/jenkins-home/snapshot_jenkins_home.sh << EOF
 #!/bin/bash -xe
 
-/usr/bin/snapshot-from-volume.sh -w ${CF_paramEBSTag} ${CF_paramEBSTag} /var/lib/jenkins/jenkins-home
+ndt snapshot-from-volume -w ${CF_paramEBSTag} ${CF_paramEBSTag} /var/lib/jenkins/jenkins-home
 EOF
-    if [ "${CF_paramJenkinsGit}" ]; then
-      cat >> /var/lib/jenkins/jenkins-home/sync_git.sh << EOF
-DIR=\$(cd \$(dirname \$0); pwd -P)
-cd \$DIR
-date
-git add -A
-git commit -m "Syncing latest changes\$COMMITMSGSUFFIX" ||:
-git push origin master
-EOF
-    fi
   fi
-  chmod 755 /var/lib/jenkins/jenkins-home/sync_git.sh
+  chmod 755 /var/lib/jenkins/jenkins-home/snapshot_jenkins_home.sh
 }
 
-jenkins_setup_git_sync_on_shutdown () {
-  # Amend service script to call sync_git right after stopping the service - original script saved as jenkins.orig
-  if [ -n "${CF_paramJenkinsGit}" ]; then
-    if [ "$SYSTEM_TYPE" = "ubuntu" ]; then
-      perl -i.orig -e 'while(<>){print;if(m!^(\s+)do_stop!){print $1.'\''retval="$?"'\''."\n".$1."sudo -iu jenkins env COMMITMSGSUFFIX=\" (jenkins shutdown)\" /var/lib/jenkins/jenkins-home/sync_git.sh\n";last;}}$_=<>;s/\$\?/\$retval/;print;while(<>){print}' /etc/init.d/jenkins
-    elif [ "$SYSTEM_TYPE" = "centos" -o "$SYSTEM_TYPE" = "fedora" ]; then
-      perl -i.orig -e 'while(<>){print;if(m!^(\s+)killproc!){print $1.'\''retval="$?"'\''."\n".$1."sudo -iu jenkins env COMMITMSGSUFFIX=\" (jenkins shutdown)\" /var/lib/jenkins/jenkins-home/sync_git.sh\n";last;}}$_=<>;s/\$\?/\$retval/;print;while(<>){print}' /etc/init.d/jenkins
-    else
-      echo "Unkown system type $SYSTEM_TYPE"
-    fi
+jenkins_setup_snapshot_on_shutdown () {
+  # Amend service script to call snapshot_jenkins_home right after stopping the service - original script saved as jenkins.orig
+  if [ "$SYSTEM_TYPE" = "ubuntu" ]; then
+    perl -i.orig -e 'while(<>){print;if(m!^(\s+)do_stop!){print $1.'\''retval="$?"'\''."\n".$1."ndt snapshot-from-volume '${CF_paramEBSTag}' '${CF_paramEBSTag}' /var/lib/jenkins/jenkins-home\n";last;}}$_=<>;s/\$\?/\$retval/;print;while(<>){print}' /etc/init.d/jenkins
+  elif [ "$SYSTEM_TYPE" = "centos" -o "$SYSTEM_TYPE" = "fedora" ]; then
+    perl -i.orig -e 'while(<>){print;if(m!^(\s+)killproc!){print $1.'\''retval="$?"'\''."\n".$1."ndt snapshot-from-volume '${CF_paramEBSTag}' '${CF_paramEBSTag}' /var/lib/jenkins/jenkins-home\n";last;}}$_=<>;s/\$\?/\$retval/;print;while(<>){print}' /etc/init.d/jenkins
   else
-    if [ "$SYSTEM_TYPE" = "ubuntu" ]; then
-      perl -i.orig -e 'while(<>){print;if(m!^(\s+)do_stop!){print $1.'\''retval="$?"'\''."\n".$1."/usr/bin/snapshot-from-volume.sh '${CF_paramEBSTag}' '${CF_paramEBSTag}' /var/lib/jenkins/jenkins-home\n";last;}}$_=<>;s/\$\?/\$retval/;print;while(<>){print}' /etc/init.d/jenkins
-    elif [ "$SYSTEM_TYPE" = "centos" -o "$SYSTEM_TYPE" = "fedora" ]; then
-      perl -i.orig -e 'while(<>){print;if(m!^(\s+)killproc!){print $1.'\''retval="$?"'\''."\n".$1."/usr/bin/snapshot-from-volume.sh '${CF_paramEBSTag}' '${CF_paramEBSTag}' /var/lib/jenkins/jenkins-home\n";last;}}$_=<>;s/\$\?/\$retval/;print;while(<>){print}' /etc/init.d/jenkins
-    else
-      echo "Unkown system type $SYSTEM_TYPE"
-    fi
+    echo "Unkown system type $SYSTEM_TYPE"
   fi
 }
 
-jenkins_setup_git_sync_job () {
-  if ! find /var/lib/jenkins/jenkins-home/jobs -name config.xml -print0 | xargs -0 fgrep -q sync_git.sh ; then
-    sync_jenkins_conf_job_name="sync-jenkins-conf-to-git"
+jenkins_setup_snapshot_job () {
+  if ! find /var/lib/jenkins/jenkins-home/jobs -name config.xml -print0 | xargs -0 fgrep -q snapshot_jenkins_home.sh ; then
+    sync_jenkins_conf_job_name="snapshot-jenkins-home"
     mkdir -p /var/lib/jenkins/jenkins-home/jobs/${sync_jenkins_conf_job_name}
     cat > /var/lib/jenkins/jenkins-home/jobs/${sync_jenkins_conf_job_name}/config.xml << 'EOF'
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>Runs the &quot;sync_git.sh&quot; script that pushes the latest jenkins config to the remote Jenkins repo.</description>
+  <description>Runs the &quot;snapshot_jenkins_home.sh&quot; script that pushes the latest jenkins config to the remote Jenkins repo.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <jenkins.model.BuildDiscarderProperty>
@@ -228,24 +175,13 @@ H H(4-5) * * *</spec>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>/var/lib/jenkins/jenkins-home/sync_git.sh 2&gt;&amp;1 | tee -a /var/lib/jenkins/sync_git.log</command>
+      <command>/var/lib/jenkins/jenkins-home/snapshot_jenkins_home.sh 2&gt;&amp;1 | tee -a /var/lib/jenkins/snapshot_jenkins_home.log</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
   <buildWrappers/>
 </project>
 EOF
-  fi
-}
-
-jenkins_git_commit () {
-  chown -R jenkins:jenkins /var/lib/jenkins
-  chown -R jenkins:jenkins /var/lib/jenkins/jenkins-home
-  if [ -n "${CF_paramJenkinsGit}" ]; then
-    sudo -iu jenkins git --git-dir=/var/lib/jenkins/jenkins-home/.git \
-         --work-tree=/var/lib/jenkins/jenkins-home add .
-    sudo -iu jenkins git --git-dir=/var/lib/jenkins/jenkins-home/.git \
-         --work-tree=/var/lib/jenkins/jenkins-home commit -m 'Post-installation commit' ||:
   fi
 }
 
