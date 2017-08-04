@@ -121,6 +121,7 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                    "-DiskNumber", disk_number,
                                    "-UseMaximumSize", "-DriveLetter",
                                    drive_letter])
+            print "Formatting " + device + "(" + drive_letter + ":)"
             subprocess.check_call(["powershell.exe", "Format-Volume",
                                    "-DriveLetter", drive_letter, "-FileSystem",
                                    "NTFS", "-Force", "-Confirm:$False"])
