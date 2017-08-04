@@ -35,7 +35,7 @@ from . import volumes
 from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
-    share_to_another_region, set_region, register_private_dns
+    share_to_another_region, set_region, register_private_dns, interpolate_file
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -687,3 +687,27 @@ def cli_register_private_dns():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     register_private_dns(args.dns_name, args.hosted_zone)
+
+def cli_interpolate_file():
+    """ Replace placeholders in file with parameter values from stack and
+    optionally from vault
+    """
+    parser = argparse.ArgumentParser(description=cli_interpolate_file.__doc__)
+    parser.add_argument("-s", "--stack", help="Stack name for values. " +\
+                                              "Automatically resolved on ec2" +\
+                                              " instances")
+    parser.add_argument("-v", "--vault", help="Use vault values as well." +\
+                                              "Vault resovled from env " +\
+                                              "variables or default is used",
+                        action="store_true")
+    parser.add_argument("-o", "--output", help="Output file")
+    parser.add_argument("-e", "--encoding", help="Encoding to use for the " +\
+                                                  "file. Defaults to utf-8",
+                        default='utf-8')
+    parser.add_argument("file", help="File to interpolate").completer = \
+                                                            FilesCompleter()
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    cf_utils.interpolate_file(args.file, stack_name=args.stack,
+                              use_vault=args.vault, destination=args.output,
+                              encoding=args.encoding)

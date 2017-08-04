@@ -16,16 +16,17 @@
 
 """ Utilities to work with instances made by nitor-deploy-tools stacks
 """
+import io
 import json
 import os
 import random
 import re
+import shutil
 import stat
 import string
-import subprocess
-from subprocess import PIPE
 import sys
 import time
+import tempfile
 from collections import deque
 from threading import Event, Lock, Thread
 from operator import itemgetter
@@ -34,6 +35,7 @@ import boto3
 from botocore.exceptions import ClientError
 import requests
 from requests.exceptions import ConnectionError
+from n_vault import Vault
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -180,6 +182,10 @@ class InstanceInfo(object):
                 self._info['stack_id'] = tags['aws:cloudformation:stack-id']
             if 'aws:cloudformation:logical-id' in tags:
                 self._info['logical_id'] = tags['aws:cloudformation:logical-id']
+
+    def stack_data_dict(self):
+        if 'StackData' in self._info:
+            return self._info['StackData']
 
     def stack_data(self, name):
         if 'StackData' in self._info:
@@ -528,3 +534,68 @@ def register_private_dns(dns_name, hosted_zone):
                 }
             }
         ]})
+
+def interpolate_file(file_name, destination=None, stack_name=None,
+                     use_vault=False, encoding='utf-8'):
+    if not destination:
+        destination = file_name
+        dstfile = tempfile.mkstemp(dir=os.path.dirname(file_name),
+                                   prefix=os.path.basename(file_name))[1]
+    else:
+        dstfile = tempfile.mkstemp(dir=os.path.dirname(destination),
+                                   prefix=os.path.basename(destination))[1]
+    if not stack_name:
+        info = InstanceInfo()
+        params = info.stack_data_dict()
+    else:
+        params = stack_params_and_outputs(region(), stack_name)
+    vault = None
+    vault_keys = []
+    if use_vault:
+        vault = Vault()
+        vault_keys = vault.list_all()
+    with io.open(file_name, "r", encoding=encoding) as _infile:
+        with io.open(dstfile, 'w', encoding=encoding) as _outfile:
+            for line in _infile:
+                line = _process_line(line, params, vault, vault_keys)
+                _outfile.write(line)
+    shutil.move(dstfile, destination)
+
+PARAM_RE = re.compile(r'\$\{|\}')
+def _process_line(line, params, vault, vault_keys):
+    param_stack = []
+    start_next = 0
+    last_start = 0
+    ret = ""
+    while start_next < len(line):
+        match = PARAM_RE.search(line, pos=start_next)
+        if match:
+            last_start = start_next
+            start_next = match.end()
+            if match.group(0) == '${':
+                ret = ret + line[last_start:match.start()]
+                param_stack.append(match)
+            else:
+                if param_stack:
+                    param_start = param_stack.pop()
+                    param_name = line[param_start.start() + 2:match.start()]
+                    value = None
+                    if param_name in vault_keys:
+                        value = vault.lookup(param_name)
+                    elif param_name in params:
+                        value = params[param_name]
+                    else:
+                        if not param_stack:
+                            ret = ret + '${' + param_name + '}'
+                        continue
+                    if not param_stack:
+                        ret = ret + value
+                    else:
+                        prev_match = param_stack[len(param_stack) - 1]
+                        start_next = prev_match.end()
+                        line = line[:start_next] + value + line[match.end():]
+                else:
+                    ret = ret + line[last_start:match.start()] + "}"
+        else:
+            return ret + line[start_next:]
+    return ret
