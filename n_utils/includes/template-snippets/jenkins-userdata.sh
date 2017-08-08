@@ -61,7 +61,6 @@ apache_install_certs
 jenkins_mount_ebs_home ${CF_paramEBSSize}
 jenkins_discard_default_install
 jenkins_setup_dotssh
-jenkins_fetch_repo
 jenkins_setup_snapshot_script
 jenkins_setup_snapshot_on_shutdown
 jenkins_setup_snapshot_job

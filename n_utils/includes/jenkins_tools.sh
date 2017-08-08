@@ -99,25 +99,6 @@ jenkins_mount_ebs_home () {
 MARKER
 }
 
-# optional parameters: CF_paramJenkinsGit
-jenkins_fetch_repo () {
-  chown -R jenkins:jenkins /var/lib/jenkins
-  chown -R jenkins:jenkins /var/lib/jenkins/jenkins-home
-  if [ "${CF_paramJenkinsGit}" ]; then
-    sudo -iu jenkins git init /var/lib/jenkins/jenkins-home
-    if ! sudo -iu jenkins git --git-dir=/var/lib/jenkins/jenkins-home/.git remote -v | grep ${CF_paramJenkinsGit} > /dev/null 2>&1; then
-      echo "Adding remote jenkins config git repo ${CF_paramJenkinsGit}"
-      sudo -iu jenkins git --git-dir=/var/lib/jenkins/jenkins-home/.git remote add -f -t master origin ${CF_paramJenkinsGit}
-    fi
-    echo "Checking out jenkins config git repo ${CF_paramJenkinsGit}"
-    #Either the correct gitignore is created via the checkout, or the default one is added later
-    rm -f /var/lib/jenkins/jenkins-home/.gitignore
-    sudo -iu jenkins git --git-dir=/var/lib/jenkins/jenkins-home/.git --work-tree=/var/lib/jenkins/jenkins-home checkout -f master
-  else
-    echo "Created EBS backed jenkins config"
-  fi
-}
-
 jenkins_setup_snapshot_script () {
   if [ ! -e /var/lib/jenkins/jenkins-home/snapshot_jenkins_home.sh ]; then
     cat > /var/lib/jenkins/jenkins-home/snapshot_jenkins_home.sh << EOF
