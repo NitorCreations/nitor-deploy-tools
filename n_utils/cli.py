@@ -486,7 +486,7 @@ def resolve_include():
 def assume_role():
     """Assume a defined role. Prints out environment variables
     to be eval'd to current context for use:
-    eval $(assume-role 'arn:aws:iam::43243246645:role/DeployRole')
+    eval $(ndt assume-role 'arn:aws:iam::43243246645:role/DeployRole')
     """
     parser = argparse.ArgumentParser(description=assume_role.__doc__)
     parser.add_argument("role_arn", help="The ARN of the role to assume")
