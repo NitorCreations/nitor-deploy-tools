@@ -539,11 +539,13 @@ def interpolate_file(file_name, destination=None, stack_name=None,
                      use_vault=False, encoding='utf-8'):
     if not destination:
         destination = file_name
-        dstfile = tempfile.mkstemp(dir=os.path.dirname(file_name),
-                                   prefix=os.path.basename(file_name))[1]
+        dstfile = tempfile.NamedTemporaryFile(dir=os.path.dirname(file_name),
+                                              prefix=os.path.basename(file_name),
+                                              delete=False)
     else:
-        dstfile = tempfile.mkstemp(dir=os.path.dirname(destination),
-                                   prefix=os.path.basename(destination))[1]
+        dstfile = tempfile.NamedTemporaryFile(dir=os.path.dirname(destination),
+                                              prefix=os.path.basename(destination),
+                                              delete=False)
     if not stack_name:
         info = InstanceInfo()
         params = info.stack_data_dict()
@@ -555,11 +557,12 @@ def interpolate_file(file_name, destination=None, stack_name=None,
         vault = Vault()
         vault_keys = vault.list_all()
     with io.open(file_name, "r", encoding=encoding) as _infile:
-        with io.open(dstfile, 'w', encoding=encoding) as _outfile:
+        with dstfile as _outfile:
             for line in _infile:
                 line = _process_line(line, params, vault, vault_keys)
-                _outfile.write(line)
-    shutil.move(dstfile, destination)
+                _outfile.write(line.encode(encoding))
+    shutil.copy(dstfile.name, destination)
+    os.unlink(dstfile.name)
 
 PARAM_RE = re.compile(r'\$\{|\}')
 def _process_line(line, params, vault, vault_keys):
