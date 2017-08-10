@@ -133,7 +133,7 @@ def create_or_update_stack(stack_name, json_small, params_doc):
 
 def get_template_arguments(stack_name, template, params):
     params = { "StackName": stack_name,
-        "Parameters": params, "Capabilities": ["CAPABILITY_IAM"]}
+        "Parameters": params, "Capabilities": ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]}
     if 'CF_BUCKET' in os.environ and os.environ['CF_BUCKET']:
         bucket = os.environ['CF_BUCKET']
         s3cli = boto3.client('s3')
