@@ -18,7 +18,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/common_tools.sh"
 
 configure_and_start_nexus () {
   check_parameters CF_paramDnsName CF_paramSonatypeWorkSize
-  volume-from-snapshot.sh nexus-data nexus-data /opt/nexus/sonatype-work ${CF_paramSonatypeWorkSize}
+  ndt volume-from-snapshot nexus-data nexus-data /opt/nexus/sonatype-work ${CF_paramSonatypeWorkSize}
   chown -R nexus:nexus /opt/nexus/sonatype-work
 
   if ! [ -r /opt/nexus/sonatype-work/nexus/conf/security.xml ]; then
