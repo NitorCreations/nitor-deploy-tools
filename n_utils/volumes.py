@@ -165,6 +165,10 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                       "GB to " + size_gb
                 subprocess.check_call(["e2fsck", "-f", "-p", device])
                 subprocess.check_call(["resize2fs", device])
+    if not sys.platform.startswith('win'):
+        if not os.path.isdir(mount_path):
+            os.makedirs(mount_path)
+        subprocess.check_call(["mount", device, mount_path])
 
 
 def first_free_device():
