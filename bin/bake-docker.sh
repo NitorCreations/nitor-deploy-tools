@@ -55,7 +55,7 @@ fi
 
 source source_infra_properties.sh "$image" "$docker"
 
-sudo docker build -t $DOCKER_NAME "$image/docker-$ORIG_DOCKER_NAME"
+sudo docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
 eval "$(ndt ecr-ensure-repo $DOCKER_NAME)"
 sudo docker tag $DOCKER_NAME:latest $DOCKER_NAME:$BUILD_NUMBER $REPO:latest $REPO:BUILD_NUMBER
 sudo docker push $REPO:latest

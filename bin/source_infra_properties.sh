@@ -42,7 +42,7 @@ shift
 
 # by default, prefix stack name with branch name, to avoid accidentally using same names in different branches - override in infra-<branch>.properties to your liking. STACK_NAME and ORIG_STACK_NAME can be assumed to exist.
 STACK_NAME="${GIT_BRANCH##*/}-${ORIG_STACK_NAME}"
-DOCKER_NAME="${GIT_BRANCH##*/}-${ORIG_STACK_NAME}"
+DOCKER_NAME="$image/${GIT_BRANCH##*/}-${ORIG_STACK_NAME}"
 
 sharedpropfile="infra.properties"
 infrapropfile="infra-${GIT_BRANCH##*/}.properties"
