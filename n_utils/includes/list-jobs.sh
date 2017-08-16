@@ -38,6 +38,12 @@ list_jobs() {
           egrep -v "$IGNORE_PROPS" > "../job-properties/stack-$GIT_BRANCH-$IMAGE_DIR-$STACK.properties"
         echo "$IMAGE_DIR:$GIT_BRANCH:stack:$STACK"
       done
+      for DOCKER in $(get_dockers $IMAGE_DIR); do
+        env -i REGION="$REGION" ACCOUNT_ID="$ACCOUNT_ID" GIT_BRANCH="$GIT_BRANCH" \
+          bash -c "source source_infra_properties.sh $IMAGE_DIR $DOCKER; set" | \
+          egrep -v "$IGNORE_PROPS" > "../job-properties/docker-$GIT_BRANCH-$IMAGE_DIR-$DOCKER.properties"
+        echo "$IMAGE_DIR:$GIT_BRANCH:docker:$DOCKER"
+      done
     done
     cd ..
     rm -rf "$GIT_BRANCH-checkout"

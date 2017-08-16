@@ -37,3 +37,8 @@ get_imageids() {
     fi
   fi
 }
+get_dockers() {
+  if [ -r infra.properties -o -r infra-master.properties ]; then
+    echo $(find $1 -mindepth 1 -maxdepth 1 -name 'docker-*' | sed 's/.*docker-\(.*\)/\1/g')
+  fi
+}

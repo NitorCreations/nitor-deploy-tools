@@ -16,6 +16,7 @@
 """
 
 SCRIPTS = [
+    'bin/bake-docker.sh',
     'bin/bake-image.sh',
     'bin/create-shell-archive.sh',
     'bin/deploy-stack.sh',
@@ -75,7 +76,8 @@ NDT_ONLY = [
     'promote-image=n_utils.cli:cli_promote_image',
     'share-to-another-region=n_utils.cli:cli_share_to_another_region',
     'register-private-dns=n_utils.cli:cli_register_private_dns',
-    'interpolate-file=n_utils.cli:cli_interpolate_file'
+    'interpolate-file=n_utils.cli:cli_interpolate_file',
+    'ecr-ensure-repo=n_utils.cli:cli_ecr_ensure_repo'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh'

@@ -36,6 +36,7 @@ from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
     share_to_another_region, set_region, register_private_dns, interpolate_file
+from .ecr_utils import ensure_repo
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -708,6 +709,14 @@ def cli_interpolate_file():
                                                             FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    cf_utils.interpolate_file(args.file, stack_name=args.stack,
-                              use_vault=args.vault, destination=args.output,
-                              encoding=args.encoding)
+    interpolate_file(args.file, stack_name=args.stack, use_vault=args.vault,
+                     destination=args.output, encoding=args.encoding)
+
+def cli_ecr_ensure_repo():
+    """ Ensure that an ECR repository exists and get the uri and login token for
+    it """
+    parser = argparse.ArgumentParser(description=cli_ecr_ensure_repo.__doc__)
+    parser.add_argument("name", help="The name of the ecr repository to verify")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    ensure_repo(args.name)

@@ -25,7 +25,7 @@ if [ "$_ARGCOMPLETE" ]; then
       compgen -W "$(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
-      compgen -W "$(get_stacks $COMP_PREV)" -- $COMP_CUR
+      compgen -W "$(get_dockers $COMP_PREV) $(get_stacks $COMP_PREV)" -- $COMP_CUR
       ;;
     *)
       exit 1
@@ -36,10 +36,13 @@ fi
 [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
 image="$1" ; shift
-ORIG_STACK_NAME="$1" ; shift
+ORIG_STACK_NAME="$1"
+ORIG_DOCKER_NAME="$1"
+shift
 
 # by default, prefix stack name with branch name, to avoid accidentally using same names in different branches - override in infra-<branch>.properties to your liking. STACK_NAME and ORIG_STACK_NAME can be assumed to exist.
 STACK_NAME="${GIT_BRANCH##*/}-${ORIG_STACK_NAME}"
+DOCKER_NAME="${GIT_BRANCH##*/}-${ORIG_STACK_NAME}"
 
 sharedpropfile="infra.properties"
 infrapropfile="infra-${GIT_BRANCH##*/}.properties"
@@ -50,6 +53,8 @@ source "${infrapropfile}"
 [ -e "${image}/${infrapropfile}" ] && source "${image}/${infrapropfile}"
 [ -e "${image}/stack-${ORIG_STACK_NAME}/${sharedpropfile}" ] && source "${image}/stack-${ORIG_STACK_NAME}/${sharedpropfile}"
 [ -e "${image}/stack-${ORIG_STACK_NAME}/${infrapropfile}" ] && source "${image}/stack-${ORIG_STACK_NAME}/${infrapropfile}"
+[ -e "${image}/docker-${ORIG_STACK_NAME}/${sharedpropfile}" ] && source "${image}/docker-${ORIG_STACK_NAME}/${sharedpropfile}"
+[ -e "${image}/docker-${ORIG_STACK_NAME}/${infrapropfile}" ] && source "${image}/docker-${ORIG_STACK_NAME}/${infrapropfile}"
 
 #If region not set in infra files, get the region of the instance or from env
 [ "$REGION" ] || REGION=$(ec2-region)

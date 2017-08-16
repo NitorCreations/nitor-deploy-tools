@@ -132,7 +132,6 @@ else
   PASSWD_ARG="$PASSWD_ARG \"prepare_script\": \"$(n-include prepare.ps1)\"}"
 fi
 if [ -z "$BUILD_NUMBER" ]; then
-
   BUILD_NUMBER=$TSTAMP
 else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
