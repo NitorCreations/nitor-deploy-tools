@@ -56,6 +56,14 @@ fi
 source source_infra_properties.sh "$image" "$docker"
 
 sudo docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
+
+#If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
+if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval $(ndt assume-role $DEPLOY_ROLE_ARN)
+elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval $(assume-deploy-role.sh)
+fi
+
 eval "$(ndt ecr-ensure-repo $DOCKER_NAME)"
 sudo docker tag $DOCKER_NAME:latest $DOCKER_NAME:$BUILD_NUMBER $REPO:latest $REPO:BUILD_NUMBER
 sudo docker push $REPO:latest
