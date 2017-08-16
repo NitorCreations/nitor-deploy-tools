@@ -65,6 +65,8 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
 fi
 
 eval "$(ndt ecr-ensure-repo $DOCKER_NAME)"
-sudo docker tag $DOCKER_NAME:latest $DOCKER_NAME:$BUILD_NUMBER $REPO:latest $REPO:BUILD_NUMBER
+sudo docker tag $DOCKER_NAME:latest $DOCKER_NAME:$BUILD_NUMBER
+sudo docker tag $DOCKER_NAME:latest $REPO:latest
+sudo docker tag $DOCKER_NAME:$BUILD_NUMBER $REPO:$BUILD_NUMBER
 sudo docker push $REPO:latest
-sudo docker push $REPO:BUILD_NUMBER
+sudo docker push $REPO:$BUILD_NUMBER
