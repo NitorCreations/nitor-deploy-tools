@@ -35,6 +35,15 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
+source_first_existing() {
+  for PROPFILE in "$@"; do
+    if [ -e "$PROPFILE" ]; then
+      source "$PROPFILE"
+      return
+    fi
+  done
+}
+
 image="$1" ; shift
 ORIG_STACK_NAME="$1"
 ORIG_DOCKER_NAME="$1"
@@ -45,16 +54,21 @@ STACK_NAME="${GIT_BRANCH##*/}-${ORIG_STACK_NAME}"
 DOCKER_NAME="$image/${GIT_BRANCH##*/}-${ORIG_STACK_NAME}"
 
 sharedpropfile="infra.properties"
-infrapropfile="infra-${GIT_BRANCH##*/}.properties"
+imagesharedpropfile="${image}/${sharedpropfile}"
+stacksharedpropfile="${image}/stack-${ORIG_STACK_NAME}/${sharedpropfile}"
+dockersharedpropfile="${image}/docker-${ORIG_STACK_NAME}/${sharedpropfile}"
 
-[ -e "${sharedpropfile}" ] && source "${sharedpropfile}"
-source "${infrapropfile}"
-[ -e "${image}/${sharedpropfile}" ] && source "${image}/${sharedpropfile}"
-[ -e "${image}/${infrapropfile}" ] && source "${image}/${infrapropfile}"
-[ -e "${image}/stack-${ORIG_STACK_NAME}/${sharedpropfile}" ] && source "${image}/stack-${ORIG_STACK_NAME}/${sharedpropfile}"
-[ -e "${image}/stack-${ORIG_STACK_NAME}/${infrapropfile}" ] && source "${image}/stack-${ORIG_STACK_NAME}/${infrapropfile}"
-[ -e "${image}/docker-${ORIG_STACK_NAME}/${sharedpropfile}" ] && source "${image}/docker-${ORIG_STACK_NAME}/${sharedpropfile}"
-[ -e "${image}/docker-${ORIG_STACK_NAME}/${infrapropfile}" ] && source "${image}/docker-${ORIG_STACK_NAME}/${infrapropfile}"
+infrapropfile="infra-${GIT_BRANCH##*/}.properties"
+imagepropfile="${image}/${infrapropfile}"
+stackpropfile="${image}/stack-${ORIG_STACK_NAME}/${infrapropfile}"
+dockerpropfile="${image}/docker-${ORIG_STACK_NAME}/${infrapropfile}"
+
+source_first_existing "$sharedpropfile"
+source_first_existing "$infrapropfile"
+source_first_existing "$imagesharedpropfile"
+source_first_existing "$imagepropfile"
+source_first_existing "$stacksharedpropfile" "$dockersharedpropfile"
+source_first_existing "$stackpropfile" "$dockerpropfile"
 
 #If region not set in infra files, get the region of the instance or from env
 [ "$REGION" ] || REGION=$(ec2-region)
