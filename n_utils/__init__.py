@@ -77,7 +77,8 @@ NDT_ONLY = [
     'share-to-another-region=n_utils.cli:cli_share_to_another_region',
     'register-private-dns=n_utils.cli:cli_register_private_dns',
     'interpolate-file=n_utils.cli:cli_interpolate_file',
-    'ecr-ensure-repo=n_utils.cli:cli_ecr_ensure_repo'
+    'ecr-ensure-repo=n_utils.cli:cli_ecr_ensure_repo',
+    'ecr-repo-uri=n_utils.cli:cli_ecr_repo_uri'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh'

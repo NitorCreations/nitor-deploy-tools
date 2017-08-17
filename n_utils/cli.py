@@ -36,7 +36,7 @@ from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
     share_to_another_region, set_region, register_private_dns, interpolate_file
-from .ecr_utils import ensure_repo
+from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 
@@ -720,3 +720,15 @@ def cli_ecr_ensure_repo():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     ensure_repo(args.name)
+
+def cli_ecr_repo_uri():
+    """ Get the repo uri for a named docker """
+    parser = argparse.ArgumentParser(description=cli_ecr_ensure_repo.__doc__)
+    parser.add_argument("name", help="The name of the ecr repository")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    uri = repo_uri(args.name)
+    if not uri:
+        parser.error("Did not find uri for repo '" + args.name + "'")
+    else:
+        print uri

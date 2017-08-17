@@ -42,3 +42,24 @@ get_dockers() {
     echo $(find $1 -mindepth 1 -maxdepth 1 -name 'docker-*' | sed 's/.*docker-\(.*\)/\1/g')
   fi
 }
+checkout_branch() {
+  local BRANCH=$1
+  mkdir -p "$BRANCH-checkout" > /dev/null 2>&1
+  git archive "origin/$BRANCH" | tar -xC "$BRANCH-checkout" > /dev/null 2>&1
+  if [ -r "infra-$BRANCH.properties" ]; then
+    echo $BRANCH
+  else
+    rm -rf "$BRANCH-checkout" > /dev/null 2>&1
+  fi
+}
+job_properties() {
+  local GIT_BRANCH=$1
+  IGNORE_PROPS='^(BASH.*|DIR|TERM|.?UID|_|GROUPS|IFS|OPTERR|OPTIND|SHELL|PIPE|PS4|PPID|SHLVL|PATH|PWD|OSTYPE|HOST(NAME|TYPE)|MACHTYPE|SHELLOPTS|DIRSTACK|PIPESTATUS)='
+  #If region not set in infra files, get the region of the instance or from env
+  [ "$REGION" ] || REGION=$(ndt ec2-region)
+  # Same logic as above for account id
+  [ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(ndt account-id)
+  env -i REGION="$REGION" ACCOUNT_ID="$ACCOUNT_ID" GIT_BRANCH="$GIT_BRANCH" \
+    bash -c "source source_infra_properties.sh $2 $3; set" | \
+    egrep -v "$IGNORE_PROPS"
+}

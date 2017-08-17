@@ -42,3 +42,12 @@ def ensure_repo(name):
         token = full_token[1]
         print "sudo docker login -u " + user + " -p " + token + " " + \
               auth_data['proxyEndpoint']
+
+def repo_uri(name):
+    ecr = boto3.client("ecr", region_name=region())
+    repo_resp = ecr.describe_repositories(repositoryNames=[name])
+    if 'repositories' in repo_resp and len(repo_resp['repositories']) > 0 and \
+       'repositoryUri' in repo_resp['repositories'][0]:
+        return repo_resp['repositories'][0]['repositoryUri']
+    else:
+        return None

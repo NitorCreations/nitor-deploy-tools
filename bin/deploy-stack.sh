@@ -55,6 +55,7 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+source $(n-include autocomplete-helpers.sh)
 
 set -xe
 
@@ -70,6 +71,21 @@ IMAGE_JOB="$1"
 shift ||:
 
 source source_infra_properties.sh "$image" "$stackName"
+
+for DOCKER in $(get_dockers $image); do
+  unset BAKE_IMAGE_BRANCH DOCKER_NAME
+  eval "$(job_properties ${GIT_BRANCH##*/} $image $DOCKER | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
+  if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH##*/}" != "$BAKE_IMAGE_BRANCH" ]; then
+    checkout_branch $BAKE_IMAGE_BRANCH
+    cd $BAKE_IMAGE_BRANCH-checkout
+    eval "$(job_properties ${GIT_BRANCH##*/} $image $DOCKER | egrep '^DOCKER_NAME=')"
+    cd ..
+    rm -rf $BAKE_IMAGE_BRANCH-checkout
+  fi
+  DOCKER_PARAM_NAME="paramDockerUri_$DOCKER"
+  URI="$(ndt ecr-repo-uri $DOCKER_NAME)"
+  [ "$URI" ] && eval "$DOCKER_PARAM_NAME=$URI"
+done
 export $(set | egrep -o '^param[a-zA-Z0-9_]+=' | tr -d '=') # export any param* variable defined in the infra-<branch>.properties files
 
 if [ -z "$AMI_ID" ]; then
