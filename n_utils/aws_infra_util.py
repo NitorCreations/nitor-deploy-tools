@@ -21,7 +21,7 @@ import re
 import subprocess
 import sys
 import yaml
-from yaml import ScalarNode, SequenceNode
+from yaml import ScalarNode, SequenceNode, MappingNode
 from .cf_utils import stack_params_and_outputs
 
 stacks = dict()
@@ -40,7 +40,8 @@ include_dirs.append(os.path.join(os.path.dirname(__file__), "includes") +\
 # _THE_ yaml & json deserialize/serialize functions
 
 def descalar(target):
-    if isinstance(target, ScalarNode) or isinstance(target, SequenceNode):
+    if isinstance(target, ScalarNode) or isinstance(target, SequenceNode) or \
+       isinstance(target, MappingNode):
         return descalar(target.value)
     elif isinstance(target, list):
         ret = []
@@ -96,21 +97,21 @@ def or_ctor(loader, tag_suffix, node):
     return {'Fn::Or': descalar(node.value)}
 
 def yaml_load(stream):
-    yaml.add_multi_constructor(u'!Base64', join_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!FindInMap', ref_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!GetAtt', join_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!GetAZs', ref_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!ImportValue', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Base64', base64_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!FindInMap', findinmap_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!GetAtt', getatt_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!GetAZs', getazs_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!ImportValue', importvalue_ctor, Loader=yaml.SafeLoader)
     yaml.add_multi_constructor(u'!Join', join_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Select', ref_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Split', join_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Sub', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Select', select_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Split', split_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Sub', sub_ctor, Loader=yaml.SafeLoader)
     yaml.add_multi_constructor(u'!Ref', ref_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!And', join_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Equals', ref_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!If', join_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Not', ref_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Or', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!And', and_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Equals', equals_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!If', if_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Not', not_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Or', or_ctor, Loader=yaml.SafeLoader)
     class OrderedLoader(yaml.SafeLoader):
         pass
     def construct_mapping(loader, node):
