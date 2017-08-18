@@ -82,7 +82,7 @@ for DOCKER in $(get_dockers $image); do
     cd ..
     rm -rf $BAKE_IMAGE_BRANCH-checkout
   fi
-  DOCKER_PARAM_NAME="paramDockerUri_$DOCKER"
+  DOCKER_PARAM_NAME="paramDockerUri$DOCKER"
   URI="$(ndt ecr-repo-uri $DOCKER_NAME)"
   [ "$URI" ] && eval "$DOCKER_PARAM_NAME=$URI"
 done
