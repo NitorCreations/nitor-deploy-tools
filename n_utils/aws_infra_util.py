@@ -21,7 +21,7 @@ import re
 import subprocess
 import sys
 import yaml
-
+from yaml import ScalarNode, SequenceNode
 from .cf_utils import stack_params_and_outputs
 
 stacks = dict()
@@ -38,7 +38,79 @@ include_dirs.append(os.path.join(os.path.dirname(__file__), "includes") +\
                     os.path.sep)
 ############################################################################
 # _THE_ yaml & json deserialize/serialize functions
+
+def descalar(target):
+    if isinstance(target, ScalarNode) or isinstance(target, SequenceNode):
+        return descalar(target.value)
+    elif isinstance(target, list):
+        ret = []
+        for nxt in target:
+            ret.append(descalar(nxt))
+        return ret
+    else:
+        return target
+
+def base64_ctor(loader, tag_suffix, node):
+    return {'Fn::Base64': descalar(node.value)}
+
+def findinmap_ctor(loader, tag_suffix, node):
+    return {'Fn::FindInMap': descalar(node.value)}
+
+def getatt_ctor(loader, tag_suffix, node):
+    return {'Fn::GetAtt': descalar(node.value)}
+
+def getazs_ctor(loader, tag_suffix, node):
+    return {'Fn::GetAZs': descalar(node.value)}
+
+def importvalue_ctor(loader, tag_suffix, node):
+    return {'Fn::ImportValue': descalar(node.value)}
+
+def join_ctor(loader, tag_suffix, node):
+    return {'Fn::Join': descalar(node.value)}
+
+def select_ctor(loader, tag_suffix, node):
+    return {'Fn::Select': descalar(node.value)}
+
+def split_ctor(loader, tag_suffix, node):
+    return {'Fn::Split': descalar(node.value)}
+
+def sub_ctor(loader, tag_suffix, node):
+    return {'Fn::Sub': descalar(node.value)}
+
+def ref_ctor(loader, tag_suffix, node):
+    return {'Ref': descalar(node.value)}
+
+def and_ctor(loader, tag_suffix, node):
+    return {'Fn::And': descalar(node.value)}
+
+def equals_ctor(loader, tag_suffix, node):
+    return {'Fn::Equals': descalar(node.value)}
+
+def if_ctor(loader, tag_suffix, node):
+    return {'Fn::If': descalar(node.value)}
+
+def not_ctor(loader, tag_suffix, node):
+    return {'Fn::Not': descalar(node.value)}
+
+def or_ctor(loader, tag_suffix, node):
+    return {'Fn::Or': descalar(node.value)}
+
 def yaml_load(stream):
+    yaml.add_multi_constructor(u'!Base64', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!FindInMap', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!GetAtt', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!GetAZs', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!ImportValue', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Join', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Select', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Split', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Sub', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Ref', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!And', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Equals', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!If', join_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Not', ref_ctor, Loader=yaml.SafeLoader)
+    yaml.add_multi_constructor(u'!Or', join_ctor, Loader=yaml.SafeLoader)
     class OrderedLoader(yaml.SafeLoader):
         pass
     def construct_mapping(loader, node):
@@ -47,6 +119,7 @@ def yaml_load(stream):
     OrderedLoader.add_constructor(
         yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
         construct_mapping)
+
     return yaml.load(stream, OrderedLoader)
 
 def yaml_save(data):
