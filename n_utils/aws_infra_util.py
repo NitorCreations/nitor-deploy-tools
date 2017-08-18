@@ -42,7 +42,10 @@ include_dirs.append(os.path.join(os.path.dirname(__file__), "includes") +\
 def descalar(target):
     if isinstance(target, ScalarNode) or isinstance(target, SequenceNode) or \
        isinstance(target, MappingNode):
-        return descalar(target.value)
+        if target.tag in INTRISINC_FUNCS:
+            return INTRISINC_FUNCS[target.tag](None, '', target)
+        else:
+            return descalar(target.value)
     elif isinstance(target, list):
         ret = []
         for nxt in target:
@@ -50,6 +53,7 @@ def descalar(target):
         return ret
     else:
         return target
+
 
 def base64_ctor(loader, tag_suffix, node):
     return {'Fn::Base64': descalar(node.value)}
@@ -96,22 +100,27 @@ def not_ctor(loader, tag_suffix, node):
 def or_ctor(loader, tag_suffix, node):
     return {'Fn::Or': descalar(node.value)}
 
+INTRISINC_FUNCS = {
+  '!Base64': base64_ctor,
+  '!FindInMap': findinmap_ctor,
+  '!GetAtt': getatt_ctor,
+  '!GetAZs': getazs_ctor,
+  '!ImportValue': importvalue_ctor,
+  '!Join': join_ctor ,
+  '!Select': select_ctor,
+  '!Split': split_ctor,
+  '!Sub': sub_ctor,
+  '!Ref': ref_ctor,
+  '!And': and_ctor,
+  '!Equals': equals_ctor,
+  '!If': if_ctor,
+  '!Not': not_ctor,
+  '!Or': or_ctor
+}
+
 def yaml_load(stream):
-    yaml.add_multi_constructor(u'!Base64', base64_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!FindInMap', findinmap_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!GetAtt', getatt_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!GetAZs', getazs_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!ImportValue', importvalue_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Join', join_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Select', select_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Split', split_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Sub', sub_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Ref', ref_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!And', and_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Equals', equals_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!If', if_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Not', not_ctor, Loader=yaml.SafeLoader)
-    yaml.add_multi_constructor(u'!Or', or_ctor, Loader=yaml.SafeLoader)
+    for name in INTRISINC_FUNCS:
+        yaml.add_multi_constructor(name, INTRISINC_FUNCS[name], Loader=yaml.SafeLoader)
     class OrderedLoader(yaml.SafeLoader):
         pass
     def construct_mapping(loader, node):
