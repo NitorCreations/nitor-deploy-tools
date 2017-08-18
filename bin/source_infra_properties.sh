@@ -75,3 +75,4 @@ source_first_existing "$stackpropfile" "$dockerpropfile"
 
 # Same logic as above for account id
 [ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(account-id)
+unset source_first_existing
