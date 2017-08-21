@@ -305,8 +305,6 @@ def _get_params(data, template):
 # replaces "((param))" references in `data` with values from `params` argument.
 # Param references with no association in `params` are left as-is.
 def apply_params(data, params):
-    print data.__class__
-    print data
     if isinstance(data, collections.OrderedDict) or isinstance(data, dict):
         for k, val in data.items():
             key2 = apply_params(k, params)
