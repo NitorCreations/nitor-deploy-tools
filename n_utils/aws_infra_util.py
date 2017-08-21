@@ -100,6 +100,15 @@ def not_ctor(loader, tag_suffix, node):
 def or_ctor(loader, tag_suffix, node):
     return {'Fn::Or': descalar(node.value)}
 
+def importfile_ctor(loader, tag_suffix, node):
+    return {'Fn::ImportFile': descalar(node.value)}
+
+def importyaml_ctor(loader, tag_suffix, node):
+    return {'Fn::ImportYaml': descalar(node.value)}
+
+def merge_ctor(loader, tag_suffix, node):
+    return {'Fn::Merge': descalar(node.value)}
+
 INTRISINC_FUNCS = {
   '!Base64': base64_ctor,
   '!FindInMap': findinmap_ctor,
@@ -115,7 +124,10 @@ INTRISINC_FUNCS = {
   '!Equals': equals_ctor,
   '!If': if_ctor,
   '!Not': not_ctor,
-  '!Or': or_ctor
+  '!Or': or_ctor,
+  '!ImportFile': importfile_ctor,
+  '!ImportYaml': importyaml_ctor,
+  '!Merge': merge_ctor
 }
 
 def yaml_load(stream):
@@ -293,7 +305,9 @@ def _get_params(data, template):
 # replaces "((param))" references in `data` with values from `params` argument.
 # Param references with no association in `params` are left as-is.
 def apply_params(data, params):
-    if isinstance(data, collections.OrderedDict):
+    print data.__class__
+    print data
+    if isinstance(data, collections.OrderedDict) or isinstance(data, dict):
         for k, val in data.items():
             key2 = apply_params(k, params)
             val2 = apply_params(val, params)
@@ -303,7 +317,7 @@ def apply_params(data, params):
     elif isinstance(data, list):
         for i in range(0, len(data)):
             data[i] = apply_params(data[i], params)
-    elif isinstance(data, str):
+    elif isinstance(data, str) or isinstance(data, unicode):
         prev_end = None
         res = ''
         for match in PARAM_REF_RE.finditer(data):
