@@ -72,6 +72,13 @@ shift ||:
 
 source source_infra_properties.sh "$image" "$stackName"
 
+#If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
+if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval $(ndt assume-role $DEPLOY_ROLE_ARN)
+elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval $(assume-deploy-role.sh)
+fi
+
 for DOCKER in $(get_dockers $image); do
   unset BAKE_IMAGE_BRANCH DOCKER_NAME
   eval "$(job_properties ${GIT_BRANCH##*/} $image $DOCKER | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
@@ -93,12 +100,5 @@ if [ -z "$AMI_ID" ]; then
 fi
 
 export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
-
-#If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
-if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
-  eval $(ndt assume-role $DEPLOY_ROLE_ARN)
-elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
-  eval $(assume-deploy-role.sh)
-fi
 
 cf-update-stack "${STACK_NAME}" "${image}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN
