@@ -90,7 +90,7 @@ def latest_snapshot():
         sys.exit(1)
 
 def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
-                         size_gb=None):
+                         size_gb=None, del_on_termination=True):
     set_region()
     snapshot = get_latest_snapshot(tag_key, tag_value)
     if snapshot:
@@ -106,6 +106,8 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
     device = first_free_device()
     print "Attaching volume " + volume + " to " + device
     attach_volume(volume, device)
+    if del_on_termination:
+        delete_on_termination(device)
     if not snapshot:
         #empty device
         if sys.platform.startswith('win'):

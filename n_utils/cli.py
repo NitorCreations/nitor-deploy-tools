@@ -523,11 +523,15 @@ def volume_from_snapshot():
                                                    "pshot size, volume and " +\
                                                    "filesystem are resized",
                         default=None, type=int)
+    parser.add_argument("-n", "--no_delete_on_termination",
+                        help="Whether to skip deleting the volume on termi" +\
+                             "nation, defaults to false", action="store_true")
     argcomplete.autocomplete(parser)
     if is_ec2():
         args = parser.parse_args()
         volumes.volume_from_snapshot(args.tag_key, args.tag_value, args.mount_path,
-                                     size_gb=args.size_gb)
+                                     size_gb=args.size_gb,
+                                     del_on_termination=not args.no_delete_on_termination)
     else:
         parser.error("Only makes sense on an EC2 instance")
 
