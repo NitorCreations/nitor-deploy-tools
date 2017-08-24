@@ -56,7 +56,9 @@ fi
 source source_infra_properties.sh "$image" "$docker"
 
 if [ -x "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
+  cd "$image/docker-$ORIG_DOCKER_NAME"
   "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh"
+  cd ../..
 fi
 sudo docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
 
