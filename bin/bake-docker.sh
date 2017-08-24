@@ -55,6 +55,9 @@ fi
 
 source source_infra_properties.sh "$image" "$docker"
 
+if [ -x "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
+  "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh"
+fi
 sudo docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
