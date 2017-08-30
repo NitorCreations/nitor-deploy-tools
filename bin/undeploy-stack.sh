@@ -49,7 +49,7 @@ fi
 # Delete will fail if S3 buckets have data - so delete those...
 for BUCKET in $(aws --region $REGION cloudformation list-stack-resources --stack-name ${STACK_NAME} \
  | jq -r '.StackResourceSummaries[] | select(.ResourceType=="AWS::S3::Bucket")|.PhysicalResourceId'); do
-   aws s3 rm s3://$BUCKET --recursive
+   aws s3 rm s3://$BUCKET --recursive ||:
 done
 
 cf-delete-stack "${STACK_NAME}" "$REGION"
