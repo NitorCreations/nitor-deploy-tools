@@ -564,41 +564,21 @@ def interpolate_file(file_name, destination=None, stack_name=None,
     shutil.copy(dstfile.name, destination)
     os.unlink(dstfile.name)
 
-PARAM_RE = re.compile(r'\$\{|\}')
+PARAM_RE = re.compile(r"\$\{([^\$\{\}]*)\}")
 def _process_line(line, params, vault, vault_keys):
-    param_stack = []
-    start_next = 0
-    last_start = 0
-    ret = ""
-    while start_next < len(line):
-        match = PARAM_RE.search(line, pos=start_next)
-        if match:
-            last_start = start_next
-            start_next = match.end()
-            if match.group(0) == '${':
-                ret = ret + line[last_start:match.start()]
-                param_stack.append(match)
-            else:
-                if param_stack:
-                    param_start = param_stack.pop()
-                    param_name = line[param_start.start() + 2:match.start()]
-                    value = None
-                    if param_name in vault_keys:
-                        value = vault.lookup(param_name)
-                    elif param_name in params:
-                        value = params[param_name]
-                    else:
-                        if not param_stack:
-                            ret = ret + '${' + param_name + '}'
-                        continue
-                    if not param_stack:
-                        ret = ret + value
-                    else:
-                        prev_match = param_stack[len(param_stack) - 1]
-                        start_next = prev_match.end()
-                        line = line[:start_next] + value + line[match.end():]
-                else:
-                    ret = ret + line[last_start:match.start()] + "}"
+    ret = line
+    next_start = 0
+    match = PARAM_RE.search(line)
+    while match is not None:
+        param_value = None
+        param_name = match.group(1)
+        if param_name in vault_keys:
+            param_value = vault.lookup(param_name)
+        elif param_name in params:
+            param_value = params[param_name]
         else:
-            return ret + line[start_next:]
+            next_start = match.end()
+        if param_value:
+            ret = ret.replace("${" + param_name + "}", param_value)
+        match = PARAM_RE.search(ret, next_start)
     return ret
