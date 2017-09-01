@@ -91,7 +91,11 @@ for var in REGION SUBNET SECURITY_GROUP AMIBAKE_INSTANCEPROFILE ; do
   [ "${!var}" ] || die "Could not determine $var automatically. Please set ${var} manually in ${infrapropfile}"
 done
 
-for var in IMAGETYPE AWS_KEY_NAME paramDeployToolsVersion APP_USER APP_HOME SSH_USER; do
+for var in AWS_KEY_NAME paramDeployToolsVersion; do
+  [ "${!var}" ] || die "Please set ${var} in ${sharedpropfile}"
+done
+
+for var in IMAGETYPE APP_USER APP_HOME SSH_USER; do
   [ "${!var}" ] || die "Please set ${var} in ${infrapropfile}"
 done
 
