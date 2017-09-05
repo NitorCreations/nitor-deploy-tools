@@ -24,4 +24,4 @@ if [ "$1" = "logout" ]; then
   exit 0
 fi
 
-vault -s "$1" -f - <&0
+vault -s "$1" -w -f - <&0
