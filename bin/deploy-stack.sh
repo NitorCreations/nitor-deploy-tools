@@ -85,7 +85,7 @@ for DOCKER in $(get_dockers $image); do
   if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH##*/}" != "$BAKE_IMAGE_BRANCH" ]; then
     checkout_branch $BAKE_IMAGE_BRANCH
     cd $BAKE_IMAGE_BRANCH-checkout
-    eval "$(job_properties ${GIT_BRANCH##*/} $image $DOCKER | egrep '^DOCKER_NAME=')"
+    eval "$(job_properties $BAKE_IMAGE_BRANCH $image $DOCKER | egrep '^DOCKER_NAME=')"
     cd ..
     rm -rf $BAKE_IMAGE_BRANCH-checkout
   fi
