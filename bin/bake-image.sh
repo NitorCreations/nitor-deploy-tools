@@ -170,7 +170,14 @@ if [ "$IMAGETYPE" = "ubuntu" ]; then
 else
   extra_args=( -e '{"repos": []}' -e '{"keys": []}' )
 fi
-
+if [ -n "$BASE_IMAGE_JOB" ]; then
+  AMI=$(ndt get-images $BASE_IMAGE_JOB | head -1 | cut -d: -f1)
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]=base_ami=$AMI
+else
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]=base_ami=clean
+fi
 JOB=$(echo $JOB_NAME | sed 's/[^[:alnum:]_]/_/g' | tr '[:upper:]' '[:lower:]')
 NAME="${JOB}_$BUILD_NUMBER"
 AMI_TAG="$NAME"
