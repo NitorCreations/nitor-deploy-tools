@@ -52,7 +52,7 @@
         assign_public_ip: yes
         group_id: "{{ sg_id }}"
         monitoring: no
-        user_data: "{{ lookup('template', {{ bake_userdata }} ) }}"
+        user_data: "{{ lookup('template', bake_userdata ) }}"
         volumes:
           - device_name: /dev/sda1
             device_type: gp2
