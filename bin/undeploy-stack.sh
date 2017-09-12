@@ -33,6 +33,10 @@ fi
 
 set -xe
 
+if [ "$1" == "-f" ]; then
+  FORCE="yes"; shift
+fi
+
 image="$1" ; shift
 stackName="$1" ; shift
 
@@ -49,7 +53,12 @@ fi
 # Delete will fail if S3 buckets have data - so delete those...
 for BUCKET in $(aws --region $REGION cloudformation list-stack-resources --stack-name ${STACK_NAME} \
  | jq -r '.StackResourceSummaries[] | select(.ResourceType=="AWS::S3::Bucket")|.PhysicalResourceId'); do
-   aws s3 rm s3://$BUCKET --recursive ||:
+   if [ -n "$FORCE" ]; then
+     echo "force flag defined - deleting content of bucket $BUCKET"
+     aws s3 rm s3://$BUCKET --recursive ||:
+   else
+     echo "force flag not defined - delete will fail if bucket $BUCKET is not empty"
+   fi
 done
 
-cf-delete-stack "${STACK_NAME}" "$REGION"
+ndt cf-delete-stack "${STACK_NAME}" "$REGION"
