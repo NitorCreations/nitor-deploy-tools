@@ -173,12 +173,12 @@ fi
 if [ -n "$BASE_IMAGE_JOB" ]; then
   AMI=$(ndt get-images $BASE_IMAGE_JOB | head -1 | cut -d: -f1)
   extra_args[${#extra_args[@]}]=-e
-  extra_args[${#extra_args[@]}]=base_ami=$AMI
+  extra_args[${#extra_args[@]}]=base_ami_id=$AMI
   extra_args[${#extra_args[@]}]=-e
   extra_args[${#extra_args[@]}]=bake_userdata=win-userdata-unclean.txt.j2
 else
   extra_args[${#extra_args[@]}]=-e
-  extra_args[${#extra_args[@]}]=base_ami=clean
+  extra_args[${#extra_args[@]}]=base_ami_id=clean
   extra_args[${#extra_args[@]}]=-e
   extra_args[${#extra_args[@]}]=bake_userdata=win-userdata.txt.j2
 fi

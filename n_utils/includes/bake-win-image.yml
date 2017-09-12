@@ -95,9 +95,9 @@
     ansible_winrm_server_cert_validation: ignore
   tasks:
   - win_file: path="C:\\nitor" state=directory
-    when: base_ami == "clean"
+    when: base_ami_id == "clean"
   - win_copy: src="{{ prepare_script }}" dest="C:\\nitor\\prepare.ps1"
-    when: base_ami == "clean"
+    when: base_ami_id == "clean"
   - win_copy: src="{{ imagedir }}/pre_install.ps1" dest="C:\\nitor\\pre_install.ps1"
   - win_copy: src="{{ imagedir }}/post_install.ps1" dest="C:\\nitor\\post_install.ps1"
   - win_copy:
@@ -106,11 +106,11 @@
     with_items: "{{ files }}"
   - win_chocolatey: name="{{ item }}"
     with_items: [ "python2", "awscli", "sync" ]
-    when: base_ami == "clean"
+    when: base_ami_id == "clean"
   - win_shell: "C:\\nitor\\prepare.ps1"
     args:
       chdir: "C:\\"
-    when: base_ami == "clean"
+    when: base_ami_id == "clean"
   - win_shell: "C:\\nitor\\pre_install.ps1"
     args:
       chdir: "C:\\"
@@ -120,7 +120,7 @@
       - 'CriticalUpdates'
       - 'UpdateRollups'
       - 'Updates'
-    when: base_ami == "clean"
+    when: base_ami_id == "clean"
   - win_chocolatey: name="{{ item }}"
     with_items: "{{ packages }}"
   - win_shell: "C:\\nitor\\post_install.ps1"
