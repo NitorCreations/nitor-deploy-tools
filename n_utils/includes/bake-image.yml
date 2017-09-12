@@ -25,7 +25,7 @@
         instance_tags: { "environment": "nitor", "Name": "{{ job_name }} prototype" }
         count_tag:     { "environment": "nitor", "Name": "{{ job_name }} prototype" }
         exact_count: 0
-        instance_type: t2.medium
+        instance_type: "{{ instance_type }}"
         image: "{{ root_ami }}"
         vpc_subnet_id: "{{ subnet_id }}"
         assign_public_ip: yes
@@ -46,7 +46,7 @@
         instance_tags: { "environment": "nitor", "Name": "{{ job_name }} prototype" }
         count_tag:     { "environment": "nitor", "Name": "{{ job_name }} prototype" }
         exact_count: 1
-        instance_type: t2.medium
+        instance_type: "{{ instance_type }}"
         image: "{{ root_ami }}"
         instance_profile_name: "{{ amibake_instanceprofile }}"
         vpc_subnet_id: "{{ subnet_id }}"
@@ -182,7 +182,7 @@
         instance_tags: { "environment": "nitor", "Name": "{{ job_name }} prototype" }
         count_tag:     { "environment": "nitor", "Name": "{{ job_name }} prototype" }
         exact_count: 0
-        instance_type: t2.medium
+        instance_type: "{{ instance_type }}"
         image: "{{ root_ami }}"
         vpc_subnet_id: "{{ subnet_id }}"
         assign_public_ip: yes

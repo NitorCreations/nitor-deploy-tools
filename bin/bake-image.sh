@@ -182,6 +182,13 @@ else
   extra_args[${#extra_args[@]}]=-e
   extra_args[${#extra_args[@]}]=bake_userdata=win-userdata.txt.j2
 fi
+if [ -n "$INSTANCE_TYPE" ]; then
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]=instance_type=$INSTANCE_TYPE
+else
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]=instance_type=t2.medium
+fi
 JOB=$(echo $JOB_NAME | sed 's/[^[:alnum:]_]/_/g' | tr '[:upper:]' '[:lower:]')
 NAME="${JOB}_$BUILD_NUMBER"
 AMI_TAG="$NAME"
