@@ -106,7 +106,7 @@
         shell: /sbin/nologin
         home: "{{ app_home }}"
         createhome: yes
-    - shell: bash -c 'sleep 54m ; shutdown -P +1' &
+    - shell: bash -c 'sleep {{ timeout_min }}m ; shutdown -P +1' &
     - file:
         path: /opt/nitor
         state: directory
