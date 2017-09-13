@@ -294,7 +294,7 @@ def send_logs_to_cloudwatch(file_name):
     read_and_follow(file_name, log_sender.send)
 
 def read_and_follow(file_name, line_function, wait=1):
-    while not os.path.isfile(file_name):
+    while not (os.path.isfile(file_name) and os.path.exists(file_name)):
         time.sleep(wait)
     with open(file_name) as file_:
         end_seen = False
