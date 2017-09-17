@@ -90,10 +90,8 @@ jenkins_mount_ebs_home () {
   local MOUNT_PATH=/var/lib/jenkins/jenkins-home
   ndt volume-from-snapshot ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH  $SIZE
   usermod -d /var/lib/jenkins/jenkins-home jenkins
-  if ! [ -e /var/lib/jenkins/jenkins-home/config.xml ]; then
-    cp -a /var/lib/jenkins-default/* /var/lib/jenkins/jenkins-home/
-    chown -R jenkins:jenkins /var/lib/jenkins/jenkins-home/
-  fi
+  mkdir -p /var/lib/jenkins/jenkins-home
+  chown -R jenkins:jenkins /var/lib/jenkins/jenkins-home/
   cat > /etc/cron.d/${CF_paramEBSTag}-snapshot << MARKER
 30 * * * * root ndt snapshot-from-volume -w ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH >> /var/log/snapshots.log 2>&1
 MARKER
