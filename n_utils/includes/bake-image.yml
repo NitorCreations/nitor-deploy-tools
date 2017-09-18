@@ -100,6 +100,7 @@
   hosts: "{{ job_name }}-ami-instance"
   sudo: yes
   tasks:
+    - script: "{{ prepare_script }}"
     - user:
         name: "{{ app_user }}"
         system: yes

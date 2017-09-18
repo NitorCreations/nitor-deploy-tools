@@ -127,6 +127,8 @@ if [ "$IMAGETYPE" != "windows" ]; then
   else
     die "Failed to find ssh private key"
   fi
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]="prepare_script=$(n-include prepare.sh)"
 else
   WIN_PASSWD="$(tr -cd '[:alnum:]' < /dev/urandom | head -c16)"
   PASSWD_ARG="{\"ansible_ssh_pass\": \"$WIN_PASSWD\","
@@ -166,9 +168,15 @@ if [ "$IMAGETYPE" = "ubuntu" ]; then
   touch $imagedir/repos.txt $imagedir/keys.txt
   REPOS="$(list-file-to-json repos $imagedir/repos.txt)"
   KEYS="$(list-file-to-json keys $imagedir/keys.txt)"
-  extra_args=( -e "$REPOS" -e "$KEYS" )
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]="$REPOS"
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]="$KEYS"
 else
-  extra_args=( -e '{"repos": []}' -e '{"keys": []}' )
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]='{"repos": []}'
+  extra_args[${#extra_args[@]}]=-e
+  extra_args[${#extra_args[@]}]='{"keys": []}'
 fi
 if [ -n "$BASE_IMAGE_JOB" ]; then
   AMI=$(ndt get-images $BASE_IMAGE_JOB | head -1 | cut -d: -f1)
