@@ -163,8 +163,8 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                        max_size])
         else:
             if size_gb and not size_gb == snapshot.volume_size:
-                print "Resizing " + device + " from " + snapshot.volume_size +\
-                      "GB to " + size_gb
+                print "Resizing " + device + " from " + \
+                       str(snapshot.volume_size) + "GB to " + str(size_gb)
                 subprocess.check_call(["e2fsck", "-f", "-p", device])
                 subprocess.check_call(["resize2fs", device])
     if not sys.platform.startswith('win'):
