@@ -6,7 +6,7 @@ import json
 import sys
 import os
 import subprocess
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, CalledProcessError
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from dateutil import tz
@@ -165,7 +165,12 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
             if size_gb and not size_gb == snapshot.volume_size:
                 print "Resizing " + device + " from " + \
                        str(snapshot.volume_size) + "GB to " + str(size_gb)
-                subprocess.check_call(["e2fsck", "-f", "-p", device])
+                try:
+                    subprocess.check_call(["e2fsck", "-f", "-p", device])
+                except CalledProcessError as e:
+                    print "Filesystem check returned " + str(e.returncode)
+                    if e.returncode > 1:
+                        raise Exception("Uncorrected filesystem errors - please fix manually")
                 subprocess.check_call(["resize2fs", device])
     if not sys.platform.startswith('win'):
         if not os.path.isdir(mount_path):
