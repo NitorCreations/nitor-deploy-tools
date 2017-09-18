@@ -33,4 +33,8 @@ fi
 pip install -U pip setuptools awscli boto3 "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
 aws configure set default.s3.signature_version s3v4
 rm -f /opt/nitor/instance-data.json
+# Make sure we get logging
+if ! grep cloud-init-output.log /etc/cloud/cloud.cfg.d/05_logging.cfg > /dev/null ; then
+  echo "output: {all: '| tee -a /var/log/cloud-init-output.log'}" >> /etc/cloud/cloud.cfg.d/05_logging.cfg
+fi
 source $(n-include common_tools.sh)
