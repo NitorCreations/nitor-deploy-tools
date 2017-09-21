@@ -36,6 +36,8 @@ from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
     share_to_another_region, set_region, register_private_dns, interpolate_file
+from .cloudfront_utils import distributions, distribution_comments, \
+    get_distribution_by_comment, get_distribution_by_id, upsert_cloudfront_records
 from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
@@ -736,3 +738,20 @@ def cli_ecr_repo_uri():
         parser.error("Did not find uri for repo '" + args.name + "'")
     else:
         print uri
+
+def cli_upsert_cloudfront_records():
+    """ Upsert Route53 records for all aliases of a CloudFront distribution """
+    parser = argparse.ArgumentParser(description=cli_upsert_cloudfront_records.__doc__)
+    stack_select = parser.add_mutually_exclusive_group(required=True)
+    stack_select.add_argument("-i", "--distribution_id", help="Id for the " +\
+                                                              "distribution to " +\
+                                                              "upsert").completer = \
+                                                              ChoicesCompleter(distributions())
+    stack_select.add_argument("-c", "--distribution_comment", help="Comment for the" +\
+                                                                   " distribution " +\
+                                                                   "to upsert").completer = \
+                                                                   ChoicesCompleter(distribution_comments())
+    parser.add_argument("-w", "--wait", help="Wait for request to sync", action="store_true")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    upsert_cloudfront_records(args)

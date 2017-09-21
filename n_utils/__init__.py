@@ -78,7 +78,8 @@ NDT_ONLY = [
     'register-private-dns=n_utils.cli:cli_register_private_dns',
     'interpolate-file=n_utils.cli:cli_interpolate_file',
     'ecr-ensure-repo=n_utils.cli:cli_ecr_ensure_repo',
-    'ecr-repo-uri=n_utils.cli:cli_ecr_repo_uri'
+    'ecr-repo-uri=n_utils.cli:cli_ecr_repo_uri',
+    'upsert-cloudfront-records=n_utils.cli:cli_upsert_cloudfront_records'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh'
