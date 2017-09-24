@@ -113,9 +113,7 @@ def get_record_change(alias, dns_name, distribution_id, hosted_zones):
             'Action': 'UPSERT',
             'ResourceRecordSet': {
                 'Name': alias,
-                'Type': type,
-                'TTL': 300
-            }
+                'Type': type            }
         }
         if type == "A":
             change['ResourceRecordSet']['AliasTarget'] = {
@@ -127,4 +125,6 @@ def get_record_change(alias, dns_name, distribution_id, hosted_zones):
             change['ResourceRecordSet']['ResourceRecords'] = [{
                 'Value': dns_name
             }]
+            change['ResourceRecordSet']['TTL'] = 300
+
         return {'HostedZoneId': zone['Id'], 'Change': change }
