@@ -30,6 +30,11 @@ if [ -z "$NEXUS_VERSION" ]; then
   NEXUS_VERSION=2.12.0-01
 fi
 
+# Make sure we get logging
+if ! grep cloud-init-output.log /etc/cloud/cloud.cfg.d/05_logging.cfg > /dev/null ; then
+  echo "output: {all: '| tee -a /var/log/cloud-init-output.log'}" >> /etc/cloud/cloud.cfg.d/05_logging.cfg
+fi
+
 install_lein() {
   wget -O /usr/bin/lein https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
   chmod 755 /usr/bin/lein
