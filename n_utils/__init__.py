@@ -67,6 +67,7 @@ NDT_AND_CONSOLE = [
     'detach-volume=n_utils.cli:detach_volume',
 ]
 NDT_ONLY = [
+    'cf-delete-stack=n_utils.cli:delete_stack',
     'setup-cli=n_utils.cli:setup_cli',
     'setup-networks=n_utils.cli:setup_networks',
     'volume-from-snapshot=n_utils.cli:volume_from_snapshot',
@@ -85,7 +86,6 @@ NDT_ONLY_SCRIPT = [
     'list-jobs.sh'
 ]
 CONSOLE_ONLY = [
-    'cf-delete-stack=n_utils.cli:delete_stack',
     'cf-update-stack=n_utils.cli:update_stack',
     'ndt=n_utils.cli:ndt',
     'nitor-dt-register-complete=n_utils.cli:ndt_register_complete',
