@@ -138,7 +138,7 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base):
     last_subnet = subnet_base  - subnet_size
     az_names = sorted([az_data['ZoneName'] for az_data in \
                az_response['AvailabilityZones']])
-    network_yaml = yaml_load(open(find_include('template-snippets/vpc.yaml')))
+    network_yaml = yaml_load(open(find_include('template-snippets/bootstrap/network.yaml')))
     network_yaml['Parameters']['paramVPCCidr']['Default'] = str(network)
     for az_name in az_names:
         zone_letter = az_name[-1:]
