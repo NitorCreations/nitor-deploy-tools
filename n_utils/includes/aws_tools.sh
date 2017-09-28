@@ -26,7 +26,7 @@ aws_ec2_associate_address () {
 # Required parameters in CloudFormation: CF_AWS__Region, CF_AWS__StackName
 aws_install_metadata_files () {
   [ "$CF_AWS__StackName" ] || CF_AWS__StackName="$(ndt cf-stack-name)"
-  [ "$CF_AWS__Region" ] || CF_AWS__Region= "$(ndt cf-region)"
+  [ "$CF_AWS__Region" ] || CF_AWS__Region="$(ndt cf-region)"
   RESOURCE="$(ndt ec2-get-tag 'ndt:cfinit:resource' || echo '')"
   [ "$RESOURCE" ] || RESOURCE="resourceLc"
   check_parameters CF_AWS__StackName CF_AWS__Region
