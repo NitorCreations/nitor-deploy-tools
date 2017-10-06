@@ -64,7 +64,6 @@ MARKER
 </settings>
 MARKER
       chmod 600 "$MAVEN_HOME/settings.xml"
-      chown -R jenkins:jenkins "$MAVEN_HOME"
     fi
     if [ "$(set -o | grep xtrace | awk '{ print $2 }')" = "on" ]; then
       set +x
@@ -78,7 +77,6 @@ MARKER
       set -x
     fi
   fi
-  chown -R jenkins:jenkins /var/lib/jenkins/ /var/lib/jenkins/jenkins-home/
 }
 
 jenkins_mount_ebs_home () {
@@ -96,7 +94,6 @@ jenkins_mount_ebs_home () {
       cp -a /var/lib/jenkins-default/* /var/lib/jenkins/jenkins-home/
     fi
   fi
-  chown -R jenkins:jenkins /var/lib/jenkins/jenkins-home/
   cat > /etc/cron.d/${CF_paramEBSTag}-snapshot << MARKER
 30 * * * * root ndt snapshot-from-volume -w ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH >> /var/log/snapshots.log 2>&1
 MARKER
@@ -178,8 +175,8 @@ jenkins_fetch_additional_files () {
   for i in ${CF_paramAdditionalFiles} ; do
     case "$i" in
       /var/lib/jenkins/*)
-	chown -R jenkins:jenkins "$i"
-	;;
+	      chown -R jenkins:jenkins "$i"
+	      ;;
     esac
   done
 }
@@ -223,19 +220,23 @@ jenkins_disable_and_shutdown_service () {
 }
 
 jenkins_enable_and_start_service () {
-  case "$SYSTEM_TYPE" in
-    ubuntu)
-      update-rc.d jenkins enable
-      service jenkins start
-      ;;
-    centos|fedora)
-      systemctl enable jenkins
-      systemctl start jenkins
-      ;;
-    *)
-      echo "Unkown system type $SYSTEM_TYPE"
-      exit 1
-  esac
+  chown -R jenkins:jenkins /var/lib/jenkins/ /var/lib/jenkins/jenkins-home/
+  systemctl enable jenkins
+  systemctl start jenkins
+}
+
+jenkins_setup() {
+  jenkins_mount_ebs_home ${CF_paramEBSSize}
+  jenkins_discard_default_install
+  jenkins_setup_dotssh
+  jenkins_setup_snapshot_script
+  jenkins_setup_snapshot_on_shutdown
+  jenkins_setup_snapshot_job
+  jenkins_improve_config_security
+
+  jenkins_fetch_additional_files
+  jenkins_set_home
+  jenkins_enable_and_start_service
 }
 
 jenkins_wait_service_up () {
@@ -251,3 +252,4 @@ jenkins_wait_service_up () {
     fail "Jenkins server not started"
   fi
 }
+

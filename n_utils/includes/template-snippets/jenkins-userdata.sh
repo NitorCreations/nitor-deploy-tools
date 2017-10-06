@@ -1,18 +1,5 @@
 #!/bin/bash -x
 
-# Copyright 2016-2017 Nitor Creations Oy
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 CF_AWS__StackName=
 CF_AWS__Region=
 CF_paramAmiName=
@@ -25,8 +12,10 @@ CF_paramEBSTag=
 CF_paramEBSSize=32
 CF_extraScanHosts=`#optional`
 CF_paramMvnDeployId=`#optional`
+CF_paramHostedZoneName=
+CF_paramDockerEBSTag=docker
+CF_paramDockerEBSSize=10
 
-sleep 300
 export HOME=/root
 cd $HOME
 
@@ -57,21 +46,20 @@ set_hostname
 apache_replace_domain_vars
 apache_install_certs
 
-jenkins_mount_ebs_home ${CF_paramEBSSize}
-jenkins_discard_default_install
-jenkins_setup_dotssh
-jenkins_setup_snapshot_script
-jenkins_setup_snapshot_on_shutdown
-jenkins_setup_snapshot_job
-jenkins_improve_config_security
-
-jenkins_fetch_additional_files
-jenkins_set_home
-jenkins_enable_and_start_service
+jenkins_setup
 
 apache_enable_and_start_service
 
 jenkins_wait_service_up
+
+MOUNT_PATH=/var/lib/docker/devicemapper
+ndt volume-from-snapshot ${CF_paramDockerEBSTag} ${CF_paramDockerEBSTag} $MOUNT_PATH ${CF_paramDockerEBSSize}
+cat > /etc/cron.d/${CF_paramDockerEBSTag}-snapshot << MARKER
+30 * * * * root ndt snapshot-from-volume -w ${CF_paramDockerEBSTag} ${CF_paramDockerEBSTag} $MOUNT_PATH >> /var/log/snapshots.log 2>&1
+MARKER
+
+systemctl enable docker
+systemctl start docker
 
 ssh_install_hostkeys
 ssh_restart_service
