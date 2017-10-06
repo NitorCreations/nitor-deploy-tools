@@ -13,14 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 CF_AWS__StackName=
 CF_AWS__Region=
 CF_paramAmiName=
 CF_paramAdditionalFiles=
 CF_paramAmi=
 CF_paramDeployToolsVersion=
-CF_paramJenkinsGit=
 CF_paramDnsName=
 CF_paramEip=
 CF_paramEBSTag=
@@ -28,6 +26,7 @@ CF_paramEBSSize=32
 CF_extraScanHosts=`#optional`
 CF_paramMvnDeployId=`#optional`
 
+sleep 300
 export HOME=/root
 cd $HOME
 

@@ -270,8 +270,11 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
         subnet_base = raw_input("Subnet base (" + default_base + "): ")
     if not subnet_base:
         subnet_base = default_base
-    subnet_base = ipaddr.IPv4Address(subnet_base)
-    network_yaml = _get_network_yaml(network, subnet_prefixlen, subnet_base)
+    subnet_base_ip = ipaddr.IPv4Address(subnet_base)
+    network_yaml = _get_network_yaml(network, subnet_prefixlen, subnet_base_ip)
+    _write_and_deploy_stack(network_yaml, name, yes)
+
+def _write_and_deploy_stack(network_yaml, name, yes):
     stack_dir = os.path.join(".", "bootstrap", "stack-" + name)
     file_name = "infra-master.properties"
     with open(file_name, 'a'):
@@ -285,7 +288,7 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
     with open(stack_template, "w") as stack_file:
         stack_file.write(yaml_save(network_yaml))
     if not yes:
-        answer = raw_input("Deploy network stack? (y): ")
+        answer = raw_input("Deploy " + name + " stack? (y): ")
     if yes or answer.lower() == "y" or not answer:
         json_small = json_save_small(network_yaml)
         end_status = cf_deploy.create_or_update_stack(name, json_small, [])
@@ -293,7 +296,7 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
             include_dir = os.path.join(".", "common")
             if not os.path.isdir(include_dir):
                 os.makedirs(include_dir)
-            network_include_yaml = os.path.join(include_dir, "network.yaml")
+            network_include_yaml = os.path.join(include_dir, name + ".yaml")
             if os.path.isfile(network_include_yaml):
                 with open(network_include_yaml, "r") as network_include_file:
                     include_data = yaml_load(network_include_file)
@@ -306,3 +309,8 @@ def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
     else:
         print yaml_save(network_yaml)
         return "NOT_CREATED"
+
+def setup_bakery_roles():
+  bakery_roles_yaml = yaml_load(open(
+      find_include('template-snippets/bakery-roles.yaml')))
+  _write_and_deploy_stack(bakery_roles_yaml, "bakery-roles", False)
