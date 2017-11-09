@@ -1,0 +1,7 @@
+[libjpeg-turbo]
+name=libjpeg-turbo official RPMs
+baseurl=https://sourceforge.net/projects/libjpeg-turbo/files
+gpgcheck=1
+gpgkey=http://pgp.mit.edu/pks/lookup?op=get&search=0x85C7044E033FDE16
+enabled=1
+exclude=libjpeg-turbo-[0-9]*,libjpeg-turbo-*.*.9[0-9]-*
