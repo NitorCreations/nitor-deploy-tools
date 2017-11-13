@@ -41,6 +41,7 @@ from .cloudfront_utils import distributions, distribution_comments, \
 from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
+from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -493,9 +494,14 @@ def assume_role():
     """
     parser = argparse.ArgumentParser(description=assume_role.__doc__)
     parser.add_argument("role_arn", help="The ARN of the role to assume")
+    parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
+                        help="Name of MFA token to use", required=False)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    creds = cf_utils.assume_role(args.role_arn)
+    if not args.mfa_token:
+        creds = cf_utils.assume_role(args.role_arn)
+    else:
+        creds = cf_utils.assume_role_mfa(args.role_arn, args.mfa_token)
     print "AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\""
     print "AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\""
     print "AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\""
@@ -763,3 +769,42 @@ def cli_upsert_cloudfront_records():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     upsert_cloudfront_records(args)
+
+def cli_mfa_add_token():
+    """ Adds an MFA token to be used with role assumption.
+        Tokens will be saved in a .ndt subdirectory in the user's home directory.
+        If a token with the same name already exists, it will not be overwritten."""
+    parser = argparse.ArgumentParser(description=cli_mfa_add_token.__doc__)
+    parser.add_argument("token_name",
+                        help="Name for the token. Use this to refer to the token later with " +\
+                        "the assume-role command.")
+    parser.add_argument("token_arn", help="ARN identifier for the token.")
+    parser.add_argument("token_secret", help="Token secret.")
+    parser.add_argument("-f", "--force", help="Force an overwrite if the token already exists.",
+                        action="store_true")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    try:
+        mfa_add_token(args)
+    except ValueError as error:
+        parser.error(error.message)
+
+def cli_mfa_delete_token():
+    """ Deletes an MFA token file from the .ndt subdirectory in the user's
+        home directory """
+    parser = argparse.ArgumentParser(description=cli_mfa_delete_token.__doc__)
+    parser.add_argument("token_name",
+                        help="Name of the token to delete.")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    mfa_delete_token(args.token_name)
+
+def cli_mfa_code():
+    """ Generates a TOTP code using an MFA token. """
+    parser = argparse.ArgumentParser(description=cli_mfa_code.__doc__)
+    parser.add_argument("token_name",
+                        help="Name of the token to use.")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    print mfa_generate_code(args.token_name)
+
