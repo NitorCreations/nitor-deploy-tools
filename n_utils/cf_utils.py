@@ -36,6 +36,7 @@ from botocore.exceptions import ClientError
 import requests
 from requests.exceptions import ConnectionError
 from n_vault import Vault
+from .mfa_utils import mfa_read_token, mfa_generate_code
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -371,6 +372,16 @@ def assume_role(role_arn):
     sts = boto3.client("sts")
     response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" + \
                                id_generator())
+    return response['Credentials']
+
+def assume_role_mfa(role_arn, mfa_token_name):
+    token = mfa_read_token(mfa_token_name)
+    code = mfa_generate_code(mfa_token_name)
+    sts = boto3.client("sts")
+    response = sts.assume_role(RoleArn=role_arn,
+                               RoleSessionName="n-sess-" + id_generator(),
+                               SerialNumber=token['token_arn'],
+                               TokenCode=code)
     return response['Credentials']
 
 def resolve_account():

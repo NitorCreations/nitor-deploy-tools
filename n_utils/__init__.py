@@ -65,6 +65,9 @@ NDT_AND_CONSOLE = [
     'ec2-get-tag=n_utils.cli:tag',
     'ec2-get-userdata=n_utils.cli:get_userdata',
     'detach-volume=n_utils.cli:detach_volume',
+    'mfa-add-token=n_utils.cli:cli_mfa_add_token',
+    'mfa-delete-token=n_utils.cli:cli_mfa_delete_token',
+    'mfa-code=n_utils.cli:cli_mfa_code'
 ]
 NDT_ONLY = [
     'cf-delete-stack=n_utils.cli:delete_stack',
