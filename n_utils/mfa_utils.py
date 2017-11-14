@@ -57,6 +57,11 @@ def mfa_generate_code(token_name):
     totp = pyotp.TOTP(token['token_secret'])
     return totp.now()
 
+def mfa_generate_code_with_secret(secret):
+    """ Generates an MFA code using the secret passed in. """
+    totp = pyotp.TOTP(secret)
+    return totp.now()
+
 def mfa_delete_token(token_name):
     """ Deletes an MFA token file from the .ndt subdirectory in the user's
         home directory """

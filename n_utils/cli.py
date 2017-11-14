@@ -41,7 +41,7 @@ from .cloudfront_utils import distributions, distribution_comments, \
 from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
-from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code
+from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, mfa_generate_code_with_secret
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -778,12 +778,27 @@ def cli_mfa_add_token():
     parser.add_argument("token_name",
                         help="Name for the token. Use this to refer to the token later with " +\
                         "the assume-role command.")
-    parser.add_argument("token_arn", help="ARN identifier for the token.")
-    parser.add_argument("token_secret", help="Token secret.")
+    parser.add_argument("-i", "--interactive", help="Ask for token details interactively.",
+                        action="store_true")
+    parser.add_argument("-a", "--token_arn", help="ARN identifier for the token.")
+    parser.add_argument("-s", "--token_secret", help="Token secret.")
     parser.add_argument("-f", "--force", help="Force an overwrite if the token already exists.",
                         action="store_true")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
+    if args.interactive:
+        args.token_secret = raw_input("Enter token secret: ")
+        code_1 = mfa_generate_code_with_secret(args.token_secret)
+        print "First sync code: " + code_1
+        print "Waiting to generate second sync code. This could take 30 seconds..."
+        code_2 = mfa_generate_code_with_secret(args.token_secret)
+        while code_1 == code_2:
+            time.sleep(5)
+            code_2 = mfa_generate_code_with_secret(args.token_secret)
+        print "Second sync code: " + code_2
+        args.token_arn = raw_input("Enter token ARN: ")
+    elif args.token_arn is None or args.token_secret is None:
+        parser.error("Both token_arn and token_secret are required when not adding interactively.")
     try:
         mfa_add_token(args)
     except ValueError as error:
