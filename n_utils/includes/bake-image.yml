@@ -90,7 +90,7 @@
 
 - name: Ensure python2 on ubuntu
   hosts: "{{ job_name }}-ami-instance"
-  sudo: no
+  become: no
   gather_facts: no
   tasks:
     - name: 'install python2'
@@ -98,7 +98,7 @@
 
 - name: Prepare AMI instance - run pre_install, install/update packages and finally post_install
   hosts: "{{ job_name }}-ami-instance"
-  sudo: yes
+  become: yes
   tasks:
     - script: "{{ prepare_script }}"
     - user:
