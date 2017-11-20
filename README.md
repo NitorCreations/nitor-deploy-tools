@@ -26,9 +26,9 @@ All of these are run in your project repository root. You need to have AWS crede
 
 * To bake a new version of an image: `bake-image.sh <image-name>`
 * To deploy a stack:
-  * with a known AMI id: `deploy-stack.sh <image-name> <stack-name> <AMI-id>`
-  * with the newest AMI id by a given bake job: `deploy-stack.sh <image-name> <stack-name> "" <bake-job-name>`
-* To undeploy a stack: `undeploy-stack.sh <image-name> <stack-name>`
+  * with a known AMI id: `ndt deploy-stack <image-name> <stack-name> <AMI-id>`
+  * with the newest AMI id by a given bake job: `ndt deploy-stack <image-name> <stack-name> "" <bake-job-name>`
+* To undeploy a stack: `ndt undeploy-stack <image-name> <stack-name>`
 
 ## Utilities for Lastpass integration
 
