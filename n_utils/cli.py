@@ -636,7 +636,7 @@ def setup_bakery_roles():
     parser = argparse.ArgumentParser(description=setup_networks.__doc__)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    print cf_bootstrap.setup_bakery_roles(args)
+    print cf_bootstrap.setup_bakery_roles()
 
 def show_stack_params_and_outputs():
     """ Show stack parameters and outputs as a single json documents

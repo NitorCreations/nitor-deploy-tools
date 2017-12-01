@@ -73,6 +73,7 @@ NDT_ONLY = [
     'cf-delete-stack=n_utils.cli:delete_stack',
     'setup-cli=n_utils.cli:setup_cli',
     'setup-networks=n_utils.cli:setup_networks',
+    'setup-bakery-roles=n_utils.cli:setup_bakery_roles',
     'volume-from-snapshot=n_utils.cli:volume_from_snapshot',
     'snapshot-from-volume=n_utils.cli:snapshot_from_volume',
     'show-stack-params-and-outputs=n_utils.cli:show_stack_params_and_outputs',
