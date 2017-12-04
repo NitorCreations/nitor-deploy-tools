@@ -36,6 +36,9 @@ mkdir -p $CERT_DIR
 renew_cert() {
   local DOMAIN="$1"
   echo "LOCKFILE=$CERT_DIR/lock" > $CERT_DIR/conf
+  if [ -n "$ACCOUNTDIR" ]; then
+    echo "ACCOUNTDIR=$ACCOUNTDIR" >> $CERT_DIR/conf
+  fi
   export CONFIG="$CERT_DIR/conf"
   letsencrypt.sh --cron --hook hook.sh --challenge dns-01 --domain "$DOMAIN"
 }
