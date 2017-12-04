@@ -16,6 +16,9 @@
 startup_hook() {
   return 0
 }
+exit_hook() {
+  return 0
+}
 find_longest_hosted_zone() {
   local DOMAIN="$1"
   for ZONE in $(aws route53 list-hosted-zones | jq -r '.HostedZones[].Name'); do
