@@ -33,7 +33,9 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+
 [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+GIT_BRANCH=${GIT_BRANCH##*/}
 
 source_first_existing() {
   for PROPFILE in "$@"; do
