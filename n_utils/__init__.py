@@ -88,7 +88,8 @@ NDT_ONLY = [
     'upsert-cloudfront-records=n_utils.cli:cli_upsert_cloudfront_records'
 ]
 NDT_ONLY_SCRIPT = [
-    'list-jobs.sh'
+    'list-jobs.sh',
+    'print-create-instructions.sh'
 ]
 CONSOLE_ONLY = [
     'cf-update-stack=n_utils.cli:update_stack',
