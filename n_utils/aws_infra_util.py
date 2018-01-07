@@ -16,6 +16,7 @@
 
 import collections
 import json
+import glob
 import os
 import re
 import subprocess
@@ -226,6 +227,15 @@ def find_include(basefile):
         if os.path.isfile(search_dir + basefile):
             return search_dir + basefile
     return None
+
+def find_all_includes(pattern):
+    ret = []
+    dirs = list(include_dirs)
+    dirs.insert(0, "./")
+    for search_dir in dirs:
+        for next_match in glob.glob( search_dir + pattern):
+            ret.append(next_match)
+    return ret
 
 def resolve_file(filename, basefile):
     if filename[0] == "/":

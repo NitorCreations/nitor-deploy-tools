@@ -487,6 +487,20 @@ def resolve_include():
                      str(aws_infra_util.include_dirs))
     print inc_file
 
+def resolve_all_includes():
+    """Find a file from the first of the defined include paths
+    """
+    parser = argparse.ArgumentParser(description=resolve_include.__doc__)
+    parser.add_argument("pattern", help="The file pattern to find")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    inc_file = aws_infra_util.find_all_includes(args.pattern)
+    if not inc_file:
+        parser.error("Include " + args.pattern + " not found on include paths " +\
+                     str(aws_infra_util.include_dirs))
+    for next_file in inc_file:
+        print next_file
+
 def assume_role():
     """Assume a defined role. Prints out environment variables
     to be eval'd to current context for use:

@@ -46,6 +46,7 @@ NDT_AND_CONSOLE = [
     'pytail=n_utils.cli:read_and_follow',
     'n-utils-init=n_utils.cf_utils:init',
     'n-include=n_utils.cli:resolve_include',
+    'n-include-all=n_utils.cli:resolve_all_includes',
     'account-id=n_utils.cli:get_account_id',
     'cf-follow-logs=n_utils.cli:tail_stack_logs',
     'cf-logical-id=n_utils.cli:logical_id',
