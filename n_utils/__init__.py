@@ -85,7 +85,8 @@ NDT_ONLY = [
     'interpolate-file=n_utils.cli:cli_interpolate_file',
     'ecr-ensure-repo=n_utils.cli:cli_ecr_ensure_repo',
     'ecr-repo-uri=n_utils.cli:cli_ecr_repo_uri',
-    'upsert-cloudfront-records=n_utils.cli:cli_upsert_cloudfront_records'
+    'upsert-cloudfront-records=n_utils.cli:cli_upsert_cloudfront_records',
+    'create-stack=n_utils.cf_bootstrap:create_stack'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh',

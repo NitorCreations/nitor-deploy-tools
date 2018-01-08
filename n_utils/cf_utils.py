@@ -593,3 +593,21 @@ def _process_line(line, params, vault, vault_keys):
             ret = ret.replace("${" + param_name + "}", param_value)
         match = PARAM_RE.search(ret, next_start)
     return ret
+
+def has_output_selector(stack, outputname, mapper):
+    if not 'Outputs' in stack:
+        return False
+    for output in stack['Outputs']:
+        if output['OutputKey'] == outputname:
+            return mapper(stack)
+    return False
+
+def select_stacks(selector):
+    ret = []
+    paginator = boto3.client('cloudformation').get_paginator('describe_stacks')
+    for page in paginator.paginate():
+        for stack in page.get('Stacks'):
+            selected = selector(stack)
+            if selected:
+                ret.append(selected)
+    return ret
