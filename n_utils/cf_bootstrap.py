@@ -63,7 +63,7 @@ def create_stack():
                 context = load_class(template_yaml["ContextClass"])()
                 context.add_context_arguments(parser)
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     parser = argparse.ArgumentParser(description=create_stack.__doc__)
     parser.add_argument("template").completer = ChoicesCompleter(list_templates())
     parser.add_argument("-y", "--yes", action='store_true',
