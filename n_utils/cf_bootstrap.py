@@ -539,16 +539,26 @@ class Network(ContextClassBase):
 class BakeryRoles(ContextClassBase):
 
     network_stacks = []
+    vault_stacks = []
     network_stack = "Network stack ({0}):\n"
+    vault_stack = "Vault stack ({0}):\n"
     def __init__(self):
-        ContextClassBase.__init__(self, ['network_stack'])
+        ContextClassBase.__init__(self, ['network_stack', 'vault_stack'])
         mapper = lambda stack: stack['StackName']
-        sel = lambda stack: has_output_selector(stack, "VPC", mapper)
-        self.network_stacks = select_stacks(sel)
+        network_sel = lambda stack: has_output_selector(stack, "VPC", mapper)
+        vault_sel = lambda stack: has_output_selector(stack, "decryptPolicy", mapper)
+        self.network_stacks = select_stacks(network_sel)
         if self.network_stacks:
             index = 1
             for stack_name in self.network_stacks:
                 self.network_stack = self.network_stack + str(index) + ": " + \
+                                     stack_name + "\n"
+                index = index + 1
+        self.vault_stacks = select_stacks(vault_sel)
+        if self.vault_stacks:
+            index = 1
+            for stack_name in self.vault_stacks:
+                self.vault_stack = self.vault_stack + str(index) + ": " + \
                                      stack_name + "\n"
                 index = index + 1
 
@@ -556,6 +566,9 @@ class BakeryRoles(ContextClassBase):
         return "bakery-roles"
 
     def network_stack_default(self):
+        return "1"
+
+    def vault_stack_default(self):
         return "1"
 
     def set_template(self, template):

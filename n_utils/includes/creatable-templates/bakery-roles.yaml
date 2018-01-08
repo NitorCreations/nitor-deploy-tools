@@ -7,7 +7,7 @@ Parameters:
     Type: String
     Default: infra-network
   paramVaultStack:
-    Description: Name of the vault stack ot get decryptPolicy fom
+    Description: Name of the vault stack ot get decryptPolicy from
     Type: String
     Default: vault
   paramVPCId:
