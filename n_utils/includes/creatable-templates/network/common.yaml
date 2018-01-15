@@ -18,20 +18,20 @@ paramVPCId:
       paramName: VPC
       region: {Ref: 'AWS::Region'}
       stackName: {Ref: paramNetwork}
-paramSubnetInfraA:
+paramSubnetA:
   Type: AWS::EC2::Subnet::Id
   Description: Public subnet A
   Default:
     StackRef:
-      paramName: subnetInfraA
+      paramName: subnetA
       region: {Ref: 'AWS::Region'}
       stackName: {Ref: paramNetwork}
-paramSubnetPrivInfraA:
+paramSubnetPrivA:
   Type: AWS::EC2::Subnet::Id
   Description: Private subnet A
   Default:
     StackRef:
-      paramName: subnetPrivInfraA
+      paramName: subnetPrivA
       region: {Ref: 'AWS::Region'}
       stackName: {Ref: paramNetwork}
 paramPublicSubnetGroup:

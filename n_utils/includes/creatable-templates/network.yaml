@@ -154,13 +154,13 @@ Outputs:
     Export:
       Name:
         Fn::Join: [":", [{Ref: "AWS::StackName"}, VPC]]
-  subnetInfraA:
+  subnetA:
     Description: Public Subnet
     Value: {Ref: resourcePubSubnetA}
     Export:
       Name:
         Fn::Join: [":", [{Ref: "AWS::StackName"}, publicSubnetA]]
-  subnetPrivInfraA:
+  subnetPrivA:
     Description: Private Subnet
     Value: {Ref: resourcePrivSubnetA}
     Export:

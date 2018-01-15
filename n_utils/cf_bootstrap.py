@@ -242,28 +242,28 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml, comm
                                       network_yaml['Resources'], az_name)
             _append_network_resources(False, zone_upper_letter,
                                       network_yaml['Resources'], az_name)
-            network_yaml['Outputs']['subnetInfra' + zone_upper_letter] = {
+            network_yaml['Outputs']['subnet' + zone_upper_letter] = {
                 "Description": "Public Subnet " + zone_upper_letter,
                 "Value": {"Ref": "resourcePubSubnet" + zone_upper_letter},
                 "Export": {"Name": {"Fn::Join": [":", [{"Ref": "AWS::StackName"},
                                                        "publicSubnet" + zone_upper_letter]]}}
             }
-            network_yaml['Outputs']['subnetPrivInfra' + zone_upper_letter] = {
+            network_yaml['Outputs']['subnetPriv' + zone_upper_letter] = {
                 "Description": "Private Subnet " + zone_upper_letter,
                 "Value": {"Ref": "resourcePrivSubnet" + zone_upper_letter},
                 "Export": {"Name": {"Fn::Join": [":", [{"Ref": "AWS::StackName"},
                                                        "privateSubnet" + zone_upper_letter]]}}
             }
-            pub_net = deepcopy(common_yaml['paramSubnetInfraA'])
+            pub_net = deepcopy(common_yaml['paramSubnetA'])
             pub_net['Description'] = pub_net['Description'][:-1] + zone_upper_letter
             pub_net['Default']['StackRef']['paramName'] = \
                 pub_net['Default']['StackRef']['paramName'][:-1] + zone_upper_letter
-            common_yaml['paramSubnetInfra' + zone_upper_letter] = pub_net
-            priv_net = deepcopy(common_yaml['paramSubnetPrivInfraA'])
+            common_yaml['paramSubnet' + zone_upper_letter] = pub_net
+            priv_net = deepcopy(common_yaml['paramSubnetPrivA'])
             priv_net['Description'] = pub_net['Description'][:-1] + zone_upper_letter
             priv_net['Default']['StackRef']['paramName'] = \
                 pub_net['Default']['StackRef']['paramName'][:-1] + zone_upper_letter
-            common_yaml['paramSubnetPrivInfra' + zone_upper_letter] = priv_net
+            common_yaml['paramSubnetPriv' + zone_upper_letter] = priv_net
     return network_yaml, common_yaml
 
 class ContextClassBase:
