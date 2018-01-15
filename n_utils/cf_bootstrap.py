@@ -17,7 +17,6 @@
 """ Utilities to bootsrap AWS accounts into use with nitor-deploy-tools
 """
 
-import collections
 import os
 import random
 import re
@@ -305,7 +304,7 @@ class ContextClassBase:
 
     def add_context_arguments(self, parser):
         parameters = self.getattr("ask_fields")
-        shorts = []
+        shorts = ['h']
         for param in parameters:
             if not param[0] in shorts:
                 shorts.append(param[0])
@@ -319,6 +318,7 @@ class ContextClassBase:
                         shorts.append(attempt)
                     else:
                         shorts.append("")
+        shorts.pop(0)
         for short_arg, long_arg in zip(shorts, parameters):
             if short_arg:
                 parser.add_argument("-" + short_arg, "--" + long_arg,
@@ -421,6 +421,7 @@ class Network(ContextClassBase):
         common_out = os.path.join("common", "network.yaml")
         with open(common_out, 'w') as c_out:
             c_out.write(yaml_save(self.common_yaml))
+
 class BakeryRoles(ContextClassBase):
 
     network_stacks = []
@@ -464,3 +465,51 @@ class BakeryRoles(ContextClassBase):
         except (ValueError, IndexError):
             print "Invalid network stack selection " + self.network_stack
             sys.exit(1)
+
+class Route53(ContextClassBase):
+    hosted_zones = []
+    hosted_zone = "Hosted zone ({0}):\n"
+
+    def __init__(self):
+        ContextClassBase.__init__(self, ['hosted_zone'])
+        self.ask_fields.pop(0)
+        self.hosted_zones = boto3.client('route53').list_hosted_zones()['HostedZones']
+        if self.hosted_zones:
+            index = 1
+            for zone in self.hosted_zones:
+                priv = "Private"
+                if zone['Config']['PrivateZone']:
+                    priv = "Public"
+                self.hosted_zone = self.hosted_zone + str(index) + ": " + \
+                                     zone['Name'] + " (" + \
+                                     zone['Id'].split("/")[-1:][0] + ") - " \
+                                     + priv + "\n"
+                index = index + 1
+
+    def hosted_zone_default(self):
+        return "1"
+
+    def write(self, yes=False):
+        if not os.path.exists("common"):
+            os.makedirs("common")
+        common_out = os.path.join("common", "route53.yaml")
+        try:
+            index = int(self.hosted_zone) - 1
+            zone = self.hosted_zones[index]
+        except (ValueError, IndexError):
+            print "Invalid hosted zone selection " + self.hosted_zone
+            sys.exit(1)
+        common_yaml = {
+            "paramHostedZoneName": {
+                "Type": "String",
+                "Descrition": "Name of hosted zone to use",
+                "Default": zone['Name']
+            },
+            "paramHostedZoneId":  {
+                "Type": "String",
+                "Descrition": "Id of hosted zone to use",
+                "Default": zone['Id'].split("/")[-1:][0]
+            }
+        }
+        with open(common_out, 'w') as c_out:
+            c_out.write(yaml_save(common_yaml))
