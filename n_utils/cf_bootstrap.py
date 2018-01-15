@@ -206,7 +206,7 @@ def _append_network_resources(public, letter, resources, availability_zone):
 
     resources[db_subnet]['Properties']['SubnetIds'].append({"Ref": subnet_to_create})
 
-def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml):
+def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml, common_yaml):
     subnet_bits = 32 - subnet_prefixlen
     subnet_size = 2 ** subnet_bits
     ec2 = boto3.client("ec2")
@@ -232,6 +232,7 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml):
                 ['AvailabilityZone'] = az_name
             network_yaml['Resources']['resourcePrivSubnetA']['Properties']\
                 ['AvailabilityZone'] = az_name
+            common_yaml['paramNetwork']['Default'] = network
         else:
             _append_cidr_param(True, zone_upper_letter, str(subnet),
                                network_yaml['Parameters'])
@@ -253,140 +254,17 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml):
                 "Export": {"Name": {"Fn::Join": [":", [{"Ref": "AWS::StackName"},
                                                        "privateSubnet" + zone_upper_letter]]}}
             }
-    return network_yaml
-
-def _get_include_yaml(name, network_yaml, include_data):
-    for output_name in network_yaml['Outputs']:
-        if output_name == "VPCCIDR":
-            include_data['paramVPCCidr'] = {
-                "Description": "VPC Cidr",
-                "Type": "String",
-                "Default": {
-                    "StackRef": {
-                        "region": {"Ref": "AWS::Region"},
-                        "stackName": name,
-                        "paramName": output_name}
-                }
-            }
-        elif output_name == "VPC":
-            include_data['paramVPCId'] = {
-                "Description": "Infra subnet A",
-                "Type": "AWS::EC2::VPC::Id",
-                "Default": {
-                    "StackRef": {
-                        "region": {"Ref": "AWS::Region"},
-                        "stackName": name,
-                        "paramName": output_name}
-                }
-            }
-        elif output_name == "publicSubnetGroup":
-            include_data['paramPublicSubnetGroup'] = {
-                "Description": "Public subnet group",
-                "Type": "String",
-                "Default": {
-                    "StackRef": {
-                        "region": {"Ref": "AWS::Region"},
-                        "stackName": name,
-                        "paramName": output_name}
-                }
-            }
-        elif output_name == "privateSubnetGroup":
-            include_data['paramPrivateSubnetGroup'] = {
-                "Description": "Private subnet group",
-                "Type": "String",
-                "Default": {
-                    "StackRef": {
-                        "region": {"Ref": "AWS::Region"},
-                        "stackName": name,
-                        "paramName": output_name}
-                }
-            }
-        elif output_name.startswith("subnetInfra"):
-            include_data['paramSubnetInfra' + output_name[-1:]] = {
-                "Description": "Public subnet " + output_name[-1:],
-                "Type": "AWS::EC2::Subnet::Id",
-                "Default": {
-                    "StackRef": {
-                        "region": {"Ref": "AWS::Region"},
-                        "stackName": name,
-                        "paramName": output_name}
-                }
-            }
-        elif output_name.startswith("subnetPrivInfra"):
-            include_data['paramSubnetPrivInfra' + output_name[-1:]] = {
-                "Description": "Private subnet " + output_name[-1:],
-                "Type": "AWS::EC2::Subnet::Id",
-                "Default": {
-                    "StackRef": {
-                        "region": {"Ref": "AWS::Region"},
-                        "stackName": name,
-                        "paramName": output_name}
-                }
-            }
-
-
-def setup_networks(name=None, vpc_cidr=None, subnet_prefixlen=None,
-                   subnet_base=None, yes=False):
-    if name is None and not yes:
-        name = raw_input("Infra network name (network): ")
-    if not name:
-        name = "network"
-    default_cidr = Network().vpc_cidr_default()
-    if vpc_cidr is None and not yes:
-        vpc_cidr = raw_input("VPC CIDR (" + default_cidr + "): ")
-    if not vpc_cidr:
-        vpc_cidr = default_cidr
-    network = ipaddr.IPv4Network(vpc_cidr)
-    default_len = network.prefixlen + 4
-    if subnet_prefixlen is None and not yes:
-        subnet_prefixlen = raw_input("Subnet prefix length (" + str(default_len) + "): ")
-    if not subnet_prefixlen:
-        subnet_prefixlen = default_len
-    default_base = str(network.network)
-    if subnet_base is None and not yes:
-        subnet_base = raw_input("Subnet base (" + default_base + "): ")
-    if not subnet_base:
-        subnet_base = default_base
-    subnet_base_ip = ipaddr.IPv4Address(subnet_base)
-    network_yaml = yaml_load(open(find_include('template-snippets/bootstrap/network.yaml')))
-    network_yaml = _get_network_yaml(network, subnet_prefixlen, subnet_base_ip, network_yaml)
-    _write_and_deploy_stack(network_yaml, "bootstrap", name, yes)
-
-def _write_and_deploy_stack(network_yaml, component, name, yes):
-    stack_dir = os.path.join(".", component, "stack-" + name)
-    file_name = "infra-master.properties"
-    with open(file_name, 'a'):
-        os.utime(file_name, None)
-    stack_props = os.path.join(stack_dir, file_name)
-    if not os.path.isdir(stack_dir):
-        os.makedirs(stack_dir)
-    with open(stack_props, 'w') as stack_props_file:
-        stack_props_file.write("STACK_NAME=$ORIG_STACK_NAME\n")
-    stack_template = os.path.join(stack_dir, "template.yaml")
-    with open(stack_template, "w") as stack_file:
-        stack_file.write(yaml_save(network_yaml))
-    if not yes:
-        answer = raw_input("Deploy " + name + " stack? (y): ")
-    if yes or answer.lower() == "y" or not answer:
-        json_small = json_save_small(network_yaml)
-        end_status = cf_deploy.create_or_update_stack(name, json_small, [])
-        if end_status == "CREATE_COMPLETE" or end_status == "UPDATE_COMPLETE":
-            include_dir = os.path.join(".", "common")
-            if not os.path.isdir(include_dir):
-                os.makedirs(include_dir)
-            network_include_yaml = os.path.join(include_dir, name + ".yaml")
-            if os.path.isfile(network_include_yaml):
-                with open(network_include_yaml, "r") as network_include_file:
-                    include_data = yaml_load(network_include_file)
-            else:
-                include_data = collections.OrderedDict()
-            _get_include_yaml(name, network_yaml, include_data)
-            with open(network_include_yaml, "w") as include_file:
-                include_file.write(yaml_save(include_data))
-        return end_status
-    else:
-        print yaml_save(network_yaml)
-        return "NOT_CREATED"
+            pub_net = deepcopy(common_yaml['paramSubnetInfraA'])
+            pub_net['Description'] = pub_net['Description'][:-1] + zone_upper_letter
+            pub_net['Default']['StackRef']['paramName'] = \
+                pub_net['Default']['StackRef']['paramName'][:-1] + zone_upper_letter
+            common_yaml['paramSubnetInfra' + zone_upper_letter] = pub_net
+            priv_net = deepcopy(common_yaml['paramSubnetPrivInfraA'])
+            priv_net['Description'] = pub_net['Description'][:-1] + zone_upper_letter
+            priv_net['Default']['StackRef']['paramName'] = \
+                pub_net['Default']['StackRef']['paramName'][:-1] + zone_upper_letter
+            common_yaml['paramSubnetPrivInfra' + zone_upper_letter] = priv_net
+    return network_yaml, common_yaml
 
 class ContextClassBase:
     """ Base class for template contexts. Can be directly used for
@@ -495,6 +373,7 @@ class Network(ContextClassBase):
     subnet_prefixlen = "Subnet prefix length ({0}) "
     subnet_base = "Subnet base ({0}) "
     last_vpc_cidr = None
+    common_yaml = None
 
     def __init__(self):
         ContextClassBase.__init__(self, ['vpc_cidr', 'subnet_prefixlen', 'subnet_base'])
@@ -530,12 +409,18 @@ class Network(ContextClassBase):
                 return "10." + str(random.randint(0, 255)) + ".0.0"
 
     def set_template(self, template):
-        self.template = _get_network_yaml(self.stack_name, self.subnet_prefixlen,
-                                          self.subnet_base, template)
+        common_yaml = yaml_load(open(find_include("creatable-templates/network/common.yaml")))
+        self.template, self.common_yaml = \
+            _get_network_yaml(self.stack_name, self.subnet_prefixlen,
+                              self.subnet_base, template, common_yaml)
 
     def write(self, yes=False):
         ContextClassBase.write(self, yes=yes)
-
+        if not os.path.exists("common"):
+            os.makedirs("common")
+        common_out = os.path.join("common", "network.yaml")
+        with open(common_out, 'w') as c_out:
+            c_out.write(yaml_save(self.common_yaml))
 class BakeryRoles(ContextClassBase):
 
     network_stacks = []
