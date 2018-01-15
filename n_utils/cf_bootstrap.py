@@ -28,15 +28,12 @@ from copy import deepcopy
 
 import argparse
 import argcomplete
-from argcomplete import split_line
-from argcomplete.completers import ChoicesCompleter, FilesCompleter
+from argcomplete.completers import ChoicesCompleter
 
 import boto3
 import ipaddr
-from . import cf_deploy
-from .aws_infra_util import find_include, find_all_includes, yaml_load, yaml_save
 from awscli.customizations.configure.writer import ConfigFileWriter
-from .aws_infra_util import find_include, yaml_load, json_save_small, yaml_save
+from .aws_infra_util import find_include, find_all_includes, yaml_load, yaml_save
 from .cf_utils import has_output_selector, select_stacks
 
 def enum(**enums):
@@ -44,14 +41,17 @@ def enum(**enums):
 
 BRANCH_MODES = enum(SINGLE_STACK='single', MULTI_STACK='multi')
 
+def _add_default_params(parser):
+    parser.add_argument("template").completer = ChoicesCompleter(list_templates())
+    parser.add_argument("-y", "--yes", action='store_true',
+                        help='Answer yes or use default to all questions')
+
 def create_stack():
     """ Create a stack from a template
     """
     parser = argparse.ArgumentParser(description=create_stack.__doc__, add_help=False)
-    parser.add_argument("template").completer = ChoicesCompleter(list_templates())
+    _add_default_params(parser)
     parser.add_argument("-h", "--help", action='store_true')
-    parser.add_argument("-y", "--yes", action='store_true',
-                        help='Answer yes or use default to all questions')
     if "_ARGCOMPLETE" in os.environ:
         args = argcomplete.split_line(os.environ['COMP_LINE'],
                                       os.environ['COMP_POINT'])[3]
@@ -63,16 +63,20 @@ def create_stack():
                 context.add_context_arguments(parser)
     argcomplete.autocomplete(parser)
     args, unknown = parser.parse_known_args()
-    parser = argparse.ArgumentParser(description=create_stack.__doc__)
-    parser.add_argument("template").completer = ChoicesCompleter(list_templates())
-    parser.add_argument("-y", "--yes", action='store_true',
-                        help='Answer yes or use default to all questions')
     if args.template:
         template_yaml = load_template(args.template)
         if "ContextClass" in template_yaml:
             context = load_class(template_yaml["ContextClass"])()
+            template_yaml.pop("ContextClass", None)
+            parser = argparse.ArgumentParser(description=context.__doc__)
+            _add_default_params(parser)
             context.add_context_arguments(parser)
-        template_yaml.pop("ContextClass", None)
+        else:
+            parser = argparse.ArgumentParser(description=create_stack.__doc__)
+            _add_default_params(parser)
+    else:
+        parser = argparse.ArgumentParser(description=create_stack.__doc__)
+        _add_default_params(parser)
     args = parser.parse_args()
     context.resolve_parameters(args)
     context.set_template(template_yaml)
@@ -368,6 +372,10 @@ class ContextClassBase:
         return True
 
 class Network(ContextClassBase):
+    """ Creates a public and private subnet for every availability zone
+    in the selected region and a shared common yaml fo easy access to
+    parameters.
+    """
     stack_name = "Network stack name ({0}): "
     vpc_cidr = "VPC CIDR ({0}) "
     subnet_prefixlen = "Subnet prefix length ({0}) "
@@ -423,7 +431,8 @@ class Network(ContextClassBase):
             c_out.write(yaml_save(self.common_yaml))
 
 class BakeryRoles(ContextClassBase):
-
+    """ Creates roles necessary for baking images and deploying stacks
+    """
     network_stacks = []
     vault_stacks = []
     network_stack = "Network stack ({0}):\n"
@@ -467,6 +476,8 @@ class BakeryRoles(ContextClassBase):
             sys.exit(1)
 
 class Route53(ContextClassBase):
+    """ Creates a common shared yaml for easy access to route53 parameters
+    """
     hosted_zones = []
     hosted_zone = "Hosted zone ({0}):\n"
 
