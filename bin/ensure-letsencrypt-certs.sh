@@ -38,8 +38,11 @@ renew_cert() {
   echo "LOCKFILE=$CERT_DIR/lock" > $CERT_DIR/conf
   if [ -n "$ACCOUNTDIR" ]; then
     echo "ACCOUNTDIR=$ACCOUNTDIR" >> $CERT_DIR/conf
+  else
+    echo "ACCOUNTDIR=$HOME/.letsencrypt/" >> $CERT_DIR/conf
   fi
   export CONFIG="$CERT_DIR/conf"
+  letsencrypt.sh --register --accept-terms
   letsencrypt.sh --cron --hook hook.sh --challenge dns-01 --domain "$DOMAIN"
 }
 
