@@ -53,10 +53,10 @@ def create_stack():
     _add_default_params(parser)
     parser.add_argument("-h", "--help", action='store_true')
     if "_ARGCOMPLETE" in os.environ:
-        args = argcomplete.split_line(os.environ['COMP_LINE'],
-                                      os.environ['COMP_POINT'])[3]
-        if len(args) >= 2:
-            template = args[1]
+        ac_args = argcomplete.split_line(os.environ['COMP_LINE'],
+                                         os.environ['COMP_POINT'])[3]
+        if len(ac_args) >= 2:
+            template = ac_args[1]
             template_yaml = load_template(template)
             if template_yaml and "ContextClass" in template_yaml:
                 context = load_class(template_yaml["ContextClass"])()
@@ -373,8 +373,8 @@ class ContextClassBase:
 
 class Network(ContextClassBase):
     """ Creates a public and private subnet for every availability zone
-    in the selected region and a shared common yaml fo easy access to
-    parameters.
+    in the selected region and a shared common yaml (common/network.yaml)
+    for easy access to parameters.
     """
     stack_name = "Network stack name ({0}): "
     vpc_cidr = "VPC CIDR ({0}) "
@@ -429,6 +429,7 @@ class Network(ContextClassBase):
         common_out = os.path.join("common", "network.yaml")
         with open(common_out, 'w') as c_out:
             c_out.write(yaml_save(self.common_yaml))
+        return True
 
 class BakeryRoles(ContextClassBase):
     """ Creates roles necessary for baking images and deploying stacks
@@ -476,7 +477,8 @@ class BakeryRoles(ContextClassBase):
             sys.exit(1)
 
 class Route53(ContextClassBase):
-    """ Creates a common shared yaml for easy access to route53 parameters
+    """ Creates a common shared yaml (common/route53.yaml) for
+    easy access to route53 parameters
     """
     hosted_zones = []
     hosted_zone = "Hosted zone ({0}):\n"
@@ -524,3 +526,4 @@ class Route53(ContextClassBase):
         }
         with open(common_out, 'w') as c_out:
             c_out.write(yaml_save(common_yaml))
+        return True
