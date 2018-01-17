@@ -285,7 +285,8 @@ class ContextClassBase:
         elif not "stack_name" in ask_fields:
             if ask_fields[0] == "component_name":
                 ask_fields.insert(1, "stack_name")
-            ask_fields.insert(0, "stack_name")
+            else:
+                ask_fields.insert(0, "stack_name")
         self.ask_fields = ask_fields
 
     def stack_name_default(self):
@@ -345,13 +346,15 @@ class ContextClassBase:
 
     def write(self, yes=False):
         if "Files" in self.template:
-            for next_file in self.template["Files"]:
-                for source, dest in next_file:
-                    dest = self.component_name + os.sep + dest.replace('${stack}', self.stack_name)
-                    if not os.path.exists(os.path.dirname(dest)):
-                        os.makedirs(os.path.dirname(dest))
-                    source_file = find_include(source)
-                    shutil.copy2(source_file, dest)
+            for source in self.template["Files"]:
+                dest = self.template["Files"][source]
+                dest = self.component_name + os.sep + dest.replace('((stack))', self.stack_name)
+                dest = os.path.normpath(dest)
+                dest_dir = os.path.normpath(os.path.dirname(dest))
+                if not os.path.exists(dest_dir):
+                    os.makedirs(dest_dir)
+                source_file = find_include(source)
+                shutil.copy2(source_file, dest)
             self.template.pop("Files", None)
         stack_dir = os.path.join(".", self.component_name, "stack-" + self.stack_name)
         if not os.path.exists(stack_dir):
@@ -527,3 +530,15 @@ class Route53(ContextClassBase):
         with open(common_out, 'w') as c_out:
             c_out.write(yaml_save(common_yaml))
         return True
+
+class Jenkins(ContextClassBase):
+
+    def __init__(self):
+        ContextClassBase.__init__(self, ['component_name'])
+        self.component_name = "Component name ({0}): "
+
+    def component_name_default(self):
+        return "jenkins"
+
+    def stack_name_default(self):
+        return "jenkins"
