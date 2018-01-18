@@ -23,7 +23,7 @@ import subprocess
 import sys
 import yaml
 from yaml import ScalarNode, SequenceNode, MappingNode
-from .cf_utils import stack_params_and_outputs
+from .cf_utils import stack_params_and_outputs, region, resolve_account
 
 stacks = dict()
 PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
@@ -131,6 +131,8 @@ INTRISINC_FUNCS = {
   '!Merge': merge_ctor
 }
 
+SOURCED_PARAMS = None
+
 def yaml_load(stream):
     for name in INTRISINC_FUNCS:
         yaml.add_multi_constructor(name, INTRISINC_FUNCS[name], Loader=yaml.SafeLoader)
@@ -237,66 +239,83 @@ def find_all_includes(pattern):
             ret.append(next_match)
     return ret
 
-def resolve_file(filename, basefile):
+def resolve_file(filename, basefile, templateParams):
+    resolved = filename % templateParams
     if filename[0] == "/":
-        return filename
+        return existing(filename)
     if re.match(r"^(\.\./\.\./|\.\./|\./)?aws-utils/.*", filename):
-        return find_include(re.sub(r"^(\.\./\.\./|\.\./|\./)?aws-utils/", "", filename))
+        return existing(find_include(re.sub(r"^(\.\./\.\./|\.\./|\./)?aws-utils/", "", filename)))
     if re.match(r"^\(\(\s?includes\s?\)\)/.*", filename):
-        return find_include(re.sub(r"^\(\(\s?includes\s?\)\)/", "", filename))
+        return existing(find_include(re.sub(r"^\(\(\s?includes\s?\)\)/", "", filename)))
     base = os.path.dirname(basefile)
     if len(base) == 0:
         base = "."
-    return base + "/" + filename
+    return existing(base + "/" + filename)
+
+def existing(filename):
+    if filename and os.path.exists(filename):
+        return filename
+    else:
+        return None
 
 PARAM_NOT_AVAILABLE = "N/A"
 
 def _add_params(target, source, source_prop, use_value):
     if source_prop in source:
         for k, val in source[source_prop].items():
-            target[k] = val['Default'] if use_value else PARAM_NOT_AVAILABLE
+            target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
 
 def _get_params(data, template):
     params = dict()
 
     # first load defaults for all parameters in "Parameters"
     _add_params(params, data, 'Parameters', True)
-    params['REGION'] = PARAM_NOT_AVAILABLE
-    params['ACCOUNT_ID'] = PARAM_NOT_AVAILABLE
+
     params['STACK_NAME'] = PARAM_NOT_AVAILABLE
 
-    # then override them with values from infra
-    template_dir = os.path.dirname(os.path.abspath(template))
-    image_dir = os.path.dirname(template_dir)
+    if not 'REGION' in os.environ:
+        os.environ['REGION'] = region()
+    params['REGION'] = os.environ['REGION']
 
-    image_name = os.path.basename(image_dir)
-    stack_name = os.path.basename(template_dir)
-    stack_name = re.sub('^stack-', '', stack_name)
+    if not 'ACCOUNT_ID' in os.environ:
+        os.environ['ACCOUNT_ID'] = resolve_account()
+    params['ACCOUNT_ID'] = os.environ['ACCOUNT_ID']
 
-    get_vars_command = ['env', '-i', 'bash', '-c',
-                        'source source_infra_properties.sh "' + \
-                        image_name + '" "' + stack_name + '" ; set']
 
-    if 'GIT_BRANCH' in os.environ:
-        get_vars_command.insert(2, 'GIT_BRANCH=' + os.environ['GIT_BRANCH'])
-    if 'REGION' in os.environ:
-        get_vars_command.insert(2, 'REGION=' + os.environ['REGION'])
-    if 'ACCOUNT_ID' in os.environ:
-        get_vars_command.insert(2, 'ACCOUNT_ID=' + os.environ['ACCOUNT_ID'])
+    global SOURCED_PARAMS
+    if not SOURCED_PARAMS:
+        SOURCED_PARAMS = {}
+        # then override them with values from infra
+        template_dir = os.path.dirname(os.path.abspath(template))
+        image_dir = os.path.dirname(template_dir)
 
-    proc = subprocess.Popen(get_vars_command, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, universal_newlines=True)
-    output = proc.communicate()
-    if proc.returncode:
-        sys.exit("Failed to retrieve infra*.properties")
+        image_name = os.path.basename(image_dir)
+        stack_name = os.path.basename(template_dir)
+        stack_name = re.sub('^stack-', '', stack_name)
 
-    for line in output[0].split('\n'):
-        line = line.strip()
-        if line:
-            k, val = line.split('=', 1)
-            if k in params:
-                val = val.strip("'").strip('"')
-                params[k] = val
+        get_vars_command = ['env', '-i', 'bash', '-c',
+                            'source source_infra_properties.sh "' + \
+                            image_name + '" "' + stack_name + '" ; set']
+
+        if 'GIT_BRANCH' in os.environ:
+            get_vars_command.insert(2, 'GIT_BRANCH=' + os.environ['GIT_BRANCH'])
+
+        proc = subprocess.Popen(get_vars_command, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, universal_newlines=True)
+        output = proc.communicate()
+        if proc.returncode:
+            sys.exit("Failed to retrieve infra*.properties")
+
+        for line in output[0].split('\n'):
+            line = line.strip()
+            if line:
+                k, val = line.split('=', 1)
+                if k in params or k.startswith("param"):
+                    val = val.strip("'").strip('"')
+                    SOURCED_PARAMS[k] = val
+                    SOURCED_PARAMS.update(os.environ)
+
+    params.update(SOURCED_PARAMS)
 
     # source_infra_properties.sh always resolves a region, account id and stack
     # name
@@ -309,7 +328,6 @@ def _get_params(data, template):
     params["AWS::NoValue"] = PARAM_NOT_AVAILABLE
     params["AWS::StackId"] = PARAM_NOT_AVAILABLE
     _add_params(params, data, 'Resources', False)
-
     return params
 
 # replaces "((param))" references in `data` with values from `params` argument.
@@ -355,12 +373,12 @@ def apply_source(data, filename, optional, default):
             apply_source(val, filename, optional, default)
 
 # returns new data
-def import_scripts_pass1(data, basefile, path):
+def import_scripts_pass1(data, basefile, path, templateParams):
     global gotImportErrors
     if isinstance(data, collections.OrderedDict):
         if 'Fn::ImportFile' in data:
             val = data['Fn::ImportFile']
-            script_import = resolve_file(val, basefile)
+            script_import = resolve_file(val, basefile, templateParams)
             if script_import:
                 data.clear()
                 contents = import_script(script_import)
@@ -373,7 +391,7 @@ def import_scripts_pass1(data, basefile, path):
         elif 'Fn::ImportYaml' in data:
             val = data['Fn::ImportYaml']
             del data['Fn::ImportYaml']
-            yaml_file = resolve_file(val, basefile)
+            yaml_file = resolve_file(val, basefile, templateParams)
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
                 contents = apply_params(contents, data)
@@ -381,31 +399,37 @@ def import_scripts_pass1(data, basefile, path):
                 if isinstance(contents, collections.OrderedDict):
                     for k, val in contents.items():
                         data[k] = import_scripts_pass1(val, yaml_file, path + \
-                                                       k + "_")
+                                                       k + "_", _get_params(data, basefile))
                 elif isinstance(contents, list):
                     data = contents
                     for i in range(0, len(data)):
                         data[i] = import_scripts_pass1(data[i], yaml_file,
-                                                       path + str(i) + "_")
+                                                       path + str(i) + "_", _get_params(data, basefile))
                 else:
                     print "ERROR: " + path + ": Can't import yaml file \"" + \
                           yaml_file + "\" that isn't an associative array or" +\
                           " a list in file " + basefile
                     gotImportErrors = True
             else:
-                print "ERROR: " + val + ": Can't import file \"" + val + \
-                      "\" - file not found on include paths or relative to " + \
-                      basefile
-                gotImportErrors = True
+                if not ('optional' in data and data['optional']):
+                    print "ERROR: " + val + ": Can't import file \"" + val + \
+                          "\" - file not found on include paths or relative to " + \
+                          basefile
+                    gotImportErrors = True
+                else:
+                    for k in data:
+                        del data[k]
+            if "optional" in data:
+                del data["optional"]
         elif 'Fn::Merge' in data:
             merge_list = data['Fn::Merge']
             if not isinstance(merge_list, list):
                 print "ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile
                 gotImportErrors = True
                 return data
-            data = import_scripts_pass1(merge_list[0], basefile, path + "0_")
+            data = import_scripts_pass1(merge_list[0], basefile, path + "0_", _get_params(data, basefile))
             for i in range(1, len(merge_list)):
-                merge = import_scripts_pass1(merge_list[i], basefile, path + str(i) + "_")
+                merge = import_scripts_pass1(merge_list[i], basefile, path + str(i) + "_", _get_params(data, basefile))
                 if isinstance(data, collections.OrderedDict):
                     if not isinstance(merge, collections.OrderedDict):
                         print "ERROR: " + path + ": First Fn::Merge entry " +\
@@ -433,10 +457,10 @@ def import_scripts_pass1(data, basefile, path):
             data['__source'] = basefile
         else:
             for k, val in data.items():
-                data[k] = import_scripts_pass1(val, basefile, path + k + "_")
+                data[k] = import_scripts_pass1(val, basefile, path + k + "_", _get_params(data, basefile))
     elif isinstance(data, list):
         for i in range(0, len(data)):
-            data[i] = import_scripts_pass1(data[i], basefile, path + str(i) + "_")
+            data[i] = import_scripts_pass1(data[i], basefile, path + str(i) + "_", _get_params(data, basefile))
     return data
 
 # returns new data
@@ -505,9 +529,8 @@ def import_scripts(data, basefile):
     global gotImportErrors
     gotImportErrors = False
 
-    data = import_scripts_pass1(data, basefile, "")
-    data = import_scripts_pass2(data, basefile, "", _get_params(data, basefile),
-                                False)
+    data = import_scripts_pass1(data, basefile, "", _get_params(data, basefile))
+    data = import_scripts_pass2(data, basefile, "", _get_params(data, basefile), False)
     if gotImportErrors:
         sys.exit(1)
     return data
@@ -605,7 +628,7 @@ def locate_launchconf_metadata(data):
     if "Resources" in data:
         resources = data["Resources"]
         for val in resources.values():
-            if val["Type"] == "AWS::AutoScaling::LaunchConfiguration" and \
+            if "Type" in val and val["Type"] == "AWS::AutoScaling::LaunchConfiguration" and \
                 "Metadata" in val:
                 return val["Metadata"]
     return None
@@ -613,7 +636,7 @@ def locate_launchconf_metadata(data):
 def locate_launchconf_userdata(data):
     resources = data["Resources"]
     for val in resources.values():
-        if val["Type"] == "AWS::AutoScaling::LaunchConfiguration":
+        if "Type" in val and val["Type"] == "AWS::AutoScaling::LaunchConfiguration":
             return val["Properties"]["UserData"]["Fn::Base64"]["Fn::Join"][1]
     return None
 
