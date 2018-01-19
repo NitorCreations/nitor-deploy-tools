@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 ContextClass: n_utils.cf_bootstrap.Jenkins
 Files:
-  'creatable-templates/jenkins/generate_jobs.groovy': '../generate_jobs.groovy'
-  'creatable-templates/jenkins/packages.txt': 'image/packages.txt'
-  'creatable-templates/jenkins/post_install.sh': 'image/post_install.sh'
-  'creatable-templates/jenkins/pre_install.sh': 'image/pre_install.sh'
-  'creatable-templates/jenkins/userdata.sh': 'stack-((stack))/userdata'
+  - 'creatable-templates/jenkins/generate_jobs.groovy': '../generate_jobs.groovy'
+  - 'creatable-templates/jenkins/packages.txt': 'image/packages.txt'
+  - 'creatable-templates/jenkins/post_install.sh': 'image/post_install.sh'
+  - 'creatable-templates/jenkins/pre_install.sh': 'image/pre_install.sh'
+  - 'creatable-templates/jenkins/userdata.sh': 'stack-%(stack_name)s/userdata'
 Description: NDT template project jenkins
 Parameters:
   'Fn::Merge':

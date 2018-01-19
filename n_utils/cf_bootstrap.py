@@ -346,15 +346,15 @@ class ContextClassBase:
 
     def write(self, yes=False):
         if "Files" in self.template:
-            for source in self.template["Files"]:
-                dest = self.template["Files"][source]
-                dest = self.component_name + os.sep + dest.replace('((stack))', self.stack_name)
-                dest = os.path.normpath(dest)
-                dest_dir = os.path.normpath(os.path.dirname(dest))
-                if not os.path.exists(dest_dir):
-                    os.makedirs(dest_dir)
-                source_file = find_include(source)
-                shutil.copy2(source_file, dest)
+            for entry in self.template["Files"]:
+                for source, dest in entry.items():
+                    dest = self.component_name + os.sep + dest % self.__dict__
+                    dest = os.path.normpath(dest)
+                    dest_dir = os.path.normpath(os.path.dirname(dest))
+                    if not os.path.exists(dest_dir):
+                        os.makedirs(dest_dir)
+                    source_file = find_include(source)
+                    shutil.copy2(source_file, dest)
             self.template.pop("Files", None)
         stack_dir = os.path.join(".", self.component_name, "stack-" + self.stack_name)
         if not os.path.exists(stack_dir):
