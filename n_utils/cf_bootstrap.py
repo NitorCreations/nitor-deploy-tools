@@ -33,6 +33,7 @@ from argcomplete.completers import ChoicesCompleter
 import boto3
 import ipaddr
 from awscli.customizations.configure.writer import ConfigFileWriter
+from n_vault import Vault
 from .aws_infra_util import find_include, find_all_includes, yaml_load, yaml_save
 from .cf_utils import has_output_selector, select_stacks
 
@@ -521,6 +522,11 @@ class Route53(ContextClassBase):
                 "Descrition": "Name of hosted zone to use",
                 "Default": zone['Name']
             },
+            "paramHostedZoneDomain": {
+                "Type": "String",
+                "Descrition": "Name of hosted zone to use",
+                "Default": zone['Name'][:-1]
+            },
             "paramHostedZoneId":  {
                 "Type": "String",
                 "Descrition": "Id of hosted zone to use",
@@ -532,13 +538,89 @@ class Route53(ContextClassBase):
         return True
 
 class Jenkins(ContextClassBase):
-
+    """ Creates a jenkins stack with the default domain name jenkins.${paramHostedZoneDomain}.
+    Also a Jenkins Job DSL script is created that can be run in Jenkins to create jobs
+    to bake and deploy ndt infrastructure defined in this repository.
+    """
+    elastic_ip = "Elastic IP ({0}):\n1: allocate new\n"
+    elastic_ips = []
+    ssh_key = "Ssh key ({0}):\n1: create new\n"
+    ssh_keys = []
     def __init__(self):
-        ContextClassBase.__init__(self, ['component_name'])
+        ContextClassBase.__init__(self, ['component_name', 'elastic_ip', 'ssh_key'])
         self.component_name = "Component name ({0}): "
+        ec2 = boto3.client("ec2")
+        eips = ec2.describe_addresses()
+        index = 2
+        if eips and "Addresses" in eips:
+            for address in eips["Addresses"]:
+                if not "InstanceId" in address:
+                    self.elastic_ips.append(address['PublicIp'])
+                    self.elastic_ip = self.elastic_ip + str(index) \
+                                      + ": " + address['PublicIp'] + "\n"
+                    index = index + 1
+        index = 2
+        keys = ec2.describe_key_pairs()
+        if keys and "KeyPairs" in keys:
+            for key in keys["KeyPairs"]:
+                self.ssh_keys.append(key["KeyName"])
+                self.ssh_key = self.ssh_key + str(index) \
+                               + ": " + key["KeyName"] + "\n"
+                index = index + 1
+    def elastic_ip_default(self):
+        return "1"
+
+    def ssh_key_default(self):
+        return "1"
 
     def component_name_default(self):
         return "jenkins"
 
     def stack_name_default(self):
         return "jenkins"
+
+    def set_template(self, template):
+        ContextClassBase.set_template(self, template)
+        eip = None
+        ec2 = boto3.client("ec2")
+        if self.elastic_ip == "1":
+            eip_res = ec2.allocate_address(Domain='vpc')
+            if eip_res and "PublicIp" in eip_res:
+                eip = eip_res["PublicIp"]
+            ec2.create_tags(Resources=[eip_res['AllocationId']],
+                            Tags=[{
+                                "Key": "Name",
+                                "Value": "jenkins"
+                            }])
+        else:
+            try:
+                index = int(self.elastic_ip) - 2
+                eip = self.elastic_ips[index]
+            except (ValueError, IndexError):
+                print "Invalid elastic ip selection " + self.elastic_ip
+                sys.exit(1)
+        key_name = None
+        if self.ssh_key == "1":
+            key_name = raw_input("Name for new key pair (ndt-jenkins-instance): ")
+            if not key_name:
+                key_name = "ndt-jenkins-instance"
+            key_res = ec2.create_key_pair(KeyName=key_name)
+            if key_res and "KeyMaterial" in key_res:
+                vault = Vault()
+                vault.store(key_name + ".pem", key_res["KeyMaterial"])
+        else:
+            try:
+                index = int(self.ssh_key) - 2
+                key_name = self.ssh_keys[index]
+            except (ValueError, IndexError):
+                print "Invalid ssh key selection " + self.elastic_ip
+                sys.exit(1)
+        self.template["Parameters"]["Fn::Merge"][2]["paramSshKeyName"]["Default"] = key_name
+        az_response = ec2.describe_availability_zones()
+        az_names = sorted([az_data['ZoneName'] for az_data in \
+                           az_response['AvailabilityZones']])
+        for az_name in az_names:
+            self.template["Resources"]["Fn::Merge"][0]["resourceAsg"]["Properties"]\
+                         ["AvailabilityZones"].append(az_name)
+            self.template["Resources"]["Fn::Merge"][0]["resourceAsg"]["Properties"]\
+                         ["VPCZoneIdentifier"].append("paramSubnet" + az_name[-1:].upper())

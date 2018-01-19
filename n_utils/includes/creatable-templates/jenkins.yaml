@@ -14,24 +14,24 @@ Parameters:
   - paramSshKeyName:
       Description: SSH key for AMIBakery
       Type: String
-      Default: ((ssh-key))
+      Default: ndt-instance
     paramDnsName:
       Description: DNS name for AMIBakery
       Type: String
-      Default: ((dns))
+      Default: !Sub "jenkins.${paramHostedZoneDomain}"
     paramEip:
       Description: Elastic IP address for AMIBakery
       Type: String
-      Default: ((eip))
+      Default: 1.1.1.1
     paramAdditionalFiles:
       Description: Whitespace-separated list of additional files needed on the server.
       Type: String
-      Default: !Sub "/var/lib/jenkins/jenkins-home/.ssh/{paramSshKeyName}.pem"
+      Default: !Sub "/var/lib/jenkins/jenkins-home/.ssh/${paramSshKeyName}.pem"
       AllowedPattern: "(/\\S+(\\s+/\\S+)*)?"
     paramEBSTag:
       Description: Tag for jenkins home EBS volume snapshots
       Type: String
-      Default: "ndt-template-jenkins"
+      Default: !Join ["-", !Split [".", !Sub "${paramDnsName}-home"]]
     paramEBSSize:
       Description: Size for the jenkins home EBS volume
       Type: String
@@ -39,7 +39,7 @@ Parameters:
     paramDockerEBSTag:
       Description: Tag for jenkins home EBS volume snapshots
       Type: String
-      Default: "ndt-template-jenkins-docker"
+      Default: !Join ["-", !Split [".", !Sub "${paramDnsName}-docker"]]
     paramDockerEBSSize:
       Description: Size for the jenkins home EBS volume
       Type: String
@@ -54,17 +54,14 @@ Resources:
     resourceAsg:
       Type: AWS::AutoScaling::AutoScalingGroup
       Properties:
-        AvailabilityZones: [eu-central-1a, eu-central-1b, eu-central-1c]
+        AvailabilityZones: []
         Cooldown: '300'
         DesiredCapacity: '1'
         HealthCheckGracePeriod: '300'
         HealthCheckType: EC2
         MaxSize: '2'
         MinSize: '1'
-        VPCZoneIdentifier:
-        - {Ref: paramSubnetInfraA}
-        - {Ref: paramSubnetInfraB}
-        - {Ref: paramSubnetInfraC}
+        VPCZoneIdentifier: []
         LaunchConfigurationName: {Ref: resourceLc}
         Tags:
         - {Key: Name, Value: {Ref: 'AWS::StackName'}, PropagateAtLaunch: 'true'}
