@@ -327,6 +327,15 @@ def _map_elastic_ip(context, param, value):
             sys.exit(1)
     return eip
 
+def _map_list(context, param, value):
+    select_list = getattr(context, param + "s")
+    try:
+        index = int(value) - 1
+        return select_list[index]
+    except (ValueError, IndexError):
+        print "Invalid " + param +" selection " + value
+        sys.exit(1)
+
 class ContextClassBase:
     """ Base class for template contexts. Can be directly used for
     bootstrap stacks with no parameters to ask can use it directly
@@ -541,15 +550,15 @@ class Network(ContextClassBase):
 class BakeryRoles(ContextClassBase):
     """ Creates roles necessary for baking images and deploying stacks
     """
-    network_stacks = []
-    vault_stacks = []
-    network_stack = "Network stack ({0}):\n"
-    vault_stack = "Vault stack ({0}):\n"
     def __init__(self):
         ContextClassBase.__init__(self, ['network_stack', 'vault_stack'])
-        mapper = lambda stack: stack['StackName']
-        network_sel = lambda stack: has_output_selector(stack, "VPC", mapper)
-        vault_sel = lambda stack: has_output_selector(stack, "decryptPolicy", mapper)
+        self._ask_network_stack()
+        self._ask_vault_stack()
+
+    def _ask_network_stack(self):
+        self.network_stack = "Network stack ({0}):\n"
+        network_sel = lambda stack: has_output_selector(stack, "VPC",
+                                                        lambda stack: stack['StackName'])
         self.network_stacks = select_stacks(network_sel)
         if self.network_stacks:
             index = 1
@@ -557,6 +566,15 @@ class BakeryRoles(ContextClassBase):
                 self.network_stack = self.network_stack + str(index) + ": " + \
                                      stack_name + "\n"
                 index = index + 1
+        self.value_mappers["network_stack"] = _map_list
+        self.template_transformers.append(lambda myself: _set_first_parameter(myself.template,
+                                                                              "paramNetworkStack",
+                                                                              myself.network_stack))
+
+    def _ask_vault_stack(self):
+        self.vault_stack = "Vault stack ({0}):\n"
+        vault_sel = lambda stack: has_output_selector(stack, "decryptPolicy",
+                                                      lambda stack: stack['StackName'])
         self.vault_stacks = select_stacks(vault_sel)
         if self.vault_stacks:
             index = 1
@@ -564,6 +582,10 @@ class BakeryRoles(ContextClassBase):
                 self.vault_stack = self.vault_stack + str(index) + ": " + \
                                      stack_name + "\n"
                 index = index + 1
+        self.value_mappers["vault_stack"] = _map_list
+        self.template_transformers.append(lambda myself: _set_first_parameter(myself.template,
+                                                                              "paramVaultStack",
+                                                                              myself.vault_stack))
 
     def stack_name_default(self):
         return "bakery-roles"
@@ -574,26 +596,19 @@ class BakeryRoles(ContextClassBase):
     def vault_stack_default(self):
         return "1"
 
-    def set_template(self, template):
-        ContextClassBase.set_template(self, template)
-        try:
-            index = int(self.network_stack) - 1
-            self.template['Parameters']['paramNetworkStack']['Default'] = self.network_stacks[index]
-        except (ValueError, IndexError):
-            print "Invalid network stack selection " + self.network_stack
-            sys.exit(1)
-
 class Route53(ContextClassBase):
     """ Creates a common shared yaml (common/route53.yaml) for
     easy access to route53 parameters
     """
-    hosted_zones = []
-    hosted_zone = "Hosted zone ({0}):\n"
-
     def __init__(self):
         ContextClassBase.__init__(self, ['hosted_zone'])
         self.ask_fields.pop(0)
+        self._ask_hosted_zone()
+
+    def _ask_hosted_zone(self):
+        self.hosted_zone = "Hosted zone ({0}):\n"
         self.hosted_zones = boto3.client('route53').list_hosted_zones()['HostedZones']
+        self.hosted_zone_default = lambda: "1"
         if self.hosted_zones:
             index = 1
             for zone in self.hosted_zones:
@@ -605,40 +620,32 @@ class Route53(ContextClassBase):
                                      zone['Id'].split("/")[-1:][0] + ") - " \
                                      + priv + "\n"
                 index = index + 1
-
-    def hosted_zone_default(self):
-        return "1"
+        self.value_mappers["hosted_zone"] = _map_list
 
     def write(self, yes=False):
         if not os.path.exists("common"):
             os.makedirs("common")
         common_out = os.path.join("common", "route53.yaml")
-        try:
-            index = int(self.hosted_zone) - 1
-            zone = self.hosted_zones[index]
-        except (ValueError, IndexError):
-            print "Invalid hosted zone selection " + self.hosted_zone
-            sys.exit(1)
         common_yaml = {
             "paramHostedZoneName": {
                 "Type": "String",
                 "Descrition": "Name of hosted zone to use",
-                "Default": zone['Name']
+                "Default": self.hosted_zone['Name']
             },
             "paramHostedZoneDomain": {
                 "Type": "String",
                 "Descrition": "Name of hosted zone to use",
-                "Default": zone['Name'][:-1]
+                "Default": self.hosted_zone['Name'][:-1]
             },
             "paramHostedZoneId":  {
                 "Type": "String",
                 "Descrition": "Id of hosted zone to use",
-                "Default": zone['Id'].split("/")[-1:][0]
+                "Default": self.hosted_zone['Id'].split("/")[-1:][0]
             }
         }
         with open(common_out, 'w') as c_out:
             c_out.write(yaml_save(common_yaml))
-        return True
+        return False
 
 class Jenkins(ContextClassBase):
     """ Creates a jenkins stack with the default domain name jenkins.${paramHostedZoneDomain}.
@@ -651,6 +658,7 @@ class Jenkins(ContextClassBase):
     def __init__(self):
         ContextClassBase.__init__(self, ['component_name', 'elastic_ip', 'ssh_key'])
         self.component_name = "Component name ({0}): "
+        self.branch_mode = BRANCH_MODES.MULTI_STACK
         self._ask_elastic_ip()
         self._ask_ssh_key()
 
