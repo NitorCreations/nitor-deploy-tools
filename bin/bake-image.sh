@@ -77,9 +77,9 @@ fi
 [ "$PRIVATE_SUBNET" ] || PRIVATE_SUBNET="no"
 if ! [ "$NETWORK_PARAMETER" ]; then
   if [ "$PRIVATE_SUBNET" = "yes" ]; then
-    NETWORK_PARAMETER=subnetPrivInfraB
+    NETWORK_PARAMETER=subnetPrivB
   else
-    NETWORK_PARAMETER=subnetInfraB
+    NETWORK_PARAMETER=subnetB
   fi
 fi
 [ "$SUBNET" ] || SUBNET="$(cache ndt show-stack-params-and-outputs -r $REGION $NETWORK_STACK | jq -r .$NETWORK_PARAMETER)"
