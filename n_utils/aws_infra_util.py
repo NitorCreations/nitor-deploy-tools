@@ -242,15 +242,15 @@ def find_all_includes(pattern):
 def resolve_file(filename, basefile, templateParams):
     resolved = filename % templateParams
     if filename[0] == "/":
-        return existing(filename)
-    if re.match(r"^(\.\./\.\./|\.\./|\./)?aws-utils/.*", filename):
-        return existing(find_include(re.sub(r"^(\.\./\.\./|\.\./|\./)?aws-utils/", "", filename)))
+        return existing(resolved)
+    if re.match(r"^(\.\./\.\./|\.\./|\./)?aws-utils/.*", resolved):
+        return existing(find_include(re.sub(r"^(\.\./\.\./|\.\./|\./)?aws-utils/", "", resolved)))
     if re.match(r"^\(\(\s?includes\s?\)\)/.*", filename):
-        return existing(find_include(re.sub(r"^\(\(\s?includes\s?\)\)/", "", filename)))
+        return existing(find_include(re.sub(r"^\(\(\s?includes\s?\)\)/", "", resolved)))
     base = os.path.dirname(basefile)
     if len(base) == 0:
         base = "."
-    return existing(base + "/" + filename)
+    return existing(base + "/" + resolved)
 
 def existing(filename):
     if filename and os.path.exists(filename):
@@ -374,8 +374,7 @@ def apply_source(data, filename, optional, default):
 
 # returns new data
 def import_scripts_pass1(data, basefile, path, templateParams):
-    if not templateParams:
-        templateParams = _get_params(data, basefile)
+    templateParams.update(_get_params(data, basefile))
     global gotImportErrors
     if isinstance(data, collections.OrderedDict):
         if 'Fn::ImportFile' in data:
