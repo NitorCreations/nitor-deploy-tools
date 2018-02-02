@@ -374,7 +374,8 @@ def apply_source(data, filename, optional, default):
 
 # returns new data
 def import_scripts_pass1(data, basefile, path, templateParams):
-    templateParams.update(_get_params(data, basefile))
+    if not templateParams:
+        templateParams = _get_params(data, basefile)
     global gotImportErrors
     if isinstance(data, collections.OrderedDict):
         if 'Fn::ImportFile' in data:
