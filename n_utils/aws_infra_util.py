@@ -374,6 +374,8 @@ def apply_source(data, filename, optional, default):
 
 # returns new data
 def import_scripts_pass1(data, basefile, path, templateParams):
+    if not templateParams:
+        templateParams = _get_params(data, basefile)
     global gotImportErrors
     if isinstance(data, collections.OrderedDict):
         if 'Fn::ImportFile' in data:
@@ -399,12 +401,12 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                 if isinstance(contents, collections.OrderedDict):
                     for k, val in contents.items():
                         data[k] = import_scripts_pass1(val, yaml_file, path + \
-                                                       k + "_", _get_params(data, basefile))
+                                                       k + "_", templateParams)
                 elif isinstance(contents, list):
                     data = contents
                     for i in range(0, len(data)):
                         data[i] = import_scripts_pass1(data[i], yaml_file,
-                                                       path + str(i) + "_", _get_params(data, basefile))
+                                                       path + str(i) + "_", templateParams)
                 else:
                     print "ERROR: " + path + ": Can't import yaml file \"" + \
                           yaml_file + "\" that isn't an associative array or" +\
@@ -427,9 +429,9 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                 print "ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile
                 gotImportErrors = True
                 return data
-            data = import_scripts_pass1(merge_list[0], basefile, path + "0_", _get_params(data, basefile))
+            data = import_scripts_pass1(merge_list[0], basefile, path + "0_", templateParams)
             for i in range(1, len(merge_list)):
-                merge = import_scripts_pass1(merge_list[i], basefile, path + str(i) + "_", _get_params(data, basefile))
+                merge = import_scripts_pass1(merge_list[i], basefile, path + str(i) + "_", templateParams)
                 if isinstance(data, collections.OrderedDict):
                     if not isinstance(merge, collections.OrderedDict):
                         print "ERROR: " + path + ": First Fn::Merge entry " +\
@@ -457,10 +459,10 @@ def import_scripts_pass1(data, basefile, path, templateParams):
             data['__source'] = basefile
         else:
             for k, val in data.items():
-                data[k] = import_scripts_pass1(val, basefile, path + k + "_", _get_params(data, basefile))
+                data[k] = import_scripts_pass1(val, basefile, path + k + "_", templateParams)
     elif isinstance(data, list):
         for i in range(0, len(data)):
-            data[i] = import_scripts_pass1(data[i], basefile, path + str(i) + "_", _get_params(data, basefile))
+            data[i] = import_scripts_pass1(data[i], basefile, path + str(i) + "_", templateParams)
     return data
 
 # returns new data
