@@ -60,7 +60,10 @@ if [ -x "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
   "./pre_build.sh"
   cd ../..
 fi
-sudo docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
+if which sudo && sudo docker -h > /dev/null 2>&1; then
+  SUDO=sudo
+fi
+$SUDO docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then

@@ -42,6 +42,11 @@ get_dockers() {
     echo $(find $1 -mindepth 1 -maxdepth 1 -name 'docker-*' | sed 's/.*docker-\(.*\)/\1/g')
   fi
 }
+get_serverless() {
+  if [ -r infra.properties -o -r infra-master.properties ]; then
+    echo $(find $1 -mindepth 1 -maxdepth 1 -name 'serverless-*' | sed 's/.*serverless-\(.*\)/\1/g')
+  fi
+}
 checkout_branch() {
   local BRANCH=$1
   mkdir -p "$BRANCH-checkout" > /dev/null 2>&1
