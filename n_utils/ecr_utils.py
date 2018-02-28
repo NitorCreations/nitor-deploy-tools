@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import base64
+from subprocess import check_call
 
 import boto3
+
 from botocore.exceptions import ClientError
 
 from .cf_utils import region
@@ -40,7 +42,13 @@ def ensure_repo(name):
         full_token = base64.b64decode(auth_data['authorizationToken']).split(":")
         user = full_token[0]
         token = full_token[1]
-        print "sudo docker login -u " + user + " -p " + token + " " + \
+        sudo = ""
+        try:
+            if check_call(["sudo", "docker", "-h"]) == 0:
+                sudo = "sudo "
+        except:
+            pass
+        print sudo + "docker login -u " + user + " -p " + token + " " + \
               auth_data['proxyEndpoint']
 
 def repo_uri(name):
