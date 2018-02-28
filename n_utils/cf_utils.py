@@ -28,6 +28,7 @@ import sys
 import time
 import tempfile
 from collections import deque
+from os.path import expanduser
 from threading import Event, Lock, Thread
 from operator import itemgetter
 
@@ -46,7 +47,7 @@ class InstanceInfo(object):
         The info is then cached in /opt/nitor/instance-data.json on linux and
         in  C:\\nitor\\instance-data.json on windows.
     """
-    _info = None
+    _info = {}
     def stack_name(self):
         if 'stack_name' in self._info:
             return self._info['stack_name']
@@ -153,24 +154,33 @@ class InstanceInfo(object):
                 self._info = {}
             info_file = None
             info_file_dir = None
+            info_file_parent = None
             if os.path.isdir('C:/'):
+                info_file_parent = 'C:/'
                 info_file_dir = 'C:/nitor'
             else:
+                info_file_parent = '/opt'
                 info_file_dir = '/opt/nitor'
-            if not os.path.isdir(info_file_dir):
+            if not os.path.isdir(info_file_dir) and os.access(info_file_parent, os.W_OK):
                 os.makedirs(info_file_dir)
-            info_file = info_file_dir + '/instance-data.json'
-            with open(info_file, 'w') as outf:
-                outf.write(json.dumps(self._info, skipkeys=True, indent=2))
-            try:
-                os.chmod(info_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP |
-                         stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-                os.chmod(info_file_dir, stat.S_IRUSR | stat.S_IWUSR |
-                         stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP |
-                         stat.S_IXGRP | stat.S_IROTH | stat.S_IWOTH |
-                         stat.S_IXOTH)
-            except:
-                pass
+            if not os.access(info_file_dir, os.W_OK):
+                home = expanduser("~")
+                info_file_dir = home + "/.ndt"
+            if not os.path.isdir(info_file_dir) and os.access(info_file_parent, os.W_OK):
+                os.makedirs(info_file_dir)
+            if os.access(info_file_dir, os.W_OK):
+                info_file = info_file_dir + '/instance-data.json'
+                with open(info_file, 'w') as outf:
+                    outf.write(json.dumps(self._info, skipkeys=True, indent=2))
+                try:
+                    os.chmod(info_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP |
+                            stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+                    os.chmod(info_file_dir, stat.S_IRUSR | stat.S_IWUSR |
+                            stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP |
+                            stat.S_IXGRP | stat.S_IROTH | stat.S_IWOTH |
+                            stat.S_IXOTH)
+                except:
+                    pass
         if self.region():
             os.environ['AWS_DEFAULT_REGION'] = self.region()
         if 'FullStackData' in self._info and 'StackStatus' in self._info['FullStackData']:
