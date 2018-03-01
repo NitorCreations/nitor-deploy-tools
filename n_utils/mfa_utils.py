@@ -18,6 +18,8 @@ import yaml
 import pyotp
 import sys
 
+from .enc_utils import _encrypt, _decrypt
+
 def mfa_add_token(args):
     """ Adds or overwrites an MFA token to be used with role assumption.
         Tokens will be saved in a .ndt subdirectory in the user's home directory. """
@@ -27,7 +29,7 @@ def mfa_add_token(args):
     data = {
         'token_name': args.token_name,
         'token_arn': args.token_arn,
-        'token_secret': args.token_secret
+        'token_secret': "enc--" + _encrypt(args.token_secret)
     }
     token_file = ndt_dir + '/mfa_' + args.token_name
     if os.path.isfile(token_file) and not args.force:
@@ -38,11 +40,18 @@ def mfa_add_token(args):
 
 def mfa_read_token(token_name):
     """ Reads a previously added MFA token file and returns its data. """
+    data = None
     with open(get_ndt_dir() + '/mfa_' + token_name, 'r') as infile:
         try:
-            return yaml.load(infile)
+            data = yaml.load(infile)
         except yaml.YAMLError as exc:
             print exc
+    if data:
+        if not data['token_secret'].startswith("enc--"):
+            data['force'] = True
+            mfa_add_token(Struct(**data))
+            return mfa_read_token(token_name)
+    return data
 
 def get_ndt_dir():
     """ Gets cross platform ndt directory path. Makes sure it exists. """
@@ -54,11 +63,17 @@ def get_ndt_dir():
 def mfa_generate_code(token_name):
     """ Generates an MFA code with the specified token. """
     token = mfa_read_token(token_name)
-    totp = pyotp.TOTP(token['token_secret'])
+    if token['token_secret'].startswith("enc--"):
+        secret = _decrypt(token['token_secret'][5:])
+    else:
+        secret = token['token_secret']
+    totp = pyotp.TOTP(secret)
     return totp.now()
 
 def mfa_generate_code_with_secret(secret):
     """ Generates an MFA code using the secret passed in. """
+    if secret.startswith("enc--"):
+        secret = _decrypt(secret[5:])
     totp = pyotp.TOTP(secret)
     return totp.now()
 
@@ -66,3 +81,6 @@ def mfa_delete_token(token_name):
     """ Deletes an MFA token file from the .ndt subdirectory in the user's
         home directory """
     os.remove(get_ndt_dir() + '/mfa_' + token_name)
+class Struct ( object ) :
+    def __init__ ( self , ** entries ) :
+        self . __dict__ . update ( entries )
