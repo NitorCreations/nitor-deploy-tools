@@ -230,6 +230,9 @@ def deploy(stack_name, yaml_template, regn, dry_run=False):
             template_parameters['paramAmiCreated'] = \
                 collections.OrderedDict([("Description", "AMI Creation Date"),
                                          ("Type", "String"), ("Default", "")])
+    else:
+        with open("ami.properties", 'w') as ami_props:
+            ami_props.write("AMI_ID=\nNAME=\n")
 
     json_small = aws_infra_util.json_save_small(template_doc)
 
