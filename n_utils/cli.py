@@ -809,3 +809,17 @@ def cli_mfa_code():
     args = parser.parse_args()
     print mfa_generate_code(args.token_name)
 
+def cli_create_account():
+    """ Creates a subaccount. """
+    parser = argparse.ArgumentParser(description=cli_create_account.__doc__)
+    parser.add_argument("email", help="Email for account root")
+    parser.add_argument("account_name", help="Organization unique account name")
+    parser.add_argument("-d", "--deny-billing-access", action="store_true")
+    parser.add_argument("-o", "--organization-role-name", help="Role name for admin access from parent account",
+            default="OrganizationAccountAccessRole")
+    parser.add_argument("-r", "--trusted-role-name", help="Role name for admin access from parent account",
+            default="TrustedAccountAccessRole")
+    parser.add_argument("-t", "--trusted-account", help="Role name for admin access from parent account")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    
