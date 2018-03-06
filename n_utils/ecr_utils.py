@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import base64
-from subprocess import check_call
+from os import devnull
+from subprocess import check_call, STDOUT
 
 import boto3
 
@@ -44,7 +45,8 @@ def ensure_repo(name):
         token = full_token[1]
         sudo = ""
         try:
-            if check_call(["sudo", "docker", "-h"]) == 0:
+            FNULL = open(devnull, 'w')
+            if check_call(["sudo", "docker", "--help"], stdout=FNULL, stderr=STDOUT, close_fds=True) == 0:
                 sudo = "sudo "
         except:
             pass
