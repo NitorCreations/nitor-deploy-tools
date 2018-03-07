@@ -30,12 +30,9 @@ SCRIPTS = [
     'bin/lpssh',
     'bin/s3-role-download.sh',
     'bin/setup-fetch-secrets.sh',
-    'bin/show-stack-params-and-outputs.sh',
-    'bin/snapshot-from-volume.sh',
     'bin/source_infra_properties.sh',
     'bin/ssh-hostkeys-collect.sh',
-    'bin/undeploy-stack.sh',
-    'bin/volume-from-snapshot.sh'
+    'bin/undeploy-stack.sh'
 ]
 NDT_AND_CONSOLE = [
     'assume-role=n_utils.cli:assume_role',

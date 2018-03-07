@@ -19,16 +19,19 @@ startup_hook() {
 exit_hook() {
   return 0
 }
+list_zones() {
+  aws route53 list-hosted-zones | python -c 'import sys, json; print "\n".join([zone["Name"] for zone in json.load(sys.stdin)["HostedZones"]])'
+}
 find_longest_hosted_zone() {
   local DOMAIN="$1"
-  for ZONE in $(aws route53 list-hosted-zones | jq -r '.HostedZones[].Name'); do
+  for ZONE in $(list_zones); do
     if [[ "$DOMAIN." =~ ${ZONE//./\\.}$ ]]; then
       echo ${#ZONE} $ZONE
     fi
   done | sort -n | tail -1 | cut -d" " -f2-
 }
 get_zone_id() {
-  aws route53 list-hosted-zones | jq -r ".HostedZones[]|select(.Name==\"$1\").Id"
+  aws route53 list-hosted-zones | python -c "import sys, json; print '\n'.join([zone['Id'] for zone in json.load(sys.stdin)['HostedZones'] if zone['Name'] == '$1'])"
 }
 find_longest_hosted_zone_id() {
   ZONE=$(find_longest_hosted_zone "$1")
@@ -57,14 +60,14 @@ cat > challenge.json << MARKER
  ]
 }
 MARKER
-  if ! CHANGE_ID=$(aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID --change-batch file://challenge.json | jq -e -r ".ChangeInfo.Id"); then
+  if ! CHANGE_ID=$(aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID --change-batch file://challenge.json --query 'ChangeInfo.Id' --output text); then
     echo "$OPERATION failed"
     return 1
   else
     COUNTER=0
     while [ "$COUNTER" -lt 180 ] && [ "$STATUS" != "INSYNC" ]; do
       sleep 1
-      STATUS=$(aws route53 get-change --id $CHANGE_ID | jq -r ".ChangeInfo.Status")
+      STATUS=$(aws route53 get-change --id $CHANGE_ID --query 'ChangeInfo.Status' --output text)
       COUNTER=$(($COUNTER + 1))
     done
     if [ "$STATUS" != "INSYNC" ]; then
