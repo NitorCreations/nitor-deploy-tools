@@ -37,6 +37,7 @@ usage() {
   echo "Undeploys (deletes) the given stack. Found s3 buckets are emptied and deleted only in case the -f argument is given." >&2
   exit 1
 }
+
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi

@@ -59,7 +59,6 @@ eval "$(nitor-dt-register-complete)"
 ```
 
 ## Commands
-
 ### `ndt ec2-associate-eip`
 
 ```bash
@@ -118,43 +117,6 @@ optional arguments:
 usage: ndt cf-stack-name [-h]
 
 Get name of the stack that created this instance
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
-### `ndt signal-cf-status`
-
-```bash
-usage: ndt signal-cf-status [-h] [-r RESOURCE] status
-
-Signal CloudFormation status to a logical resource in CloudFormation that is
-either given on the command line or resolved from CloudFormation tags
-
-positional arguments:
-  status                Status to indicate: SUCCESS | FAILURE
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -r RESOURCE, --resource RESOURCE
-                        Logical resource name to signal. Looked up from
-                        cloudformation tags by default
-```
-
-### `ndt share-to-another-region`
-
-```bash
-usage: ndt share-to-another-region [-h]
-                                   ami_id to_region ami_name account_id
-                                   [account_id ...]
-
-Shares an image to another region for potentially another account
-
-positional arguments:
-  ami_id      The ami to share
-  to_region   The region to share to
-  ami_name    The name for the ami
-  account_id  The account ids to share ami to
 
 optional arguments:
   -h, --help  show this help message and exit
@@ -255,15 +217,6 @@ optional arguments:
                         the stack - default is paramEipAllocationId
 ```
 
-### `lpssh`
-
-```bash
-usage: lpssh [-k key-name] user@example.com
-
-Fetches key mappings from lastpass, downloads mapped keys into a local ssh-agent and starts
-an ssh session using those credentials.
-```
-
 ### `ndt json-to-yaml`
 
 ```bash
@@ -352,9 +305,9 @@ optional arguments:
 ```bash
 usage: ndt assume-role [-h] [-t TOKEN_NAME] role_arn
 
-Assume a defined role. Prints out environment variables to be eval'd to
+Assume a defined role. Prints out environment variables to be eval\'d to
 current context for use: eval $(ndt assume-role
-'arn:aws:iam::43243246645:role/DeployRole')
+\'arn:aws:iam::43243246645:role/DeployRole\')
 
 positional arguments:
   role_arn              The ARN of the role to assume
@@ -370,20 +323,13 @@ optional arguments:
 ```bash
 usage: ndt detach-volume [-h] mount_path
 
-Create a snapshot of a volume identified by it's mount path
+Create a snapshot of a volume identified by it\'s mount path
 
 positional arguments:
   mount_path  Where to mount the volume
 
 optional arguments:
   -h, --help  show this help message and exit
-```
-
-### `ndt encrypt-and-mount`
-
-```bash
-'-h' not a block device
-Usage: /usr/bin/encrypt-and-mount.sh blk-device mount-path
 ```
 
 ### `ndt ecr-ensure-repo`
@@ -462,20 +408,6 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt ecr-repo-uri`
-
-```bash
-usage: ndt ecr-repo-uri [-h] name
-
-Ensure that an ECR repository exists and get the uri and login token for it
-
-positional arguments:
-  name        The name of the ecr repository
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
 ### `ndt cf-get-parameter`
 
 ```bash
@@ -547,36 +479,18 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt lastpass-fetch-notes`
+### `ndt ecr-repo-uri`
 
 ```bash
+usage: ndt ecr-repo-uri [-h] name
 
-```
+Ensure that an ECR repository exists and get the uri and login token for it
 
-### `ndt ensure-letsencrypt-certs`
+positional arguments:
+  name        The name of the ecr repository
 
-```bash
-Please enter the LastPass master password for <webmaster@nitorcreations.com>.
-
-Master Password: Error: Failed to enter correct password.
-Error: Not currently logged in.
-chmod: cannot access '/etc/certs/-h.crt': No such file or directory
-+ CF_paramSecretsUser=webmaster@nitorcreations.com
-+ case "$1" in
-+ shift
-+ mode=444
-+ shift
-+ login_if_not_already
-+ lpass ls not-meant-to-return-anything
-+ cat /home/pasi/.lpass/webmaster.pwd
-+ lastpass-login.sh webmaster@nitorcreations.com -
-cat: /home/pasi/.lpass/webmaster.pwd: No such file or directory
-/usr/bin/ensure-letsencrypt-certs.sh: line 33: /etc/certs/conf: No such file or directory
-ERROR: Invalid argument: -h
-+ CF_paramSecretsUser=webmaster@nitorcreations.com
-+ case "$1" in
-+ shift
-+ lastpass-logout.sh
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt register-private-dns`
@@ -619,7 +533,7 @@ usage: ndt mfa-add-token [-h] [-i] [-a TOKEN_ARN] [-s TOKEN_SECRET] [-f]
                          token_name
 
 Adds an MFA token to be used with role assumption. Tokens will be saved in a
-.ndt subdirectory in the user's home directory. If a token with the same name
+.ndt subdirectory in the user\'s home directory. If a token with the same name
 already exists, it will not be overwritten.
 
 positional arguments:
@@ -648,7 +562,7 @@ ndt create-stack: error: too few arguments
 ```bash
 usage: ndt snapshot-from-volume [-h] [-w] tag_key tag_value mount_path
 
-Create a snapshot of a volume identified by it's mount path
+Create a snapshot of a volume identified by it\'s mount path
 
 positional arguments:
   tag_key     Key of the tag to find volume with
@@ -660,21 +574,31 @@ optional arguments:
   -w, --wait  Wait for the snapshot to finish before returning
 ```
 
-### `ndt bake-image`
+### `ndt undeploy-stack`
 
 ```bash
-usage: ndt bake-images <component>
+usage: /usr/local/bin/undeploy-stack.sh [-f] <component> <stack-name>
 
-Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and
-tags the image with the job name and build number.
+Undeploys (deletes) the given stack. Found s3 buckets are emptied and deleted only in case the -f argument is given.
 ```
 
-### `ndt setup-fetch-secrets`
+### `ndt share-to-another-region`
 
 ```bash
-usage: setup-fetch-secrets.sh <lpass|s3|vault>
+usage: ndt share-to-another-region [-h]
+                                   ami_id to_region ami_name account_id
+                                   [account_id ...]
 
-Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault
+Shares an image to another region for potentially another account
+
+positional arguments:
+  ami_id      The ami to share
+  to_region   The region to share to
+  ami_name    The name for the ami
+  account_id  The account ids to share ami to
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt setup-cli`
@@ -695,6 +619,15 @@ optional arguments:
                         Secret to set for the profile
   -r REGION, --region REGION
                         Default region for the profile
+```
+
+### `ndt bake-image`
+
+```bash
+usage: ndt bake-images <component>
+
+Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and
+tags the image with the job name and build number.
 ```
 
 ### `ndt cf-follow-logs`
@@ -732,7 +665,7 @@ optional arguments:
 ```bash
 usage: ndt mfa-delete-token [-h] token_name
 
-Deletes an MFA token file from the .ndt subdirectory in the user's home
+Deletes an MFA token file from the .ndt subdirectory in the user\'s home
 directory
 
 positional arguments:
@@ -771,7 +704,7 @@ ndt volume-from-snapshot: error: Only makes sense on an EC2 instance
 usage: ndt add-deployer-server [-h] [--id ID] file username
 
 Add a server into a maven configuration file. Password is taken from the
-environment variable 'DEPLOYER_PASSWORD'
+environment variable \'DEPLOYER_PASSWORD\'
 
 positional arguments:
   file        The file to modify
@@ -780,7 +713,7 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
   --id ID     Optional id for the server. Default is deploy. One server with
-              this id is added and another with '-release' appended
+              this id is added and another with \'-release\' appended
 ```
 
 ### `ndt ec2-instance-id`
@@ -824,7 +757,7 @@ optional arguments:
 ```bash
 usage: ndt yaml-to-json [-h] [--colorize] file
 
-"Convert Nitor CloudFormation yaml to CloudFormation json with some
+Convert Nitor CloudFormation yaml to CloudFormation json with some
 preprosessing
 
 positional arguments:
@@ -835,33 +768,10 @@ optional arguments:
   --colorize, -c  Colorize output
 ```
 
-### `ndt ssh-hostkeys-collect`
-
-```bash
-/usr/bin/ssh-hostkeys-collect.sh: line 18: [: too many arguments
-```
-
 ### `ndt print-create-instructions`
 
 ```bash
-You can deploy the stack  by running 'ndt deploy-stack -h '
-```
-
-### `ndt source_infra_properties`
-
-```bash
-usage: /usr/local/bin/source_infra_properties.sh <component> [<stack-or-docker-name>]
-
-Merges the properties of a component, stack and image from the relevant infra.properties and infra-<branch>.properties files.
-This script is meant to be sourced to get the parameters into environment variables.
-```
-
-### `ndt create-shell-archive`
-
-```bash
-#!/bin/bash -e
-umask 077
-echo "Extracting -h"
+You can deploy the stack  by running \'ndt deploy-stack -h \'
 ```
 
 ### `ndt cf-stack-id`
@@ -875,10 +785,89 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt undeploy-stack`
+### `ndt signal-cf-status`
 
 ```bash
-usage: /usr/local/bin/undeploy-stack.sh [-f] <component> <stack-name>
+usage: ndt signal-cf-status [-h] [-r RESOURCE] status
 
-Undeploys (deletes) the given stack. Found s3 buckets are emptied and deleted only in case the -f argument is given.
+Signal CloudFormation status to a logical resource in CloudFormation that is
+either given on the command line or resolved from CloudFormation tags
+
+positional arguments:
+  status                Status to indicate: SUCCESS | FAILURE
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r RESOURCE, --resource RESOURCE
+                        Logical resource name to signal. Looked up from
+                        cloudformation tags by default
 ```
+
+### `create-shell-archive.sh`
+
+```bash
+usage: /usr/local/bin/create-shell-archive.sh [<file> ...]
+
+Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes
+```
+
+### `ensure-letsencrypt-certs.sh`
+
+```bash
+usage: /usr/local/bin/ensure-letsencrypt-certs.sh <domain-name>
+
+Fetches a certificate with fetch-secrets.sh, and exits cleanly if certificate is found and valid.
+Otherwise gets a new certificate from letsencrypt via DNS verification using Route53.
+Requires that fetch-secrets.sh and Route53 are set up correctly.
+```
+
+### `lastpass-fetch-notes.sh`
+
+```bash
+usage: /usr/local/bin/lastpass-fetch-notes.sh <mode> [<file> ...] [--optional <file> ...]
+
+Fetches secure notes from lastpass that match the basename of each listed file.
+Files specified after --optional won\'t fail if the file does not exist.
+```
+
+### `lpssh`
+
+```bash
+usage: lpssh [-k key-name] user@example.com
+
+Fetches key mappings from lastpass, downloads mapped keys into a local ssh-agent and starts
+an ssh session using those credentials.
+```
+
+### `encrypt-and-mount.sh`
+
+```bash
+Mounts a local block device as an encrypted volume. Handy for things like local database installs.
+usage: /usr/local/bin/encrypt-and-mount.sh blk-device mount-path
+```
+
+### `setup-fetch-secrets.sh`
+
+```bash
+usage: setup-fetch-secrets.sh <lpass|s3|vault>
+
+Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault
+```
+
+### `source_infra_properties.sh`
+
+```bash
+usage: /usr/local/bin/source_infra_properties.sh <component> [<stack-or-docker-name>]
+
+Merges the properties of a component, stack and image from the relevant infra.properties and infra-<branch>.properties files.
+This script is meant to be sourced to get the parameters into environment variables.
+```
+
+### `ssh-hostkeys-collect.sh`
+
+```bash
+usage: /usr/local/bin/ssh-hostkeys-collect.sh hostname
+
+Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containin ssh host keys to preserve the identity of a server over image upgrades.
+```
+

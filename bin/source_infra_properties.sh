@@ -41,6 +41,7 @@ usage() {
   echo "This script is meant to be sourced to get the parameters into environment variables." >&2
   exit 1
 }
+
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi

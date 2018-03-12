@@ -32,9 +32,11 @@ usage() {
   echo "Requires that fetch-secrets.sh and Route53 are set up correctly." >&2
   exit 1
 }
+
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi
+
 if [ -z "$1" ]; then
   usage
 fi

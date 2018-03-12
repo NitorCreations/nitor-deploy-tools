@@ -13,7 +13,7 @@
 # limitations under the License.
 import sys
 from setuptools import setup
-from n_utils import SCRIPTS, CONSOLESCRIPTS
+from n_utils import PATH_COMMANDS, CONSOLESCRIPTS
 
 setup(name='nitor_deploy_tools',
       version='0.223',
@@ -25,7 +25,7 @@ setup(name='nitor_deploy_tools',
       license='Apache 2.0',
       packages=['n_utils'],
       include_package_data=True,
-      scripts=SCRIPTS,
+      scripts=PATH_COMMANDS,
       entry_points={
           'console_scripts': CONSOLESCRIPTS,
       },

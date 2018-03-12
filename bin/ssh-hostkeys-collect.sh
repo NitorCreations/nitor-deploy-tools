@@ -25,6 +25,7 @@ usage() {
   echo "Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containin ssh host keys to preserve the identity of a server over image upgrades." >&2
   exit 1
 }
+
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi

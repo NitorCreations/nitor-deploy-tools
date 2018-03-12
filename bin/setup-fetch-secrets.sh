@@ -33,6 +33,7 @@ usage() {
   echo "Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault" >&2
   exit 1
 }
+
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi

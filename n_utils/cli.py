@@ -239,7 +239,7 @@ def colorprint(data, output_format="yaml"):
     sys.stdout.write(colored.encode(locale.getpreferredencoding()))
 
 def yaml_to_json():
-    """"Convert Nitor CloudFormation yaml to CloudFormation json with some
+    """Convert Nitor CloudFormation yaml to CloudFormation json with some
     preprosessing
     """
     parser = argparse.ArgumentParser(description=yaml_to_json.__doc__)

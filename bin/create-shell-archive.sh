@@ -20,14 +20,17 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-setup() {
+usage() {
   echo "usage: $0 [<file> ...]" >&2
+  echo "" >&2
   echo "Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes" >&2
   exit 1
 }
+
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi
+
 eof_marker="AR_EOF_MARKER_$(basename $(mktemp --dry-run | tr . _))"
 echo '#!/bin/bash -e'
 echo 'umask 077'

@@ -15,18 +15,20 @@
 """ Main module for nitor-deploy-tools
 """
 
-SCRIPTS = [
-    'bin/bake-docker.sh',
-    'bin/bake-image.sh',
+PATH_COMMANDS = [
     'bin/create-shell-archive.sh',
-    'bin/deploy-stack.sh',
-    'bin/encrypt-and-mount.sh',
     'bin/ensure-letsencrypt-certs.sh',
     'bin/lastpass-fetch-notes.sh',
     'bin/lpssh',
+    'bin/encrypt-and-mount.sh',
     'bin/setup-fetch-secrets.sh',
     'bin/source_infra_properties.sh',
-    'bin/ssh-hostkeys-collect.sh',
+    'bin/ssh-hostkeys-collect.sh'
+]
+SCRIPTS = [
+    'bin/bake-docker.sh',
+    'bin/bake-image.sh',
+    'bin/deploy-stack.sh',
     'bin/undeploy-stack.sh'
 ]
 NDT_AND_CONSOLE = [

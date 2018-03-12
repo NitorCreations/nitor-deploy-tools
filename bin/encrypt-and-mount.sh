@@ -39,6 +39,7 @@ usage() {
   echo "Mounts a local block device as an encrypted volume. Handy for things like local database installs."
   exit 1
 }
+
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi
