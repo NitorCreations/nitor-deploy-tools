@@ -27,9 +27,6 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
-if [ "$1" = "--help" -o "$1" = "-h" ]; then
-  usage
-fi
 
 usage() {
   echo "usage: $0 <mode> [<file> ...] [--optional <file> ...]" >&2
@@ -38,6 +35,9 @@ usage() {
   echo "Files specified after --optional won't fail if the file does not exist." >&2
   exit 1
 }
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 
 mode="$1"
 shift

@@ -19,16 +19,15 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-if [ "$1" = "--help" -o "$1" = "-h" ]; then
-  usage
-fi
-
 usage() {
   echo "usage: $0 hostname" >&2
   echo "" >&2
   echo "Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containin ssh host keys to preserve the identity of a server over image upgrades." >&2
   exit 1
 }
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 
 host="$1"
 if [ ! "$host" -o "$host" = "--help" ]; then

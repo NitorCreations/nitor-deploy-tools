@@ -30,10 +30,6 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-if [ "$1" = "--help" -o "$1" = "-h" ]; then
-  usage
-fi
-
 usage() {
   if [ -n "$1" ]; then
     echo "$1"
@@ -43,6 +39,10 @@ usage() {
   echo "Mounts a local block device as an encrypted volume. Handy for things like local database installs."
   exit 1
 }
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
 crypted_devices() {
   for dev in  $(dmsetup ls --target crypt | grep -v "No devices found" | awk '{ print $1 }'); do
     echo -n "$dev "

@@ -31,16 +31,15 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-if [ "$1" = "--help" -o "$1" = "-h" ]; then
-  usage
-fi
-
 usage() {
   echo "usage: $0 [-f] <component> <stack-name>" >&2
   echo "" >&2
   echo "Undeploys (deletes) the given stack. Found s3 buckets are emptied and deleted only in case the -f argument is given." >&2
   exit 1
 }
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 
 set -xe
 

@@ -34,10 +34,6 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-if [ "$1" = "--help" -o "$1" = "-h" ]; then
-  usage
-fi
-
 usage() {
   echo "usage: ndt bake-docker <component> <docker-name>" >&2
   echo "" >&2
@@ -50,6 +46,10 @@ usage() {
   fi
   exit 1
 }
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
 die () {
   usage
 }

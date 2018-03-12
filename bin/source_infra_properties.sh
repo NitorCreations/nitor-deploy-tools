@@ -34,10 +34,6 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-if [ "$1" = "--help" -o "$1" = "-h" ]; then
-  usage
-fi
-
 usage() {
   echo "usage: $0 <component> [<stack-or-docker-name>]" >&2
   echo "" >&2
@@ -45,6 +41,9 @@ usage() {
   echo "This script is meant to be sourced to get the parameters into environment variables." >&2
   exit 1
 }
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 
 [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 GIT_BRANCH=${GIT_BRANCH##*/}

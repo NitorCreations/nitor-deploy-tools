@@ -76,7 +76,8 @@ NDT_ONLY = [
     'ecr-ensure-repo=n_utils.cli:cli_ecr_ensure_repo',
     'ecr-repo-uri=n_utils.cli:cli_ecr_repo_uri',
     'upsert-cloudfront-records=n_utils.cli:cli_upsert_cloudfront_records',
-    'create-stack=n_utils.cf_bootstrap:create_stack'
+    'create-stack=n_utils.cf_bootstrap:create_stack',
+    'latest-snapshot=n_utils.volumes:latest_snapshot'
 ]
 NDT_ONLY_SCRIPT = [
     'list-jobs.sh',
@@ -85,8 +86,7 @@ NDT_ONLY_SCRIPT = [
 CONSOLE_ONLY = [
     'cf-update-stack=n_utils.cli:update_stack',
     'ndt=n_utils.cli:ndt',
-    'nitor-dt-register-complete=n_utils.cli:ndt_register_complete',
-    'latest-snapshot=n_utils.volumes:latest_snapshot'
+    'nitor-dt-register-complete=n_utils.cli:ndt_register_complete'
 ]
 CONSOLESCRIPTS = CONSOLE_ONLY + NDT_AND_CONSOLE
 COMMAND_MAPPINGS = {}

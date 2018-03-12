@@ -27,16 +27,15 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-if [ "$1" = "--help" -o "$1" = "-h" ]; then
-  usage
-fi
-
 usage() {
   echo "usage: setup-fetch-secrets.sh <lpass|s3|vault>" >&2
   echo "" >&2
   echo "Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault" >&2
   exit 1
 }
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"

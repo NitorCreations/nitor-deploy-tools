@@ -4,7 +4,7 @@
 
 **nitor-deploy-tools** is a set of tools for infrastructure-as-code on Amazon Web Services.
 
-nitor-deploy-tools works by defining _Amazon Machine Instances_ and
+nitor-deploy-tools works by defining _Amazon Machine Instances_, _Docker containers_ and
 deploying _[CloudFormation](https://aws.amazon.com/cloudformation/)
 stacks_ of resources.
 
@@ -24,16 +24,9 @@ pip install nitor-deploy-tools
 
 All of these are run in your project repository root. You need to have AWS credentials for command line access set up.
 
-* To bake a new version of an image: `bake-image.sh <image-name>`
+* To bake a new version of an image: `ndt bake-image <image-name>`
+* To build a new Docker container image `ndt bake-docker <component> <docker-name>`
 * To deploy a stack:
   * with a known AMI id: `ndt deploy-stack <image-name> <stack-name> <AMI-id>`
   * with the newest AMI id by a given bake job: `ndt deploy-stack <image-name> <stack-name> "" <bake-job-name>`
 * To undeploy a stack: `ndt undeploy-stack <image-name> <stack-name>`
-
-## Utilities for Lastpass integration
-
-TODO
-
-## Vault
-
-A class and a command line utility to store secrets with client side encryption

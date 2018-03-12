@@ -224,6 +224,8 @@ def get_account_id():
     """Get current account id. Either from instance metadata or current cli
     configuration.
     """
+    parser = argparse.ArgumentParser(description=get_account_id.__doc__)
+    args = parser.parse_args()
     print cf_utils.resolve_account()
 
 def colorprint(data, output_format="yaml"):
@@ -347,6 +349,7 @@ def instance_id():
     """
     parser = argparse.ArgumentParser(description=instance_id.__doc__)
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print info.instance_id()
@@ -382,6 +385,7 @@ def stack_name():
     """
     parser = argparse.ArgumentParser(description=stack_name.__doc__)
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print info.stack_name()
@@ -393,6 +397,7 @@ def stack_id():
     """
     parser = argparse.ArgumentParser(description=stack_id.__doc__)
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print info.stack_id()
@@ -404,6 +409,7 @@ def logical_id():
     """
     parser = argparse.ArgumentParser(description=logical_id.__doc__)
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print info.logical_id()
@@ -415,6 +421,7 @@ def cf_region():
     """
     parser = argparse.ArgumentParser(description=cf_region.__doc__)
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print info.stack_id().split(":")[3]
@@ -568,8 +575,8 @@ def snapshot_from_volume():
     parser.add_argument("tag_value", help="Value of the tag to find volume with")
     parser.add_argument("mount_path", help="Where to mount the volume")
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     if is_ec2():
-        args = parser.parse_args()
         print volumes.create_snapshot(args.tag_key, args.tag_value,
                                       args.mount_path, wait=args.wait)
     else:
@@ -581,8 +588,8 @@ def detach_volume():
     parser = argparse.ArgumentParser(description=snapshot_from_volume.__doc__)
     parser.add_argument("mount_path", help="Where to mount the volume")
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     if is_ec2():
-        args = parser.parse_args()
         volumes.detach_volume(args.mount_path)
     else:
         parser.error("Only makes sense on an EC2 instance")

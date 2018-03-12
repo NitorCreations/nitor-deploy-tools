@@ -24,14 +24,21 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [ -z "$1" ]; then
+usage() {
   echo "usage: $0 <domain-name>" >&2
   echo "" >&2
   echo "Fetches a certificate with fetch-secrets.sh, and exits cleanly if certificate is found and valid." >&2
   echo "Otherwise gets a new certificate from letsencrypt via DNS verification using Route53." >&2
   echo "Requires that fetch-secrets.sh and Route53 are set up correctly." >&2
   exit 1
+}
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
 fi
+if [ -z "$1" ]; then
+  usage
+fi
+
 RENEW_DAYS="30"
 if [ -z "$CERT_DIR" ]; then
   CERT_DIR=/etc/certs
