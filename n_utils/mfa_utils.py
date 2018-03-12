@@ -17,7 +17,7 @@ import os
 import yaml
 import pyotp
 import sys
-
+from os import walk
 from .enc_utils import _encrypt, _decrypt
 
 def mfa_add_token(args):
@@ -84,3 +84,10 @@ def mfa_delete_token(token_name):
 class Struct ( object ) :
     def __init__ ( self , ** entries ) :
         self . __dict__ . update ( entries )
+
+def list_mfa_tokens():
+    tokens = []
+    for (dirpath, dirnames, filenames) in walk(get_ndt_dir()):
+        tokens.extend([fn[4:] for fn in filenames if fn.startswith("mfa_")])
+        break
+    return tokens

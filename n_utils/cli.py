@@ -41,7 +41,8 @@ from .cloudfront_utils import distributions, distribution_comments, \
 from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
-from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, mfa_generate_code_with_secret
+from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
+    mfa_generate_code_with_secret, list_mfa_tokens
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -802,7 +803,8 @@ def cli_mfa_delete_token():
         home directory """
     parser = argparse.ArgumentParser(description=cli_mfa_delete_token.__doc__)
     parser.add_argument("token_name",
-                        help="Name of the token to delete.")
+                        help="Name of the token to delete.").completer = \
+                            ChoicesCompleter(list_mfa_tokens())
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     mfa_delete_token(args.token_name)
@@ -811,7 +813,8 @@ def cli_mfa_code():
     """ Generates a TOTP code using an MFA token. """
     parser = argparse.ArgumentParser(description=cli_mfa_code.__doc__)
     parser.add_argument("token_name",
-                        help="Name of the token to use.")
+                        help="Name of the token to use.").completer = \
+                            ChoicesCompleter(list_mfa_tokens())
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     print mfa_generate_code(args.token_name)
@@ -829,4 +832,3 @@ def cli_create_account():
     parser.add_argument("-t", "--trusted-account", help="Role name for admin access from parent account")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    
