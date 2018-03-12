@@ -25,7 +25,11 @@ cleanup() {
 trap cleanup EXIT
 
 if [ -z "$1" ]; then
-  echo "usage: $0 <domain-name>"
+  echo "usage: $0 <domain-name>" >&2
+  echo "" >&2
+  echo "Fetches a certificate with fetch-secrets.sh, and exits cleanly if certificate is found and valid." >&2
+  echo "Otherwise gets a new certificate from letsencrypt via DNS verification using Route53." >&2
+  echo "Requires that fetch-secrets.sh and Route53 are set up correctly." >&2
   exit 1
 fi
 RENEW_DAYS="30"
@@ -42,8 +46,8 @@ renew_cert() {
     echo "ACCOUNTDIR=$HOME/.letsencrypt/" >> $CERT_DIR/conf
   fi
   export CONFIG="$CERT_DIR/conf"
-  letsencrypt.sh --register --accept-terms
-  letsencrypt.sh --cron --hook hook.sh --challenge dns-01 --domain "$DOMAIN"
+  $(n-include letsencrypt.sh) --register --accept-terms
+  $(n-include letsencrypt.sh) --cron --hook $(n-include hook.sh) --challenge dns-01 --domain "$DOMAIN"
 }
 
 for DOMAIN in "$@"; do

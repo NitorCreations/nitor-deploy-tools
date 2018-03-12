@@ -21,12 +21,13 @@
 
 login_if_not_already () {
   if ! lpass ls not-meant-to-return-anything > /dev/null 2>&1; then
-    s3-role-download.sh ${CF_paramSecretsBucket} webmaster.pwd - | lastpass-login.sh ${CF_paramSecretsUser} -
+    export AWS_DEFAULT_REGION=$(ndt ec2-region)
+    aws s3 s3://${CF_paramSecretsBucket}/webmaster.pwd - | $(n-include lastpass-login.sh) ${CF_paramSecretsUser} -
   fi
 }
 logout() {
   lpass sync
-  lastpass-logout.sh
+  $(n-include lastpass-logout.sh)
 }
 
 if [ -z "$1" ]; then

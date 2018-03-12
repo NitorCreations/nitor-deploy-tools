@@ -4,7 +4,7 @@ if [ "$_ARGCOMPLETE" ]; then
   cur=${COMP_CUR}
   prev=${COMP_PREV}
   if [ "$cur" = "-" ]; then
-    echo "-k"
+    echo -e "-k\n-h"
     return 0
   fi
   case $prev in
@@ -15,7 +15,7 @@ if [ "$_ARGCOMPLETE" ]; then
            rm -f $TMP
            return 1
       fi
-      compgen -W "-k $(cat $TMP | cut -d ":" -f1)" -- "$cur"
+      compgen -W "-h -k $(cat $TMP | cut -d ":" -f1)" -- "$cur"
       rm -f $TMP
       ;;
     -k)
@@ -24,6 +24,18 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
+usage() {
+  echo "usage: lpssh [-k key-name] user@example.com" >&2
+  echo "" >&2
+  echo "Fetches key mappings from lastpass, downloads mapped keys into a local ssh-agent and starts" >&2
+  echo "an ssh session using those credentials." >&2
+  exit 1
+}
 
 unset SSH_AUTH_SOCK
 unset SSH_AGENT_PID

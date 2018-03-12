@@ -18,7 +18,7 @@ if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
   case $COMP_CWORD in
     2)
-      exit 0
+      echo "-h"
       ;;
     *)
       echo '--optional'
@@ -27,14 +27,23 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
+usage() {
+  echo "usage: $0 <mode> [<file> ...] [--optional <file> ...]" >&2
+  echo "" >&2
+  echo "Fetches secure notes from lastpass that match the basename of each listed file." >&2
+  echo "Files specified after --optional won't fail if the file does not exist." >&2
+  exit 1
+}
 
 mode="$1"
 shift
 
 if [ ! "$mode" ]; then
-  echo "usage: $0 <mode> [<file> ...] [--optional <file> ...]" >&2
-  echo "Files specified after --optional won't fail if the file does not exist."
-  exit 1
+  usage
 fi
 
 for path ; do

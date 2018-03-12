@@ -18,7 +18,7 @@ if [ "$_ARGCOMPLETE" ]; then
   case $COMP_CWORD in
     2)
       DEVICES=$(lsblk -pnlo name)
-      compgen -W "$DEVICES" -- $COMP_CUR
+      compgen -W "-h $DEVICES" -- $COMP_CUR
       ;;
     3)
       compgen -f -- $COMP_CUR
@@ -30,11 +30,17 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
 usage() {
   if [ -n "$1" ]; then
     echo "$1"
   fi
-  echo "Usage: $0 blk-device mount-path"
+  echo "usage: $0 blk-device mount-path" >&2
+  echo "" >&2
+  echo "Mounts a local block device as an encrypted volume. Handy for things like local database installs."
   exit 1
 }
 crypted_devices() {

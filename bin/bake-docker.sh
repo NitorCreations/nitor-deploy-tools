@@ -22,7 +22,7 @@ if [ "$_ARGCOMPLETE" ]; then
   source $(n-include autocomplete-helpers.sh)
   case $COMP_CWORD in
     2)
-      compgen -W "$(get_stack_dirs)" -- $COMP_CUR
+      compgen -W "-h $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
       compgen -W "$(get_dockers $COMP_PREV)" -- $COMP_CUR
@@ -34,12 +34,26 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-set -xe
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 
-die () {
-  echo "$@" >&2
+usage() {
+  echo "usage: ndt bake-docker <component> <docker-name>" >&2
+  echo "" >&2
+  echo "Runs a docker build, ensures that an ecr repository with the docker name" >&2
+  echo "(by default <component>/<branch>-<docker-name>) exists and pushes the built" >&2
+  echo "image to that repository with the tags \"latest\" and \"\$BUILD_NUMBER\"" >&2
+  if "$@"; then
+    echo "" >&2
+    echo "$@" >&2
+  fi
   exit 1
 }
+die () {
+  usage
+}
+set -xe
 
 image="$1" ; shift
 [ "${image}" ] || die "You must give the image name as argument"

@@ -21,7 +21,7 @@ if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
   case $COMP_CWORD in
     2)
-      compgen -W "$(get_bakeable_images)" -- $COMP_CUR
+      compgen -W "-h $(get_bakeable_images)" -- $COMP_CUR
       ;;
     *)
       exit 1
@@ -30,12 +30,25 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-set -xe
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 
-die () {
-  echo "$@" >&2
+usage() {
+  echo "usage: ndt bake-images <component>" >&2
+  echo "" >&2
+  echo "Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and" >&2
+  echo "tags the image with the job name and build number." >&2
+  if "$@"; then
+    echo "" >&2
+    echo "$@" >&2
+  fi
   exit 1
 }
+die () {
+  usage
+}
+set -xe
 
 image="$1" ; shift
 [ "${image}" ] || die "You must give the image name as argument"

@@ -19,7 +19,7 @@ if [ "$_ARGCOMPLETE" ]; then
   source $(n-include autocomplete-helpers.sh)
   case $COMP_CWORD in
     2)
-      compgen -W "$(get_stack_dirs)" -- $COMP_CUR
+      compgen -W "-f -h $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
       compgen -W "$(get_stacks $COMP_PREV)" -- $COMP_CUR
@@ -30,6 +30,17 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
+usage() {
+  echo "usage: $0 [-f] <component> <stack-name>" >&2
+  echo "" >&2
+  echo "Undeploys (deletes) the given stack. Found s3 buckets are emptied and deleted only in case the -f argument is given." >&2
+  exit 1
+}
 
 set -xe
 

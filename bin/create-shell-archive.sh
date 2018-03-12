@@ -15,12 +15,12 @@
 # limitations under the License.
 if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
-  echo '--help'
+  echo '-h'
   compgen -f -- $COMP_CUR
   exit 0
 fi
 
-if [ "$1" = "--help" -o "$1" == "-h" ]; then
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
     echo "usage: $0 [<file> ...]" >&2
     echo "Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes" >&2
     exit 1

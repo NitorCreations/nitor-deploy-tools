@@ -15,14 +15,24 @@
 # limitations under the License.
 if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
+  echo "-h"
   exit 0
 fi
 
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
+usage() {
+  echo "usage: $0 hostname" >&2
+  echo "" >&2
+  echo "Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containin ssh host keys to preserve the identity of a server over image upgrades." >&2
+  exit 1
+}
+
 host="$1"
 if [ ! "$host" -o "$host" = "--help" ]; then
-   echo "usage: $0 <hostname>" >&2
-   echo "Creates a <hostname>-ssh-hostkeys.sh archive in the current directory" >&2
-   exit 10
+  usage
 fi
 create-shell-archive.sh /etc/ssh/ssh_host_* > ${host}-ssh-hostkeys.sh 
 chmod og= ${host}-ssh-hostkeys.sh

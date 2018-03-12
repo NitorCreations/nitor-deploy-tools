@@ -34,7 +34,7 @@ if [ "$_ARGCOMPLETE" ]; then
       if [ "$COMP_INDEX" = "$COMP_CWORD" ]; then
         DRY="-d "
       fi
-      compgen -W "$DRY$(get_stack_dirs)" -- $COMP_CUR
+      compgen -W "-h $DRY$(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
       compgen -W "$(get_stacks $IMAGE_DIR)" -- $COMP_CUR
@@ -55,6 +55,17 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
+usage() {
+  echo "usage: ndt deploy-stack <component> <stack-name> <ami-id or empty string> <bake job name for searching ami-id>" >&2
+  echo "" >&2
+  echo "Resolves potential ECR urls and AMI Ids and then deploys the given stack either updating or creating it." >&2
+  exit 1
+}
 source $(n-include autocomplete-helpers.sh)
 
 set -xe

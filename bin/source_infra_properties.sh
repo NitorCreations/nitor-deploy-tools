@@ -22,7 +22,7 @@ if [ "$_ARGCOMPLETE" ]; then
   source $(n-include autocomplete-helpers.sh)
   case $COMP_CWORD in
     2)
-      compgen -W "$(get_stack_dirs)" -- $COMP_CUR
+      compgen -W "-h $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
       compgen -W "$(get_dockers $COMP_PREV) $(get_stacks $COMP_PREV)" -- $COMP_CUR
@@ -33,6 +33,18 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
+usage() {
+  echo "usage: $0 <component> [<stack-or-docker-name>]" >&2
+  echo "" >&2
+  echo "Merges the properties of a component, stack and image from the relevant infra.properties and infra-<branch>.properties files." >&2
+  echo "This script is meant to be sourced to get the parameters into environment variables." >&2
+  exit 1
+}
 
 [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 GIT_BRANCH=${GIT_BRANCH##*/}
@@ -78,3 +90,4 @@ source_first_existing "$stackpropfile" "$dockerpropfile"
 # Same logic as above for account id
 [ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(account-id)
 unset source_first_existing
+unset usage

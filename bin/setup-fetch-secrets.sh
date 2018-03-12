@@ -18,7 +18,7 @@ if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
   case $COMP_CWORD in
     2)
-      compgen -W "lpass s3 vault" -- $COMP_CUR
+      compgen -W "-h lpass s3 vault" -- $COMP_CUR
       ;;
     *)
       exit 1
@@ -26,6 +26,17 @@ if [ "$_ARGCOMPLETE" ]; then
   esac
   exit 0
 fi
+
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
+usage() {
+  echo "usage: setup-fetch-secrets.sh <lpass|s3|vault>" >&2
+  echo "" >&2
+  echo "Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault" >&2
+  exit 1
+}
 
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
