@@ -21,9 +21,14 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: create-shell-archive.sh [<file> ...]" >&2
+  echo "usage: create-shell-archive.sh [-h] [<file> ...]" >&2
   echo "" >&2
   echo "Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes" >&2
+  echo "positional arguments:" >&2
+  echo "  file  one or more files to package into the archive"
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 

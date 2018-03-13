@@ -57,9 +57,21 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt deploy-stack <component> <stack-name> <ami-id or empty string> <bake job name for searching ami-id>" >&2
+  echo "usage: ndt deploy-stack [-d] [-h] component stack-name ami-id bake-job" >&2
   echo "" >&2
   echo "Resolves potential ECR urls and AMI Ids and then deploys the given stack either updating or creating it." >&2
+  echo "positional arguments:" >&2
+  echo "  component   the component directory where the stack template is" >&2
+  echo "  stack-name  the name of the stack directory inside the component directory" >&2
+  echo "              For example for ecs-cluster/stack-cluster/template.yaml" >&2
+  echo "              you would give cluster" >&2
+  echo "  ami-id      If you want to specify a value for the paramAmi variable in the stack," >&2
+  echo "              you can do so. Otherwise give an empty string with two quotation marks" >&2
+  echo "  bake-job    If an ami-id is not given, the ami id is resolved by getting the latest" >&2
+  echo "              ami that is tagged with the bake-job name"
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 if [ "$1" = "--help" -o "$1" = "-h" ]; then

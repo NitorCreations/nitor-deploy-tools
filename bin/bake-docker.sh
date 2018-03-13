@@ -35,11 +35,20 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt bake-docker <component> <docker-name>" >&2
+  echo "usage: ndt bake-docker [-h] component docker-name" >&2
   echo "" >&2
   echo "Runs a docker build, ensures that an ecr repository with the docker name" >&2
   echo "(by default <component>/<branch>-<docker-name>) exists and pushes the built" >&2
   echo "image to that repository with the tags \"latest\" and \"\$BUILD_NUMBER\"" >&2
+  echo "" >&2
+  echo "positional arguments:" >&2
+  echo "  component   the component directory where the docker directory is" >&2
+  echo "  docker-name the name of the docker directory that has the Dockerfile" >&2
+  echo "              For example for ecs-cluster/docker-cluster/Dockerfile" >&2
+  echo "              you would give cluster" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit"  >&2
   if "$@"; then
     echo "" >&2
     echo "$@" >&2

@@ -35,11 +35,18 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: source source_infra_properties.sh <component> [<stack-or-docker-name>]" >&2
+  echo "usage: source source_infra_properties.sh component [stack-or-docker-name]" >&2
   echo "" >&2
   echo "Merges the properties of a component, stack and image from the relevant infra.properties" >&2
   echo "and infra-<branch>.properties files. This script is meant to be sourced to get the" >&2
   echo "parameters into environment variables." >&2
+  echo "" >&2
+  echo "positional arguments" >&2
+  echo "  component             the component directory to look for additional properties files" >&2
+  echo "  stack-or-docker-name  the stack or docker directory to look for more properties files" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 

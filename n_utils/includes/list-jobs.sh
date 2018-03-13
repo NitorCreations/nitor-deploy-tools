@@ -4,10 +4,13 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 usage() {
-  echo "usage: ndt list-jobs" >&2
+  echo "usage: ndt list-jobs  [-h]" >&2
   echo "" >&2
-  echo "List jobs that should be created in jenkins for the current repository. This includes all branches in the current repository."
-  exit 1
+  echo "List jobs that should be created in jenkins for the current repository." >&2
+  echo "This includes all branches in the current repository." >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2  exit 1
 }
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage

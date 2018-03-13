@@ -31,12 +31,20 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  if [ -n "$1" ]; then
-    echo "$1"
-  fi
-  echo "usage: encrypt-and-mount.sh blk-device mount-path" >&2
+  echo "usage: encrypt-and-mount.sh [-h] blk-device mount-path" >&2
   echo "" >&2
   echo "Mounts a local block device as an encrypted volume. Handy for things like local database installs."
+  echo "" >&2
+  echo "positional arguments" >&2
+  echo "  blk-device  the block device you want to encrypt and mount" >&2
+  echo "  mount-path  the mount point for the encrypted volume" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
+  if [ -n "$1" ]; then
+    echo "" >&2
+    echo "$1" >&2
+  fi
   exit 1
 }
 

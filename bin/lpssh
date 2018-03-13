@@ -26,10 +26,18 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: lpssh [-k key-name] user@example.com" >&2
+  echo "usage: lpssh [-h] [-k key-name] user@example.com" >&2
   echo "" >&2
   echo "Fetches key mappings from lastpass, downloads mapped keys into a local ssh-agent and starts" >&2
   echo "an ssh session using those credentials." >&2
+  echo "" >&2
+  echo "positional arguments" >&2
+  echo "  user@example.com   The user and host to match in \"my-ssh-mappings\" secure note" >&2
+  echo "                     and to log into once keys are set up." >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -k,         key name in lastpass to use if you don't want to use a mapping"  >&2
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 

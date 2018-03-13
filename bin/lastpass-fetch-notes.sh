@@ -29,10 +29,18 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: lasptass-fetch-notes.sh <mode> [<file> ...] [--optional <file> ...]" >&2
+  echo "usage: lasptass-fetch-notes.sh [-h] mode file [file ...] [--optional file ...]" >&2
   echo "" >&2
   echo "Fetches secure notes from lastpass that match the basename of each listed file." >&2
   echo "Files specified after --optional won't fail if the file does not exist." >&2
+  echo "" >&2
+  echo "positional arguments" >&2
+  echo "  mode   the file mode for the downloaded files" >&2
+  echo "  file   the file(s) to download. The source will be the note that matches the basename of the file" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  --optional  marks that following files will not fail and exit the script in they do not exist"
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 

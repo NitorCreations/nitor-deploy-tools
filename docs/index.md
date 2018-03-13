@@ -156,7 +156,7 @@ tags the image with the job name and build number.
 ```bash
 usage: ndt cf-delete-stack [-h] stack_name region
 
-Create or update existing CloudFormation stack
+Delete an existing CloudFormation stack
 
 positional arguments:
   stack_name  Name of the stack to delete
@@ -179,7 +179,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -s START, --start START
-                        Start time in seconds sinceepoc
+                        Start time in seconds since epoc
 ```
 
 ### `ndt cf-get-parameter`
@@ -213,7 +213,8 @@ optional arguments:
 usage: ndt cf-logs-to-cloudwatch [-h] file
 
 Read a file and send rows to cloudwatch and keep following the end for new
-data
+data. The log group will be the stack name that created instance and the
+logstream will be the instance id and filename.
 
 positional arguments:
   file        File to follow
@@ -276,8 +277,16 @@ optional arguments:
 ### `ndt create-stack`
 
 ```bash
-usage: ndt create-stack [-y] [-h] template
-ndt create-stack: error: too few arguments
+usage: ndt create-stack [-h] [-y] [template]
+
+Create a stack from a template
+
+positional arguments:
+  template
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -y, --yes   Answer yes or use default to all questions
 ```
 
 ### `ndt deploy-stack`
@@ -508,8 +517,14 @@ optional arguments:
 ### `ndt list-jobs`
 
 ```bash
-List jobs that should be created in jenkins for the current repository. This includes all branches in the current repository.
-usage: ndt list-jobs
+usage: ndt list-jobs  [-h]
+
+List jobs that should be created in jenkins for the current repository.
+This includes all branches in the current repository.
+
+optional arguments:
+  -h, --help  show this help message and exit exit 1
+fatal: Not a valid object name
 ```
 
 ### `ndt logs-to-cloudwatch`
@@ -518,7 +533,8 @@ usage: ndt list-jobs
 usage: ndt logs-to-cloudwatch [-h] file
 
 Read a file and send rows to cloudwatch and keep following the end for new
-data
+data. The log group will be the stack name that created instance and the
+logstream will be the instance id and filename.
 
 positional arguments:
   file        File to follow
@@ -618,7 +634,17 @@ optional arguments:
 
 ```bash
 Prints out the instructions to create and deploy the resources in a stack
-usage: ndt print-create-instructions <component> <stack-name>
+usage: ndt print-create-instructions [-h] component stack-name
+
+
+positional arguments:
+  component   the component directory where the stack template is
+  stack-name  the name of the stack directory inside the component directory
+              For example for ecs-cluster/stack-cluster/template.yaml
+              you would give cluster
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt promote-image`

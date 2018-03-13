@@ -31,10 +31,17 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt bake-images <component>" >&2
+  echo "usage: ndt bake-image [-h] component" >&2
   echo "" >&2
   echo "Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and" >&2
   echo "tags the image with the job name and build number." >&2
+  echo "" >&2
+  echo "positional arguments" >&2
+  echo "  component   the component directory where the ami bake configurations are" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
+
   if "$@"; then
     echo "" >&2
     echo "$@" >&2

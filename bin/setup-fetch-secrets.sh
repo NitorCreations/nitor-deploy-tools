@@ -28,10 +28,15 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: setup-fetch-secrets.sh <lpass|s3|vault>" >&2
+  echo "usage: setup-fetch-secrets.sh [-h] <lpass|s3|vault>" >&2
   echo "" >&2
   echo "Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault" >&2
-  exit 1
+  echo "" >&2
+  echo "positional arguments" >&2
+  echo "  lpass|s3|vault   the selected secrets backend." >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2  exit 1
 }
 
 if [ "$1" = "--help" -o "$1" = "-h" ]; then

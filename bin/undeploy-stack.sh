@@ -32,10 +32,19 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: $0 [-f] <component> <stack-name>" >&2
+  echo "usage: ndt undeploy-stack [-h] [-f] <component> <stack-name>" >&2
   echo "" >&2
   echo "Undeploys (deletes) the given stack." >&2
   echo "Found s3 buckets are emptied and deleted only in case the -f argument is given." >&2
+  echo "" >&2
+  echo "positional arguments:" >&2
+  echo "  component   the component directory where the stack template is" >&2
+  echo "  stack-name  the name of the stack directory inside the component directory" >&2
+  echo "              For example for ecs-cluster/stack-cluster/template.yaml" >&2
+  echo "              you would give cluster" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 

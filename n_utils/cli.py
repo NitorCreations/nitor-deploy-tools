@@ -298,7 +298,9 @@ def read_and_follow():
     cf_utils.read_and_follow(args.file, sys.stdout.write)
 
 def logs_to_cloudwatch():
-    """Read a file and send rows to cloudwatch and keep following the end for new data
+    """Read a file and send rows to cloudwatch and keep following the end for new data.
+    The log group will be the stack name that created instance and the logstream
+    will be the instance id and filename.
     """
     parser = get_parser()
     parser.add_argument("file", help="File to follow").completer = FilesCompleter()
@@ -463,7 +465,7 @@ def update_stack():
     return
 
 def delete_stack():
-    """Create or update existing CloudFormation stack
+    """Delete an existing CloudFormation stack
     """
     parser = get_parser()
     parser.add_argument("stack_name", help="Name of the stack to delete")
@@ -478,7 +480,7 @@ def tail_stack_logs():
     parser = get_parser()
     parser.add_argument("stack_name", help="Name of the stack to watch logs " +\
                                            "for")
-    parser.add_argument("-s", "--start", help="Start time in seconds since" +\
+    parser.add_argument("-s", "--start", help="Start time in seconds since " +\
                                               "epoc")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()

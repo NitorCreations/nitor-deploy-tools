@@ -45,7 +45,7 @@ def enum(**enums):
 BRANCH_MODES = enum(SINGLE_STACK='single', MULTI_STACK='multi')
 
 def _add_default_params(parser):
-    parser.add_argument("template").completer = ChoicesCompleter(list_templates())
+    parser.add_argument("template", nargs="?").completer = ChoicesCompleter(list_templates())
     parser.add_argument("-y", "--yes", action='store_true',
                         help='Answer yes or use default to all questions')
 

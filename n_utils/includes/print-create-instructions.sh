@@ -23,9 +23,18 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt print-create-instructions <component> <stack-name>" >&2
+  echo "usage: ndt print-create-instructions [-h] component stack-name" >&2
   echo "" >&2
   echo "Prints out the instructions to create and deploy the resources in a stack"
+  echo "" >&2
+  echo "positional arguments:" >&2
+  echo "  component   the component directory where the stack template is" >&2
+  echo "  stack-name  the name of the stack directory inside the component directory" >&2
+  echo "              For example for ecs-cluster/stack-cluster/template.yaml" >&2
+  echo "              you would give cluster" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 if [ "$1" = "--help" -o "$1" = "-h" ]; then

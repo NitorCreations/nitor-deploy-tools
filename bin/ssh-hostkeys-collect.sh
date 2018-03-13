@@ -20,10 +20,17 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ssh-hostkeys-collect.sh hostname" >&2
+  echo "usage: ssh-hostkeys-collect.sh [-h] hostname" >&2
   echo "" >&2
   echo "Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containing" >&2
   echo "ssh host keys to preserve the identity of a server over image upgrades." >&2
+  echo "" >&2
+  echo "positional arguments" >&2
+  echo "  hostname   the name of the host used to store the keys. Typically the hostname is what" >&2
+  echo "             instance userdata scripts will use to look for the keys" >&2
+  echo "" >&2
+  echo "optional arguments:" >&2
+  echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }
 
