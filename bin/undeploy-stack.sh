@@ -34,7 +34,8 @@ fi
 usage() {
   echo "usage: $0 [-f] <component> <stack-name>" >&2
   echo "" >&2
-  echo "Undeploys (deletes) the given stack. Found s3 buckets are emptied and deleted only in case the -f argument is given." >&2
+  echo "Undeploys (deletes) the given stack." >&2
+  echo "Found s3 buckets are emptied and deleted only in case the -f argument is given." >&2
   exit 1
 }
 

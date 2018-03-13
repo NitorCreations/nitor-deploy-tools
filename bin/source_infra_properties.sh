@@ -35,10 +35,11 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: $0 <component> [<stack-or-docker-name>]" >&2
+  echo "usage: source source_infra_properties.sh <component> [<stack-or-docker-name>]" >&2
   echo "" >&2
-  echo "Merges the properties of a component, stack and image from the relevant infra.properties and infra-<branch>.properties files." >&2
-  echo "This script is meant to be sourced to get the parameters into environment variables." >&2
+  echo "Merges the properties of a component, stack and image from the relevant infra.properties" >&2
+  echo "and infra-<branch>.properties files. This script is meant to be sourced to get the" >&2
+  echo "parameters into environment variables." >&2
   exit 1
 }
 

@@ -34,7 +34,7 @@ usage() {
   if [ -n "$1" ]; then
     echo "$1"
   fi
-  echo "usage: $0 blk-device mount-path" >&2
+  echo "usage: encrypt-and-mount.sh blk-device mount-path" >&2
   echo "" >&2
   echo "Mounts a local block device as an encrypted volume. Handy for things like local database installs."
   exit 1

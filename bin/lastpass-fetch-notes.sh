@@ -29,7 +29,7 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: $0 <mode> [<file> ...] [--optional <file> ...]" >&2
+  echo "usage: lasptass-fetch-notes.sh <mode> [<file> ...] [--optional <file> ...]" >&2
   echo "" >&2
   echo "Fetches secure notes from lastpass that match the basename of each listed file." >&2
   echo "Files specified after --optional won't fail if the file does not exist." >&2

@@ -20,9 +20,10 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: $0 hostname" >&2
+  echo "usage: ssh-hostkeys-collect.sh hostname" >&2
   echo "" >&2
-  echo "Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containin ssh host keys to preserve the identity of a server over image upgrades." >&2
+  echo "Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containing" >&2
+  echo "ssh host keys to preserve the identity of a server over image upgrades." >&2
   exit 1
 }
 

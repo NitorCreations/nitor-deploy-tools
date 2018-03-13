@@ -8,14 +8,14 @@ def do_call(command):
     output, err = proc.communicate()
     return (output + err).strip().replace("'", "\\'")
 
-for command, c_type in COMMAND_MAPPINGS.iteritems():
+for command in sorted(COMMAND_MAPPINGS.keys()):
     print "### `ndt " + command + "`"
     print ""
     print "```bash"
     print do_call(["ndt", command, "-h"])
     print "```\n"
 
-for script in PATH_COMMANDS:
+for script in sorted(PATH_COMMANDS):
     name = script.split("/")[-1]
     print "### `" + name + "`"
     print ""

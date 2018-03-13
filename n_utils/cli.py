@@ -21,6 +21,7 @@ import locale
 import os
 import sys
 import time
+from inspect import currentframe, getframeinfo
 from subprocess import PIPE, Popen
 import argcomplete
 from argcomplete import USING_PYTHON2, ensure_str, split_line
@@ -45,6 +46,17 @@ from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
     mfa_generate_code_with_secret, list_mfa_tokens
 
 SYS_ENCODING = locale.getpreferredencoding()
+
+def get_parser():
+    caller = currentframe().f_back
+    func_name = getframeinfo(caller)[2]
+    caller = caller.f_back
+    func = caller.f_locals.get(
+            func_name, caller.f_globals.get(
+                func_name
+        )
+    )
+    return argparse.ArgumentParser(description=func.__doc__)
 
 def ndt_register_complete():
     """Print out shell function and command to register ndt command completion
@@ -169,7 +181,7 @@ def list_file_to_json():
     """ Convert a file with an entry on each line to a json document with
     a single element (name as argument) containg file rows as  list.
     """
-    parser = argparse.ArgumentParser(description=list_file_to_json.__doc__)
+    parser = get_parser()
     parser.add_argument("arrayname", help="The name in the json object given" +\
                                           "to the array").completer = \
                                                             ChoicesCompleter(())
@@ -186,7 +198,7 @@ def add_deployer_server():
     """Add a server into a maven configuration file. Password is taken from the
     environment variable 'DEPLOYER_PASSWORD'
     """
-    parser = argparse.ArgumentParser(description=add_deployer_server.__doc__)
+    parser = get_parser()
     parser.add_argument("file", help="The file to modify").completer = \
                                                                 FilesCompleter()
     parser.add_argument("username",
@@ -207,7 +219,7 @@ def add_deployer_server():
 def get_userdata():
     """Get userdata defined for an instance into a file
     """
-    parser = argparse.ArgumentParser(description=get_userdata.__doc__)
+    parser = get_parser()
     parser.add_argument("file", help="File to write userdata into").completer =\
                                                                 FilesCompleter()
     argcomplete.autocomplete(parser)
@@ -225,7 +237,7 @@ def get_account_id():
     """Get current account id. Either from instance metadata or current cli
     configuration.
     """
-    parser = argparse.ArgumentParser(description=get_account_id.__doc__)
+    parser = get_parser()
     args = parser.parse_args()
     print cf_utils.resolve_account()
 
@@ -242,7 +254,7 @@ def yaml_to_json():
     """Convert Nitor CloudFormation yaml to CloudFormation json with some
     preprosessing
     """
-    parser = argparse.ArgumentParser(description=yaml_to_json.__doc__)
+    parser = get_parser()
     parser.add_argument("--colorize", "-c", help="Colorize output",
                         action="store_true")
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
@@ -260,7 +272,7 @@ def json_to_yaml():
     """Convert CloudFormation json to an approximation of a Nitor CloudFormation
     yaml with for example scripts externalized
     """
-    parser = argparse.ArgumentParser(description=json_to_yaml.__doc__)
+    parser = get_parser()
     parser.add_argument("--colorize", "-c", help="Colorize output",
                         action="store_true")
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
@@ -277,7 +289,7 @@ def json_to_yaml():
 def read_and_follow():
     """Read and print a file and keep following the end for new data
     """
-    parser = argparse.ArgumentParser(description=read_and_follow.__doc__)
+    parser = get_parser()
     parser.add_argument("file", help="File to follow").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -286,10 +298,9 @@ def read_and_follow():
     cf_utils.read_and_follow(args.file, sys.stdout.write)
 
 def logs_to_cloudwatch():
-    """Read a file and send rows to cloudwatch and keep following the end for
-    new data
+    """Read a file and send rows to cloudwatch and keep following the end for new data
     """
-    parser = argparse.ArgumentParser(description=logs_to_cloudwatch.__doc__)
+    parser = get_parser()
     parser.add_argument("file", help="File to follow").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -302,7 +313,7 @@ def signal_cf_status():
     that is either given on the command line or resolved from CloudFormation
     tags
     """
-    parser = argparse.ArgumentParser(description=signal_cf_status.__doc__)
+    parser = get_parser()
     parser.add_argument("status",
                         help="Status to indicate: SUCCESS | FAILURE").completer\
                                       = ChoicesCompleter(("SUCCESS", "FAILURE"))
@@ -317,16 +328,18 @@ def signal_cf_status():
     cf_utils.signal_status(args.status, resource_name=args.resource)
 
 def associate_eip():
-    """Associate an Elastic IP for the instance
+    """Associate an Elastic IP for the instance that this script runs on
     """
-    parser = argparse.ArgumentParser(description=associate_eip.__doc__)
+    parser = get_parser()
     parser.add_argument("-i", "--ip", help="Elastic IP to allocate - default" +\
-                                           " is to get paramEip from stack")
+                                           " is to get paramEip from the stack" +\
+                                           " that created this instance")
     parser.add_argument("-a", "--allocationid", help="Elastic IP allocation " +\
                                                      "id to allocate - " +\
                                                      "default is to get " +\
                                                      "paramEipAllocationId " +\
-                                                     "from stack")
+                                                     "from the stack " +\
+                                                     "that created this instance")
     parser.add_argument("-e", "--eipparam", help="Parameter to look up for " +\
                                                  "Elastic IP in the stack - " +\
                                                  "default is paramEip",
@@ -348,7 +361,7 @@ def associate_eip():
 def instance_id():
     """ Get id for instance
     """
-    parser = argparse.ArgumentParser(description=instance_id.__doc__)
+    parser = get_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if is_ec2():
@@ -360,14 +373,14 @@ def instance_id():
 def ec2_region():
     """ Get default region - the region of the instance if run in an EC2 instance
     """
-    parser = argparse.ArgumentParser(description=region.__doc__)
+    parser = get_parser()
     argcomplete.autocomplete(parser)
     print region()
 
 def tag():
     """ Get the value of a tag for an ec2 instance
     """
-    parser = argparse.ArgumentParser(description=tag.__doc__)
+    parser = get_parser()
     parser.add_argument("name", help="The name of the tag to get")
     args = parser.parse_args()
     argcomplete.autocomplete(parser)
@@ -384,7 +397,7 @@ def tag():
 def stack_name():
     """ Get name of the stack that created this instance
     """
-    parser = argparse.ArgumentParser(description=stack_name.__doc__)
+    parser = get_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if is_ec2():
@@ -396,7 +409,7 @@ def stack_name():
 def stack_id():
     """ Get id of the stack the creted this instance
     """
-    parser = argparse.ArgumentParser(description=stack_id.__doc__)
+    parser = get_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if is_ec2():
@@ -408,7 +421,7 @@ def stack_id():
 def logical_id():
     """ Get the logical id that is expecting a signal from this instance
     """
-    parser = argparse.ArgumentParser(description=logical_id.__doc__)
+    parser = get_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if is_ec2():
@@ -420,7 +433,7 @@ def logical_id():
 def cf_region():
     """ Get region of the stack that created this instance
     """
-    parser = argparse.ArgumentParser(description=cf_region.__doc__)
+    parser = get_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if is_ec2():
@@ -452,7 +465,7 @@ def update_stack():
 def delete_stack():
     """Create or update existing CloudFormation stack
     """
-    parser = argparse.ArgumentParser(description=delete_stack.__doc__)
+    parser = get_parser()
     parser.add_argument("stack_name", help="Name of the stack to delete")
     parser.add_argument("region", help="The region to delete the stack from")
     args = parser.parse_args()
@@ -462,7 +475,7 @@ def delete_stack():
 def tail_stack_logs():
     """Tail logs from the log group of a cloudformation stack
     """
-    parser = argparse.ArgumentParser(description=tail_stack_logs.__doc__)
+    parser = get_parser()
     parser.add_argument("stack_name", help="Name of the stack to watch logs " +\
                                            "for")
     parser.add_argument("-s", "--start", help="Start time in seconds since" +\
@@ -485,7 +498,7 @@ def tail_stack_logs():
 def resolve_include():
     """Find a file from the first of the defined include paths
     """
-    parser = argparse.ArgumentParser(description=resolve_include.__doc__)
+    parser = get_parser()
     parser.add_argument("file", help="The file to find")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -498,7 +511,7 @@ def resolve_include():
 def resolve_all_includes():
     """Find a file from the first of the defined include paths
     """
-    parser = argparse.ArgumentParser(description=resolve_include.__doc__)
+    parser = get_parser()
     parser.add_argument("pattern", help="The file pattern to find")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -514,7 +527,7 @@ def assume_role():
     to be eval'd to current context for use:
     eval $(ndt assume-role 'arn:aws:iam::43243246645:role/DeployRole')
     """
-    parser = argparse.ArgumentParser(description=assume_role.__doc__)
+    parser = get_parser()
     parser.add_argument("role_arn", help="The ARN of the role to assume")
     parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
                         help="Name of MFA token to use", required=False)
@@ -532,7 +545,7 @@ def assume_role():
 def get_parameter():
     """Get a parameter value from the stack
     """
-    parser = argparse.ArgumentParser(description=get_parameter.__doc__)
+    parser = get_parser()
     parser.add_argument("parameter", help="The name of the parameter to print")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -544,7 +557,7 @@ def volume_from_snapshot():
     path. The snapshot is identified by a tag key and value. If no tag is
     found, an empty volume is created, attached, formatted and mounted.
     """
-    parser = argparse.ArgumentParser(description=volume_from_snapshot.__doc__)
+    parser = get_parser()
     parser.add_argument("tag_key", help="Key of the tag to find volume with")
     parser.add_argument("tag_value", help="Value of the tag to find volume with")
     parser.add_argument("mount_path", help="Where to mount the volume")
@@ -568,7 +581,7 @@ def volume_from_snapshot():
 def snapshot_from_volume():
     """ Create a snapshot of a volume identified by it's mount path
     """
-    parser = argparse.ArgumentParser(description=snapshot_from_volume.__doc__)
+    parser = get_parser()
     parser.add_argument("-w", "--wait", help="Wait for the snapshot to finish" +\
                                               " before returning",
                         action="store_true")
@@ -586,7 +599,7 @@ def snapshot_from_volume():
 def detach_volume():
     """ Create a snapshot of a volume identified by it's mount path
     """
-    parser = argparse.ArgumentParser(description=snapshot_from_volume.__doc__)
+    parser = get_parser()
     parser.add_argument("mount_path", help="Where to mount the volume")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -600,7 +613,7 @@ def clean_snapshots():
     """Clean snapshots that are older than a number of days (30 by default) and
     have one of specified tag values
     """
-    parser = argparse.ArgumentParser(description=clean_snapshots.__doc__)
+    parser = get_parser()
     parser.add_argument("-r", "--region", help="The region to delete " +\
                                                "snapshots from. Can also be " +\
                                                "set with env variable " +\
@@ -623,7 +636,7 @@ def setup_cli():
     the given name and credentials. If an identically named profile exists,
     it will not be overwritten.
     """
-    parser = argparse.ArgumentParser(description=setup_cli.__doc__)
+    parser = get_parser()
     parser.add_argument("-n", "--name", help="Name for the profile to create")
     parser.add_argument("-k", "--key-id", help="Key id for the profile")
     parser.add_argument("-s", "--secret", help="Secret to set for the profile")
@@ -635,7 +648,7 @@ def setup_cli():
 def show_stack_params_and_outputs():
     """ Show stack parameters and outputs as a single json documents
     """
-    parser = argparse.ArgumentParser(description=show_stack_params_and_outputs.__doc__)
+    parser = get_parser()
     parser.add_argument("-r", "--region", help="Region for the stack to show",
                         default=region()).completer = ChoicesCompleter(regions())
     parser.add_argument("-p", "--parameter", help="Name of paremeter if only" +\
@@ -656,7 +669,7 @@ def show_stack_params_and_outputs():
 def cli_get_images():
     """ Gets a list of images given a bake job name
     """
-    parser = argparse.ArgumentParser(description=cli_get_images.__doc__)
+    parser = get_parser()
     parser.add_argument("job_name", help="The job name to look for")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -668,7 +681,7 @@ def cli_get_images():
 def cli_promote_image():
     """  Promotes an image for use in another branch
     """
-    parser = argparse.ArgumentParser(description=cli_promote_image.__doc__)
+    parser = get_parser()
     parser.add_argument("image_id", help="The image to promote")
     parser.add_argument("target_job", help="The job name to promote the image to")
     argcomplete.autocomplete(parser)
@@ -680,7 +693,7 @@ def cli_promote_image():
 def cli_share_to_another_region():
     """ Shares an image to another region for potentially another account
     """
-    parser = argparse.ArgumentParser(description=cli_share_to_another_region.__doc__)
+    parser = get_parser()
     parser.add_argument("ami_id", help="The ami to share")
     parser.add_argument("to_region", help="The region to share to").completer =\
         ChoicesCompleter(regions())
@@ -696,7 +709,7 @@ def cli_register_private_dns():
     """ Register local private IP in route53 hosted zone usually for internal
     use.
     """
-    parser = argparse.ArgumentParser(description=cli_register_private_dns.__doc__)
+    parser = get_parser()
     parser.add_argument("dns_name", help="The name to update in route 53")
     parser.add_argument("hosted_zone", help="The name of the hosted zone to update")
     argcomplete.autocomplete(parser)
@@ -707,7 +720,7 @@ def cli_interpolate_file():
     """ Replace placeholders in file with parameter values from stack and
     optionally from vault
     """
-    parser = argparse.ArgumentParser(description=cli_interpolate_file.__doc__)
+    parser = get_parser()
     parser.add_argument("-s", "--stack", help="Stack name for values. " +\
                                               "Automatically resolved on ec2" +\
                                               " instances")
@@ -729,7 +742,7 @@ def cli_interpolate_file():
 def cli_ecr_ensure_repo():
     """ Ensure that an ECR repository exists and get the uri and login token for
     it """
-    parser = argparse.ArgumentParser(description=cli_ecr_ensure_repo.__doc__)
+    parser = get_parser()
     parser.add_argument("name", help="The name of the ecr repository to verify")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -737,7 +750,7 @@ def cli_ecr_ensure_repo():
 
 def cli_ecr_repo_uri():
     """ Get the repo uri for a named docker """
-    parser = argparse.ArgumentParser(description=cli_ecr_ensure_repo.__doc__)
+    parser = get_parser()
     parser.add_argument("name", help="The name of the ecr repository")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -749,7 +762,7 @@ def cli_ecr_repo_uri():
 
 def cli_upsert_cloudfront_records():
     """ Upsert Route53 records for all aliases of a CloudFront distribution """
-    parser = argparse.ArgumentParser(description=cli_upsert_cloudfront_records.__doc__)
+    parser = get_parser()
     stack_select = parser.add_mutually_exclusive_group(required=True)
     stack_select.add_argument("-i", "--distribution_id", help="Id for the " +\
                                                               "distribution to " +\
@@ -768,7 +781,7 @@ def cli_mfa_add_token():
     """ Adds an MFA token to be used with role assumption.
         Tokens will be saved in a .ndt subdirectory in the user's home directory.
         If a token with the same name already exists, it will not be overwritten."""
-    parser = argparse.ArgumentParser(description=cli_mfa_add_token.__doc__)
+    parser = get_parser()
     parser.add_argument("token_name",
                         help="Name for the token. Use this to refer to the token later with " +\
                         "the assume-role command.")
@@ -801,7 +814,7 @@ def cli_mfa_add_token():
 def cli_mfa_delete_token():
     """ Deletes an MFA token file from the .ndt subdirectory in the user's
         home directory """
-    parser = argparse.ArgumentParser(description=cli_mfa_delete_token.__doc__)
+    parser = get_parser()
     parser.add_argument("token_name",
                         help="Name of the token to delete.").completer = \
                             ChoicesCompleter(list_mfa_tokens())
@@ -811,7 +824,7 @@ def cli_mfa_delete_token():
 
 def cli_mfa_code():
     """ Generates a TOTP code using an MFA token. """
-    parser = argparse.ArgumentParser(description=cli_mfa_code.__doc__)
+    parser = get_parser()
     parser.add_argument("token_name",
                         help="Name of the token to use.").completer = \
                             ChoicesCompleter(list_mfa_tokens())
@@ -821,7 +834,7 @@ def cli_mfa_code():
 
 def cli_create_account():
     """ Creates a subaccount. """
-    parser = argparse.ArgumentParser(description=cli_create_account.__doc__)
+    parser = get_parser()
     parser.add_argument("email", help="Email for account root")
     parser.add_argument("account_name", help="Organization unique account name")
     parser.add_argument("-d", "--deny-billing-access", action="store_true")

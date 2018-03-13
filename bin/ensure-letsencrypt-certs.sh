@@ -25,7 +25,7 @@ cleanup() {
 trap cleanup EXIT
 
 usage() {
-  echo "usage: $0 <domain-name>" >&2
+  echo "usage: ensure-letsencrypt-certs.sh <domain-name>" >&2
   echo "" >&2
   echo "Fetches a certificate with fetch-secrets.sh, and exits cleanly if certificate is found and valid." >&2
   echo "Otherwise gets a new certificate from letsencrypt via DNS verification using Route53." >&2

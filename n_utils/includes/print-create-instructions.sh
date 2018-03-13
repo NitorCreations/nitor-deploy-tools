@@ -22,6 +22,15 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
+usage() {
+  echo "usage: ndt print-create-instructions <component> <stack-name>" >&2
+  echo "" >&2
+  echo "Prints out the instructions to create and deploy the resources in a stack"
+  exit 1
+}
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
 source $(n-include autocomplete-helpers.sh)
 
 COMPONENT=$1

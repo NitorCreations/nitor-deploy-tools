@@ -3,6 +3,16 @@
 if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
+usage() {
+  echo "usage: ndt list-jobs" >&2
+  echo "" >&2
+  echo "List jobs that should be created in jenkins for the current repository. This includes all branches in the current repository."
+  exit 1
+}
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+  usage
+fi
+
 source $(n-include autocomplete-helpers.sh)
 
 buildable_branches() {

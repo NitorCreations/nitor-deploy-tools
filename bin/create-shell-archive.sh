@@ -21,7 +21,7 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: $0 [<file> ...]" >&2
+  echo "usage: create-shell-archive.sh [<file> ...]" >&2
   echo "" >&2
   echo "Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes" >&2
   exit 1
