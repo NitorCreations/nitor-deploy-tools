@@ -17,7 +17,7 @@ ASSUME_ROLE_POLICY="""{
 """
 def create_account(email, account_name, role_name="OrganizationAccountAccessRole",
                    trusted_role="TrustedAccountAccessRole"
-                   access_to_billing=True, trusted_account=None):
+                   access_to_billing=True, trusted_accounts=None):
     if access_to_billing:
         access = "ALLOW"
     else:

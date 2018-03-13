@@ -26,27 +26,29 @@ PATH_COMMANDS = [
     'bin/ssh-hostkeys-collect.sh'
 ]
 NDT_AND_CONSOLE = [
+    'n-include=n_utils.cli:resolve_include',
+    'n-include-all=n_utils.cli:resolve_all_includes',
+    'cf-logs-to-cloudwatch=n_utils.cli:logs_to_cloudwatch',
+    'associate-eip=n_utils.cli:associate_eip',
+    'signal-cf-status=n_utils.cli:signal_cf_status',
+    'ec2-associate-eip=n_utils.cli:associate_eip'
+]
+NDT_ONLY = [
     'assume-role=n_utils.cli:assume_role',
     'list-file-to-json=n_utils.cli:list_file_to_json',
     'add-deployer-server=n_utils.cli:add_deployer_server',
     'yaml-to-json=n_utils.cli:yaml_to_json',
     'json-to-yaml=n_utils.cli:json_to_yaml',
     'pytail=n_utils.cli:read_and_follow',
-    'n-include=n_utils.cli:resolve_include',
-    'n-include-all=n_utils.cli:resolve_all_includes',
     'account-id=n_utils.cli:get_account_id',
     'cf-follow-logs=n_utils.cli:tail_stack_logs',
     'cf-logical-id=n_utils.cli:logical_id',
     'logs-to-cloudwatch=n_utils.cli:logs_to_cloudwatch',
-    'cf-logs-to-cloudwatch=n_utils.cli:logs_to_cloudwatch',
     'cf-region=n_utils.cli:cf_region',
-    'signal-cf-status=n_utils.cli:signal_cf_status',
     'cf-get-parameter=n_utils.cli:get_parameter',
     'cf-signal-status=n_utils.cli:signal_cf_status',
     'cf-stack-name=n_utils.cli:stack_name',
     'cf-stack-id=n_utils.cli:stack_id',
-    'associate-eip=n_utils.cli:associate_eip',
-    'ec2-associate-eip=n_utils.cli:associate_eip',
     'ec2-clean-snapshots=n_utils.cli:clean_snapshots',
     'ec2-instance-id=n_utils.cli:instance_id',
     'ec2-region=n_utils.cli:ec2_region',
@@ -55,9 +57,7 @@ NDT_AND_CONSOLE = [
     'detach-volume=n_utils.cli:detach_volume',
     'mfa-add-token=n_utils.cli:cli_mfa_add_token',
     'mfa-delete-token=n_utils.cli:cli_mfa_delete_token',
-    'mfa-code=n_utils.cli:cli_mfa_code'
-]
-NDT_ONLY = [
+    'mfa-code=n_utils.cli:cli_mfa_code',
     'cf-delete-stack=n_utils.cli:delete_stack',
     'setup-cli=n_utils.cli:setup_cli',
     'volume-from-snapshot=n_utils.cli:volume_from_snapshot',

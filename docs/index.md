@@ -90,30 +90,6 @@ optional arguments:
               this id is added and another with \'-release\' appended
 ```
 
-### `ndt associate-eip`
-
-```bash
-usage: ndt associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
-                         [-p ALLOCATIONIDPARAM]
-
-Associate an Elastic IP for the instance that this script runs on
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
-                        from the stack that created this instance
-  -a ALLOCATIONID, --allocationid ALLOCATIONID
-                        Elastic IP allocation id to allocate - default is to
-                        get paramEipAllocationId from the stack that created
-                        this instance
-  -e EIPPARAM, --eipparam EIPPARAM
-                        Parameter to look up for Elastic IP in the stack -
-                        default is paramEip
-  -p ALLOCATIONIDPARAM, --allocationidparam ALLOCATIONIDPARAM
-                        Parameter to look up for Elastic IP Allocation ID in
-                        the stack - default is paramEipAllocationId
-```
-
 ### `ndt assume-role`
 
 ```bash
@@ -222,22 +198,6 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt cf-logs-to-cloudwatch`
-
-```bash
-usage: ndt cf-logs-to-cloudwatch [-h] file
-
-Read a file and send rows to cloudwatch and keep following the end for new
-data. The log group will be the stack name that created instance and the
-logstream will be the instance id and filename.
-
-positional arguments:
-  file        File to follow
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
 ### `ndt cf-region`
 
 ```bash
@@ -336,30 +296,6 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
-```
-
-### `ndt ec2-associate-eip`
-
-```bash
-usage: ndt ec2-associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
-                             [-p ALLOCATIONIDPARAM]
-
-Associate an Elastic IP for the instance that this script runs on
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
-                        from the stack that created this instance
-  -a ALLOCATIONID, --allocationid ALLOCATIONID
-                        Elastic IP allocation id to allocate - default is to
-                        get paramEipAllocationId from the stack that created
-                        this instance
-  -e EIPPARAM, --eipparam EIPPARAM
-                        Parameter to look up for Elastic IP in the stack -
-                        default is paramEip
-  -p ALLOCATIONIDPARAM, --allocationidparam ALLOCATIONIDPARAM
-                        Parameter to look up for Elastic IP Allocation ID in
-                        the stack - default is paramEipAllocationId
 ```
 
 ### `ndt ec2-clean-snapshots`
@@ -628,34 +564,6 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt n-include`
-
-```bash
-usage: ndt n-include [-h] file
-
-Find a file from the first of the defined include paths
-
-positional arguments:
-  file        The file to find
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
-### `ndt n-include-all`
-
-```bash
-usage: ndt n-include-all [-h] pattern
-
-Find a file from the first of the defined include paths
-
-positional arguments:
-  pattern     The file pattern to find
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
 ### `ndt print-create-instructions`
 
 ```bash
@@ -775,24 +683,6 @@ optional arguments:
                         Name of paremeter if only one parameter required
 ```
 
-### `ndt signal-cf-status`
-
-```bash
-usage: ndt signal-cf-status [-h] [-r RESOURCE] status
-
-Signal CloudFormation status to a logical resource in CloudFormation that is
-either given on the command line or resolved from CloudFormation tags
-
-positional arguments:
-  status                Status to indicate: SUCCESS | FAILURE
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -r RESOURCE, --resource RESOURCE
-                        Logical resource name to signal. Looked up from
-                        cloudformation tags by default
-```
-
 ### `ndt snapshot-from-volume`
 
 ```bash
@@ -868,6 +758,101 @@ positional arguments:
 optional arguments:
   -h, --help      show this help message and exit
   --colorize, -c  Colorize output
+```
+
+### `[ndt ]associate-eip`
+
+```bash
+usage: associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
+                     [-p ALLOCATIONIDPARAM]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
+                        from the stack that created this instance
+  -a ALLOCATIONID, --allocationid ALLOCATIONID
+                        Elastic IP allocation id to allocate - default is to
+                        get paramEipAllocationId from the stack that created
+                        this instance
+  -e EIPPARAM, --eipparam EIPPARAM
+                        Parameter to look up for Elastic IP in the stack -
+                        default is paramEip
+  -p ALLOCATIONIDPARAM, --allocationidparam ALLOCATIONIDPARAM
+                        Parameter to look up for Elastic IP Allocation ID in
+                        the stack - default is paramEipAllocationId
+```
+
+### `[ndt ]cf-logs-to-cloudwatch`
+
+```bash
+usage: cf-logs-to-cloudwatch [-h] file
+
+positional arguments:
+  file        File to follow
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+### `[ndt ]ec2-associate-eip`
+
+```bash
+usage: ec2-associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
+                         [-p ALLOCATIONIDPARAM]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
+                        from the stack that created this instance
+  -a ALLOCATIONID, --allocationid ALLOCATIONID
+                        Elastic IP allocation id to allocate - default is to
+                        get paramEipAllocationId from the stack that created
+                        this instance
+  -e EIPPARAM, --eipparam EIPPARAM
+                        Parameter to look up for Elastic IP in the stack -
+                        default is paramEip
+  -p ALLOCATIONIDPARAM, --allocationidparam ALLOCATIONIDPARAM
+                        Parameter to look up for Elastic IP Allocation ID in
+                        the stack - default is paramEipAllocationId
+```
+
+### `[ndt ]n-include`
+
+```bash
+usage: n-include [-h] file
+
+positional arguments:
+  file        The file to find
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+### `[ndt ]n-include-all`
+
+```bash
+usage: n-include-all [-h] pattern
+
+positional arguments:
+  pattern     The file pattern to find
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+### `[ndt ]signal-cf-status`
+
+```bash
+usage: signal-cf-status [-h] [-r RESOURCE] status
+
+positional arguments:
+  status                Status to indicate: SUCCESS | FAILURE
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r RESOURCE, --resource RESOURCE
+                        Logical resource name to signal. Looked up from
+                        cloudformation tags by default
 ```
 
 ### `create-shell-archive.sh`
