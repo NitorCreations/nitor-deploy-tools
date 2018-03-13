@@ -135,20 +135,35 @@ optional arguments:
 ### `ndt bake-docker`
 
 ```bash
-usage: ndt bake-docker <component> <docker-name>
+usage: ndt bake-docker [-h] component docker-name
 
 Runs a docker build, ensures that an ecr repository with the docker name
 (by default <component>/<branch>-<docker-name>) exists and pushes the built
 image to that repository with the tags "latest" and "$BUILD_NUMBER"
+
+positional arguments:
+  component   the component directory where the docker directory is
+  docker-name the name of the docker directory that has the Dockerfile
+              For example for ecs-cluster/docker-cluster/Dockerfile
+              you would give cluster
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt bake-image`
 
 ```bash
-usage: ndt bake-images <component>
+usage: ndt bake-image [-h] component
 
 Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and
 tags the image with the job name and build number.
+
+positional arguments
+  component   the component directory where the ami bake configurations are
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt cf-delete-stack`
@@ -292,9 +307,21 @@ optional arguments:
 ### `ndt deploy-stack`
 
 ```bash
-usage: ndt deploy-stack <component> <stack-name> <ami-id or empty string> <bake job name for searching ami-id>
+ami that is tagged with the bake-job name
+usage: ndt deploy-stack [-d] [-h] component stack-name ami-id bake-job
 
 Resolves potential ECR urls and AMI Ids and then deploys the given stack either updating or creating it.
+positional arguments:
+  component   the component directory where the stack template is
+  stack-name  the name of the stack directory inside the component directory
+              For example for ecs-cluster/stack-cluster/template.yaml
+              you would give cluster
+  ami-id      If you want to specify a value for the paramAmi variable in the stack,
+              you can do so. Otherwise give an empty string with two quotation marks
+  bake-job    If an ami-id is not given, the ami id is resolved by getting the latest
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt detach-volume`
@@ -624,12 +651,6 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt n-utils-init`
-
-```bash
-
-```
-
 ### `ndt print-create-instructions`
 
 ```bash
@@ -787,9 +808,19 @@ optional arguments:
 ### `ndt undeploy-stack`
 
 ```bash
-usage: /usr/local/bin/undeploy-stack.sh [-f] <component> <stack-name>
+usage: ndt undeploy-stack [-h] [-f] <component> <stack-name>
 
-Undeploys (deletes) the given stack. Found s3 buckets are emptied and deleted only in case the -f argument is given.
+Undeploys (deletes) the given stack.
+Found s3 buckets are emptied and deleted only in case the -f argument is given.
+
+positional arguments:
+  component   the component directory where the stack template is
+  stack-name  the name of the stack directory inside the component directory
+              For example for ecs-cluster/stack-cluster/template.yaml
+              you would give cluster
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt upsert-cloudfront-records`
