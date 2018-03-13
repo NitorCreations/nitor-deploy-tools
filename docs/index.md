@@ -837,68 +837,126 @@ optional arguments:
 ### `create-shell-archive.sh`
 
 ```bash
-usage: /usr/local/bin/create-shell-archive.sh [<file> ...]
+file  one or more files to package into the archive
+usage: create-shell-archive.sh [-h] [<file> ...]
 
 Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes
+positional arguments:
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `encrypt-and-mount.sh`
 
 ```bash
 Mounts a local block device as an encrypted volume. Handy for things like local database installs.
-usage: /usr/local/bin/encrypt-and-mount.sh blk-device mount-path
+usage: encrypt-and-mount.sh [-h] blk-device mount-path
+
+
+positional arguments
+  blk-device  the block device you want to encrypt and mount
+  mount-path  the mount point for the encrypted volume
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ensure-letsencrypt-certs.sh`
 
 ```bash
-usage: /usr/local/bin/ensure-letsencrypt-certs.sh <domain-name>
+usage: ensure-letsencrypt-certs.sh [-h] domain-name [domain-name ...]
 
 Fetches a certificate with fetch-secrets.sh, and exits cleanly if certificate is found and valid.
 Otherwise gets a new certificate from letsencrypt via DNS verification using Route53.
 Requires that fetch-secrets.sh and Route53 are set up correctly.
+
+positional arguments
+  domain-name   The domain(s) you want to check certificates for
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `lastpass-fetch-notes.sh`
 
 ```bash
-usage: /usr/local/bin/lastpass-fetch-notes.sh <mode> [<file> ...] [--optional <file> ...]
+--optional  marks that following files will not fail and exit the script in they do not exist
+usage: lasptass-fetch-notes.sh [-h] mode file [file ...] [--optional file ...]
 
 Fetches secure notes from lastpass that match the basename of each listed file.
 Files specified after --optional won\'t fail if the file does not exist.
+
+positional arguments
+  mode   the file mode for the downloaded files
+  file   the file(s) to download. The source will be the note that matches the basename of the file
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `lpssh`
 
 ```bash
-usage: lpssh [-k key-name] user@example.com
+usage: lpssh [-h] [-k key-name] user@example.com
 
 Fetches key mappings from lastpass, downloads mapped keys into a local ssh-agent and starts
 an ssh session using those credentials.
+
+positional arguments
+  user@example.com   The user and host to match in "my-ssh-mappings" secure note
+                     and to log into once keys are set up.
+
+optional arguments:
+  -k,         key name in lastpass to use if you don\'t want to use a mapping
+  -h, --help  show this help message and exit
 ```
 
 ### `setup-fetch-secrets.sh`
 
 ```bash
-usage: setup-fetch-secrets.sh <lpass|s3|vault>
+Please run as root
+usage: setup-fetch-secrets.sh [-h] <lpass|s3|vault>
 
 Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault
+
+positional arguments
+  lpass|s3|vault   the selected secrets backend.
+
+optional arguments:
+  -h, --help  show this help message and exit exit 1
 ```
 
 ### `source_infra_properties.sh`
 
 ```bash
-usage: /usr/local/bin/source_infra_properties.sh <component> [<stack-or-docker-name>]
+usage: source source_infra_properties.sh component [stack-or-docker-name]
 
-Merges the properties of a component, stack and image from the relevant infra.properties and infra-<branch>.properties files.
-This script is meant to be sourced to get the parameters into environment variables.
+Merges the properties of a component, stack and image from the relevant infra.properties
+and infra-<branch>.properties files. This script is meant to be sourced to get the
+parameters into environment variables.
+
+positional arguments
+  component             the component directory to look for additional properties files
+  stack-or-docker-name  the stack or docker directory to look for more properties files
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ssh-hostkeys-collect.sh`
 
 ```bash
-usage: /usr/local/bin/ssh-hostkeys-collect.sh hostname
+usage: ssh-hostkeys-collect.sh [-h] hostname
 
-Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containin ssh host keys to preserve the identity of a server over image upgrades.
+Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containing
+ssh host keys to preserve the identity of a server over image upgrades.
+
+positional arguments
+  hostname   the name of the host used to store the keys. Typically the hostname is what
+             instance userdata scripts will use to look for the keys
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
