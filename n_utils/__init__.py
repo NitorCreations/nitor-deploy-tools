@@ -25,12 +25,6 @@ PATH_COMMANDS = [
     'bin/source_infra_properties.sh',
     'bin/ssh-hostkeys-collect.sh'
 ]
-SCRIPTS = [
-    'bin/bake-docker.sh',
-    'bin/bake-image.sh',
-    'bin/deploy-stack.sh',
-    'bin/undeploy-stack.sh'
-]
 NDT_AND_CONSOLE = [
     'assume-role=n_utils.cli:assume_role',
     'list-file-to-json=n_utils.cli:list_file_to_json',
@@ -38,7 +32,6 @@ NDT_AND_CONSOLE = [
     'yaml-to-json=n_utils.cli:yaml_to_json',
     'json-to-yaml=n_utils.cli:json_to_yaml',
     'pytail=n_utils.cli:read_and_follow',
-    'n-utils-init=n_utils.cf_utils:init',
     'n-include=n_utils.cli:resolve_include',
     'n-include-all=n_utils.cli:resolve_all_includes',
     'account-id=n_utils.cli:get_account_id',
@@ -82,6 +75,10 @@ NDT_ONLY = [
     'latest-snapshot=n_utils.volumes:latest_snapshot'
 ]
 NDT_ONLY_SCRIPT = [
+    'bake-docker.sh',
+    'bake-image.sh',
+    'deploy-stack.sh',
+    'undeploy-stack.sh',
     'list-jobs.sh',
     'print-create-instructions.sh'
 ]
@@ -92,13 +89,6 @@ CONSOLE_ONLY = [
 ]
 CONSOLESCRIPTS = CONSOLE_ONLY + NDT_AND_CONSOLE
 COMMAND_MAPPINGS = {}
-for script in SCRIPTS:
-    name = script.split("/")[-1]
-    value = "script"
-    if name.endswith(".sh"):
-        name = name[:-3]
-        value = "shell"
-    COMMAND_MAPPINGS[name] = value
 for script in NDT_ONLY_SCRIPT:
     name = script
     value = "ndtscript"
