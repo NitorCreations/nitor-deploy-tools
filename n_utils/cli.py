@@ -377,6 +377,7 @@ def ec2_region():
     """
     parser = get_parser()
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
     print region()
 
 def tag():

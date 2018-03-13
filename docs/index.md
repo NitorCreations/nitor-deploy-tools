@@ -425,7 +425,12 @@ optional arguments:
 ### `ndt ec2-region`
 
 ```bash
-eu-west-1
+usage: ndt ec2-region [-h]
+
+Get default region - the region of the instance if run in an EC2 instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt ecr-ensure-repo`
