@@ -629,17 +629,17 @@ class Route53(ContextClassBase):
         common_yaml = {
             "paramHostedZoneName": {
                 "Type": "String",
-                "Descrition": "Name of hosted zone to use",
+                "Description": "Name of hosted zone to use",
                 "Default": self.hosted_zone['Name']
             },
             "paramHostedZoneDomain": {
                 "Type": "String",
-                "Descrition": "Name of hosted zone to use",
+                "Description": "Name of hosted zone to use",
                 "Default": self.hosted_zone['Name'][:-1]
             },
             "paramHostedZoneId":  {
                 "Type": "String",
-                "Descrition": "Id of hosted zone to use",
+                "Description": "Id of hosted zone to use",
                 "Default": self.hosted_zone['Id'].split("/")[-1:][0]
             }
         }
