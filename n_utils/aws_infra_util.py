@@ -560,7 +560,7 @@ def extract_script(prefix, path, join_args):
     var_decls = collections.OrderedDict()
     code_idx = 0
     for element in join_args:
-        if isinstance(element) is collections.OrderedDict:
+        if isinstance(element, collections.OrderedDict):
             if not 'Ref' in element:
                 print "Dict with no ref"
                 json_save(element)
