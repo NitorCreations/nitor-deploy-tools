@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: NDT Manage account policy
+Parameters:
+  paramManagedAccount:
+    Description: Account to manage
+    Type: String
+  paramManageRole:
+    Description: Role to assume in the target account
+    Type: String
+Resources:
+  AllowManagePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: AllowAssumeManageRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: assmeManageRole
+          Effect: Allow
+          Action:
+            - 'sts:AssumeRole'
+          Resource: 
+            - "arn:aws:iam::${paramManagedAccount}:role/${paramManageRole}"
+Outputs:
+  ManagePolicy:
+    Value: !Ref AllowManagePolicy
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, ManagePolicy]]

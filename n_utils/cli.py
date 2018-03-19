@@ -536,10 +536,7 @@ def assume_role():
                         help="Name of MFA token to use", required=False)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    if not args.mfa_token:
-        creds = cf_utils.assume_role(args.role_arn)
-    else:
-        creds = cf_utils.assume_role_mfa(args.role_arn, args.mfa_token)
+    creds = cf_utils.assume_role_mfa(args.role_arn, mfa_token_name=args.mfa_token)
     print "AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\""
     print "AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\""
     print "AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\""

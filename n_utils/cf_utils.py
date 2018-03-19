@@ -378,20 +378,18 @@ def id_generator(size=10, chars=string.ascii_uppercase + string.digits + \
                  string.ascii_lowercase):
     return ''.join(random.choice(chars) for _ in range(size))
 
-def assume_role(role_arn):
+def assume_role(role_arn, mfa_token_name=None):
     sts = boto3.client("sts")
-    response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" + \
+    if mfa_token_name:
+        token = mfa_read_token(mfa_token_name)
+        code = mfa_generate_code(mfa_token_name)
+        response = sts.assume_role(RoleArn=role_arn,
+                                RoleSessionName="n-sess-" + id_generator(),
+                                SerialNumber=token['token_arn'],
+                                TokenCode=code)
+    else:
+        response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" + \
                                id_generator())
-    return response['Credentials']
-
-def assume_role_mfa(role_arn, mfa_token_name):
-    token = mfa_read_token(mfa_token_name)
-    code = mfa_generate_code(mfa_token_name)
-    sts = boto3.client("sts")
-    response = sts.assume_role(RoleArn=role_arn,
-                               RoleSessionName="n-sess-" + id_generator(),
-                               SerialNumber=token['token_arn'],
-                               TokenCode=code)
     return response['Credentials']
 
 def resolve_account():

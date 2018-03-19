@@ -1,28 +1,28 @@
 from __future__ import print_function
+import os
 import boto3
 from time import time, sleep
+import cf_utils
+import cf_deploy
+import aws_infra_util
 
-ASSUME_ROLE_POLICY="""{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::%(account_id)s:root"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-"""
 def create_account(email, account_name, role_name="OrganizationAccountAccessRole",
-                   trusted_role="TrustedAccountAccessRole"
-                   access_to_billing=True, trusted_accounts=None):
+                   trusted_role="TrustedAccountAccessRole",
+                   access_to_billing=True, trusted_accounts=None, mfa_token=None):
     if access_to_billing:
         access = "ALLOW"
     else:
         access = "DENY"
     timeout = 300
+
+    if trusted_accounts:
+        trusted_roles = {}
+        for trusted_account in trusted_accounts:
+            role_arn = find_role_arn(trusted_account)
+            if not role_arn:
+                raise Exception("Failed to resolve trusted account " + trusted_account)
+            trusted_roles[trusted_account] = role_arn
+
     client = boto3.client('organizations')
     response = client.create_account(Email=email, AccountName=account_name,
                                      RoleName=role_name, IamUserAccessToBilling=access)
@@ -34,25 +34,50 @@ def create_account(email, account_name, role_name="OrganizationAccountAccessRole
             if response['CreateAccountStatus']['State'] == "FAILED":
                 raise Exception("Account creation failed: " + response['CreateAccountStatus']['FailureReason'])
             print ("Waiting for account creation to finish")
-            sleep(3)
+            sleep(2)
             response = client.describe_create_account_status(CreateAccountRequestId=create_account_id)
             status = response['CreateAccountStatus']['State']
         if time() - startTime > timeout and not status == "SUCCEEDED":
             raise Exception("Timed out waiting to create account " + response['CreateAccountStatus']['State'])
         account_id = response['CreateAccountStatus']['AccountId']
-    if trusted_account:
-        add_managed_policy_to_manage(account_id)
-        attach_managed_policy_to_manage(account_id)
-        assume_role(role_name)
-        client = boto3.client("iam")
-        response = client.create_role(RoleName=trusted_role,
-                                      AssumeRolePolicyDocument=ASSUME_ROLE_POLICY % {account_id=trusted_account}
-                                      Description="Admin role for account "+ trusted_account)
-        client.put_role_policy("*/*")
-        assume_role(trusted_account)
-        add_managed_policy_to_manage(account_id)
-        
 
-def add_managed_policy_to_manage(target_account):
-    ## Todo
-    return
+    os.environ['paramManagedAccount'] = account_id
+    os.environ['paramRoleName'] = trusted_role
+    template = aws_infra_util.find_include("manage-account.yaml")
+    cf_deploy.deploy("managed-account-" + account_name + "-" + account_id, template, cf_utils.region())        
+
+    if trusted_accounts:
+        role_arn = "arn:aws:iam::" + account_id + ":role/" + role_name
+        assumed_creds = cf_utils.assume_role(role_arn, mfa_token_name=mfa_token)
+        os.environ["AWS_ACCESS_KEY_ID"] = assumed_creds['AccessKeyId']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = assumed_creds['SecretAccessKey']
+        os.environ["AWS_SESSION_TOKEN"] = assumed_creds['SessionToken']
+        for trusted_account in trusted_accounts:
+            os.environ['paramTrustedAccount'] = trusted_roles[trusted_account].split(":")[4]
+            os.environ['paramRoleName'] = trusted_role
+            template = aws_infra_util.find_include("trusted-account-role.yaml")
+            cf_deploy.deploy("trust-" + trusted_account, template, cf_utils.region())        
+        template = aws_infra_util.find_include("manage-account.yaml")
+        for trusted_account in trusted_accounts:
+            del os.environ["AWS_ACCESS_KEY_ID"]
+            del os.environ["AWS_SECRET_ACCESS_KEY"]
+            del os.environ["AWS_SESSION_TOKEN"]
+            role_arn = trusted_roles[trusted_account]
+            assumed_creds = cf_utils.assume_role(role_arn, mfa_token_name=mfa_token)
+            os.environ["AWS_ACCESS_KEY_ID"] = assumed_creds['AccessKeyId']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = assumed_creds['SecretAccessKey']
+            os.environ["AWS_SESSION_TOKEN"] = assumed_creds['SessionToken']
+            os.environ['paramManagedAccount'] = account_id
+            os.environ['paramRoleName'] = trusted_role
+            cf_deploy.deploy("managed-account-" + account_name + "-" + account_id, template, cf_utils.region())        
+
+def find_role_arn(trusted_account):
+    cf_stacks = boto3.client("cloudformation").get_paginator('describe_stacks')
+    for page in cf_stacks.paginate():
+        for stack in page["Stacks"]:
+            if stack["StackName"].endswith(trusted_account) or \
+               "-" + trusted_account + "-" in stack["StackName"]: 
+                    for output in stack["Outputs"]:
+                        if output["OutputKey"] == "ManagePolicy":
+                            return output["OutputValue"]
+    return None
