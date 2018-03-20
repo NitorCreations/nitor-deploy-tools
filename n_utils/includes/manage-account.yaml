@@ -4,26 +4,34 @@ Parameters:
   paramManagedAccount:
     Description: Account to manage
     Type: String
+    Default: ""
   paramManageRole:
     Description: Role to assume in the target account
     Type: String
+    Default: ""
 Resources:
   AllowManagePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: AllowAssumeManageRole
+      ManagedPolicyName: 
+        !Sub "AllowAssumeManageRoleFor${paramManagedAccount}"
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Sid: assmeManageRole
+        - Sid: assumeManageRole
           Effect: Allow
           Action:
             - 'sts:AssumeRole'
           Resource: 
-            - "arn:aws:iam::${paramManagedAccount}:role/${paramManageRole}"
+            - !Sub "arn:aws:iam::${paramManagedAccount}:role/${paramManageRole}"
 Outputs:
   ManagePolicy:
     Value: !Ref AllowManagePolicy
     Export:
       Name:
         Fn::Join: [":", [{Ref: "AWS::StackName"}, ManagePolicy]]
+  ManageRole:
+    Value: !Sub "arn:aws:iam::${paramManagedAccount}:role/${paramManageRole}"
+    Export:
+      Name:
+        Fn::Join: [":", [{Ref: "AWS::StackName"}, ManageRole]]

@@ -34,6 +34,7 @@ from . import aws_infra_util
 from .cf_utils import get_images
 from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
 
+REDIRECTED = False
 def log_data(data, output_format="yaml"):
     if output_format == "yaml":
         formatted = aws_infra_util.yaml_save(data)
@@ -50,8 +51,11 @@ def log(message):
     sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " " \
         + message + os.linesep).encode(locale.getpreferredencoding()))
 
-def update_stack(stack_name, template, params, dry_run=False):
-    clf = boto3.client('cloudformation')
+def update_stack(stack_name, template, params, dry_run=False, session=None):
+    if session:
+        clf = session.client('cloudformation')
+    else:
+        clf = boto3.client('cloudformation')
     chset_name = stack_name + "-" + time.strftime("%Y%m%d%H%M%S",
                                                   time.gmtime())
     params = get_template_arguments(stack_name, template, params)
@@ -79,14 +83,20 @@ def update_stack(stack_name, template, params, dry_run=False):
             clf.delete_change_set(ChangeSetName=chset_id)
     return
 
-def create_stack(stack_name, template, params):
-    clf = boto3.client('cloudformation')
+def create_stack(stack_name, template, params, session=None):
+    if session:
+        clf = session.client('cloudformation')
+    else:
+        clf = boto3.client('cloudformation')
     params = get_template_arguments(stack_name, template, params)
     clf.create_stack(**params)
     return
 
-def get_stack_operation(stack_name):
-    clf = boto3.client('cloudformation')
+def get_stack_operation(stack_name, session=None):
+    if session:
+        clf = session.client('cloudformation')
+    else:
+        clf = boto3.client('cloudformation')
     stack_oper = "create_stack"
     try:
         stack_data = clf.describe_stacks(StackName=stack_name)
@@ -102,13 +112,16 @@ def get_stack_operation(stack_name):
             raise
     return globals()[stack_oper]
 
-def get_end_status(stack_name):
+def get_end_status(stack_name, session=None):
     logs = CloudWatchLogs(log_group_name=stack_name)
     logs.start()
     cf_events = CloudFormationEvents(log_group_name=stack_name)
     cf_events.start()
     log("Waiting for stack operation to complete:")
-    clf = boto3.client('cloudformation')
+    if session:
+        clf = session.client('cloudformation')
+    else:
+        clf = boto3.client('cloudformation')
     status = "_IN_PROGRESS"
     while True:
         stack_info = clf.describe_stacks(StackName=stack_name)
@@ -125,18 +138,21 @@ def get_end_status(stack_name):
         time.sleep(5)
     return status
 
-def create_or_update_stack(stack_name, json_small, params_doc):
-    stack_func = get_stack_operation(stack_name)
-    stack_func(stack_name, json_small, params_doc)
-    return get_end_status(stack_name)
+def create_or_update_stack(stack_name, json_small, params_doc, session=None):
+    stack_func = get_stack_operation(stack_name, session=session)
+    stack_func(stack_name, json_small, params_doc, session=session)
+    return get_end_status(stack_name, session=session)
 
 
-def get_template_arguments(stack_name, template, params):
+def get_template_arguments(stack_name, template, params, session=None):
     params = { "StackName": stack_name,
         "Parameters": params, "Capabilities": ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]}
     if 'CF_BUCKET' in os.environ and os.environ['CF_BUCKET']:
         bucket = os.environ['CF_BUCKET']
-        s3cli = boto3.client('s3')
+        if session:
+            s3cli = session.client('s3')
+        else:
+            s3cli = boto3.client('s3')
         template_hash = hashlib.md5()
         template_hash.update(template)
         template_hash.update(aws_infra_util.json_save_small(params))
@@ -147,10 +163,13 @@ def get_template_arguments(stack_name, template, params):
         params["TemplateBody"] = template
     return params
 
-def delete(stack_name, regn):
+def delete(stack_name, regn, session=None):
     os.environ['AWS_DEFAULT_REGION'] = regn
     log("**** Deleting stack '" + stack_name + "'")
-    clf = boto3.client('cloudformation')
+    if session:
+        clf = session.client('cloudformation')
+    else:
+        clf = boto3.client('cloudformation')
     cf_events = CloudFormationEvents(log_group_name=stack_name)
     cf_events.start()
     clf.delete_stack(StackName=stack_name)
@@ -171,7 +190,7 @@ def delete(stack_name, regn):
             else:
                 raise
 
-def resolve_ami(template_doc):
+def resolve_ami(template_doc, session=None):
     ami_id = ""
     ami_name = ""
     ami_created = ""
@@ -192,7 +211,10 @@ def resolve_ami(template_doc):
     elif ami_id and 'Parameters' in template_doc and \
         'paramAmi'in template_doc['Parameters']:
         log("Looking for ami metadata with id " + ami_id)
-        ec2 = boto3.client('ec2')
+        if session:
+            ec2 = session.client('ec2')
+        else:
+            ec2 = boto3.client('ec2')
         ami_meta = ec2.describe_images(ImageIds=[ami_id])
         log("Result: " + aws_infra_util.json_save(ami_meta))
         image = ami_meta['Images'][0]
@@ -200,13 +222,16 @@ def resolve_ami(template_doc):
         ami_created = image['CreationDate']
     return ami_id, ami_name, ami_created
 
-def deploy(stack_name, yaml_template, regn, dry_run=False):
+def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     os.environ['AWS_DEFAULT_REGION'] = regn
     os.environ['REGION'] = regn
-    # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    global REDIRECTED
+    if not REDIRECTED:
+        # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
+        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        REDIRECTED = True
     template_doc = aws_infra_util.yaml_to_dict(yaml_template)
-    ami_id, ami_name, ami_created = resolve_ami(template_doc)
+    ami_id, ami_name, ami_created = resolve_ami(template_doc, session=session)
 
     log("**** Deploying stack '" + stack_name + "' with template '" + \
           yaml_template + "' and ami_id '" + str(ami_id) + "'")
@@ -252,9 +277,9 @@ def deploy(stack_name, yaml_template, regn, dry_run=False):
             log("Parameter " + key + ": using default value " + str(val))
 
     if not dry_run:
-        status = create_or_update_stack(stack_name, json_small, params_doc)
+        status = create_or_update_stack(stack_name, json_small, params_doc, session=session)
         if not (status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE"):
             sys.exit("Stack operation failed: end state " + status)
     elif get_stack_operation(stack_name).__name__ == "update_stack":
-        update_stack(stack_name, json_small, params_doc, dry_run=True)
+        update_stack(stack_name, json_small, params_doc, dry_run=True, session=session)
     log("Done!")

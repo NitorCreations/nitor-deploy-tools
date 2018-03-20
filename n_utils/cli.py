@@ -846,7 +846,7 @@ def cli_create_account():
                                                           "access from parent account",
                         default="TrustedAccountAccessRole")
     parser.add_argument("-a", "--trusted-accounts", nargs="*",
-                        help="Account to trust with user management").completer(ChoicesCompleter(list_created_accounts()))
+                        help="Account to trust with user management").completer = ChoicesCompleter(list_created_accounts())
     parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
                         help="Name of MFA token to use", required=False)
     argcomplete.autocomplete(parser)
