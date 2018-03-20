@@ -72,7 +72,8 @@ NDT_ONLY = [
     'ecr-repo-uri=n_utils.cli:cli_ecr_repo_uri',
     'upsert-cloudfront-records=n_utils.cli:cli_upsert_cloudfront_records',
     'create-stack=n_utils.cf_bootstrap:create_stack',
-    'latest-snapshot=n_utils.volumes:latest_snapshot'
+    'latest-snapshot=n_utils.volumes:latest_snapshot',
+    'create-account=n_utils.cli:cli_create_account'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',

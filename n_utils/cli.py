@@ -44,7 +44,7 @@ from .log_events import CloudWatchLogs, CloudFormationEvents
 from .maven_utils import add_server
 from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
     mfa_generate_code_with_secret, list_mfa_tokens
-
+from .account_utils import list_created_accounts, create_account
 SYS_ENCODING = locale.getpreferredencoding()
 
 def get_parser():
@@ -536,7 +536,7 @@ def assume_role():
                         help="Name of MFA token to use", required=False)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    creds = cf_utils.assume_role_mfa(args.role_arn, mfa_token_name=args.mfa_token)
+    creds = cf_utils.assume_role(args.role_arn, mfa_token_name=args.mfa_token)
     print "AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\""
     print "AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\""
     print "AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\""
@@ -838,10 +838,20 @@ def cli_create_account():
     parser.add_argument("email", help="Email for account root")
     parser.add_argument("account_name", help="Organization unique account name")
     parser.add_argument("-d", "--deny-billing-access", action="store_true")
-    parser.add_argument("-o", "--organization-role-name", help="Role name for admin access from parent account",
-            default="OrganizationAccountAccessRole")
-    parser.add_argument("-r", "--trusted-role-name", help="Role name for admin access from parent account",
-            default="TrustedAccountAccessRole")
-    parser.add_argument("-t", "--trusted-account", help="Role name for admin access from parent account")
+    parser.add_argument("-o", "--organization-role-name", help="Role name for " +\
+                                                               "admin access from" +\
+                                                               " parent account",
+                        default="OrganizationAccountAccessRole")
+    parser.add_argument("-r", "--trust-role-name", help="Role name for admin " +\
+                                                          "access from parent account",
+                        default="TrustedAccountAccessRole")
+    parser.add_argument("-a", "--trusted-accounts", nargs="*",
+                        help="Account to trust with user management").completer(ChoicesCompleter(list_created_accounts()))
+    parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
+                        help="Name of MFA token to use", required=False)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
+    create_account(args.email, args.account_name, role_name=args.organization_role_name,
+                    trust_role=args.trust_role_name, access_to_billing=not args.deny_billing_access,
+                    trusted_accounts=args.trusted_accounts, mfa_token=args.mfa_token)
+

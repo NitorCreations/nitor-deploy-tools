@@ -7,7 +7,7 @@ import cf_deploy
 import aws_infra_util
 
 def create_account(email, account_name, role_name="OrganizationAccountAccessRole",
-                   trusted_role="TrustedAccountAccessRole",
+                   trust_role="TrustedAccountAccessRole",
                    access_to_billing=True, trusted_accounts=None, mfa_token=None):
     if access_to_billing:
         access = "ALLOW"
@@ -42,7 +42,7 @@ def create_account(email, account_name, role_name="OrganizationAccountAccessRole
         account_id = response['CreateAccountStatus']['AccountId']
 
     os.environ['paramManagedAccount'] = account_id
-    os.environ['paramRoleName'] = trusted_role
+    os.environ['paramRoleName'] = trust_role
     template = aws_infra_util.find_include("manage-account.yaml")
     cf_deploy.deploy("managed-account-" + account_name + "-" + account_id, template, cf_utils.region())        
 
@@ -54,7 +54,7 @@ def create_account(email, account_name, role_name="OrganizationAccountAccessRole
         os.environ["AWS_SESSION_TOKEN"] = assumed_creds['SessionToken']
         for trusted_account in trusted_accounts:
             os.environ['paramTrustedAccount'] = trusted_roles[trusted_account].split(":")[4]
-            os.environ['paramRoleName'] = trusted_role
+            os.environ['paramRoleName'] = trust_role
             template = aws_infra_util.find_include("trusted-account-role.yaml")
             cf_deploy.deploy("trust-" + trusted_account, template, cf_utils.region())        
         template = aws_infra_util.find_include("manage-account.yaml")
@@ -68,7 +68,7 @@ def create_account(email, account_name, role_name="OrganizationAccountAccessRole
             os.environ["AWS_SECRET_ACCESS_KEY"] = assumed_creds['SecretAccessKey']
             os.environ["AWS_SESSION_TOKEN"] = assumed_creds['SessionToken']
             os.environ['paramManagedAccount'] = account_id
-            os.environ['paramRoleName'] = trusted_role
+            os.environ['paramRoleName'] = trust_role
             cf_deploy.deploy("managed-account-" + account_name + "-" + account_id, template, cf_utils.region())        
 
 def find_role_arn(trusted_account):
@@ -81,3 +81,10 @@ def find_role_arn(trusted_account):
                         if output["OutputKey"] == "ManagePolicy":
                             return output["OutputValue"]
     return None
+
+def list_created_accounts():
+    cf_stacks = boto3.client("cloudformation").get_paginator('describe_stacks')
+    for page in cf_stacks.paginate():
+        for stack in page["Stacks"]:
+            if stack["StackName"].startswith("managed-account-"):
+                yield  "-".join(stack["StackName"].split("-")[2:-1])
