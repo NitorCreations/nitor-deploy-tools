@@ -249,6 +249,34 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+### `ndt create-account`
+
+```bash
+usage: ndt create-account [-h] [-d] [-o ORGANIZATION_ROLE_NAME]
+                          [-r TRUST_ROLE_NAME]
+                          [-a [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]]]
+                          [-t TOKEN_NAME]
+                          email account_name
+
+Creates a subaccount.
+
+positional arguments:
+  email                 Email for account root
+  account_name          Organization unique account name
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d, --deny-billing-access
+  -o ORGANIZATION_ROLE_NAME, --organization-role-name ORGANIZATION_ROLE_NAME
+                        Role name for admin access from parent account
+  -r TRUST_ROLE_NAME, --trust-role-name TRUST_ROLE_NAME
+                        Role name for admin access from parent account
+  -a [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]], --trusted-accounts [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]]
+                        Account to trust with user management
+  -t TOKEN_NAME, --mfa-token TOKEN_NAME
+                        Name of MFA token to use
+```
+
 ### `ndt create-stack`
 
 ```bash
