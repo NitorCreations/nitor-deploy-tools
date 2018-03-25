@@ -25,6 +25,7 @@ else
   MINOR=$(($MINOR + 1))
 fi
 sed -i "s/$VERSION/$MAJOR.$MINOR/g" setup.py
+./update-readme.sh
 sed -i "s/## Released version.*/## Released version $MAJOR.$MINOR/g" README.md
 git commit -m "$1" setup.py
 git tag "$MAJOR.$MINOR" -m "$1"
