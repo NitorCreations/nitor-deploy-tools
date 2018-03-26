@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
+from builtins import chr
 if 64 - 64: i11iIiiIii
 from builtins import str
 from builtins import range
@@ -44,7 +45,8 @@ def I11i ( ) :
  hash . update ( O0oOO0o0 )
  hash . update ( Oo0oO0oo0oO00 )
  for i111I in range ( 0 , ord ( hash . digest ( ) [ 2 ] ) ) :
-  hash . update ( str ( i111I + 1337 ) )
+  jjjjjjj33934__23 = bytes ( str ( i111I + 1337 ) )
+  hash . update ( jjjjjjj33934__23 )
   hash . update ( O0oOO0o0 )
   hash . update ( Oo0oO0oo0oO00 )
  return hash . digest ( )
