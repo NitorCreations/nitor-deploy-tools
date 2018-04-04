@@ -46,6 +46,7 @@ from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
     mfa_generate_code_with_secret, list_mfa_tokens
 from .account_utils import list_created_accounts, create_account
 SYS_ENCODING = locale.getpreferredencoding()
+from .serverless_utils import serverless_deploy
 
 def get_parser():
     caller = currentframe().f_back
@@ -855,3 +856,11 @@ def cli_create_account():
                     trust_role=args.trust_role_name, access_to_billing=not args.deny_billing_access,
                     trusted_accounts=args.trusted_accounts, mfa_token=args.mfa_token)
 
+def cli_serverless_deploy():
+    """ Deploys a Serverless Framework service under [component]/serverless-[name] """
+    parser = get_parser()
+    parser.add_argument("component", help="The component that contains the serverless service")
+    parser.add_argument("name", help="The name of the serverless service")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    serverless_deploy(args.component, args.name)

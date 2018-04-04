@@ -73,7 +73,8 @@ NDT_ONLY = [
     'upsert-cloudfront-records=n_utils.cli:cli_upsert_cloudfront_records',
     'create-stack=n_utils.cf_bootstrap:create_stack',
     'latest-snapshot=n_utils.volumes:latest_snapshot',
-    'create-account=n_utils.cli:cli_create_account'
+    'create-account=n_utils.cli:cli_create_account',
+    'serverless-deploy=n_utils.cli:cli_serverless_deploy'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',
