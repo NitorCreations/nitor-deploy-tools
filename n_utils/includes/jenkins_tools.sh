@@ -71,7 +71,7 @@ MARKER
     fi
     DEPLOYER_PWD=$(fetch-secrets.sh show "$CF_paramMvnDeployId")
     export DEPLOYER_PASSWORD=$(sudo -iu jenkins mvn -ep "$DEPLOYER_PWD")
-    add-deployer-server "$MAVEN_HOME/settings.xml" "$CF_paramMvnDeployId"
+    ndt add-deployer-server "$MAVEN_HOME/settings.xml" "$CF_paramMvnDeployId"
     if [ "$RESET_XTRACE" ]; then
       unset RESET_XTRACE
       set -x

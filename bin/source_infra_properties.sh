@@ -93,9 +93,9 @@ source_first_existing "$stacksharedpropfile" "$dockersharedpropfile"
 source_first_existing "$stackpropfile" "$dockerpropfile"
 
 #If region not set in infra files, get the region of the instance or from env
-[ "$REGION" ] || REGION=$(ec2-region)
+[ "$REGION" ] || REGION=$(ndt ec2-region)
 
 # Same logic as above for account id
-[ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(account-id)
+[ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(ndt account-id)
 unset source_first_existing
 unset usage

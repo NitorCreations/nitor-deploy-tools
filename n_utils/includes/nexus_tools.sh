@@ -64,6 +64,6 @@ nexus_wait_service_up () {
 
 nexus_setup_snapshot_cron () {
   cat > /etc/cron.d/home-snapshot << MARKER
-30 * * * * root /usr/bin/snapshot-from-volume.sh nexus-data nexus-data /opt/nexus/sonatype-work >> /var/log/snapshots.log 2>&1
+30 * * * * root ndt snapshot-from-volume nexus-data nexus-data /opt/nexus/sonatype-work >> /var/log/snapshots.log 2>&1
 MARKER
 }

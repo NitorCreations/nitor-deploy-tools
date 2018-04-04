@@ -190,13 +190,13 @@ else
   fi
 fi
 touch $imagedir/packages.txt
-PACKAGES="$(list-file-to-json packages $imagedir/packages.txt)"
+PACKAGES="$(ndt list-file-to-json packages $imagedir/packages.txt)"
 touch $imagedir/files.txt
-FILES="$(list-file-to-json files $imagedir/files.txt)"
+FILES="$(ndt list-file-to-json files $imagedir/files.txt)"
 if [ "$IMAGETYPE" = "ubuntu" ]; then
   touch $imagedir/repos.txt $imagedir/keys.txt
-  REPOS="$(list-file-to-json repos $imagedir/repos.txt)"
-  KEYS="$(list-file-to-json keys $imagedir/keys.txt)"
+  REPOS="$(ndt list-file-to-json repos $imagedir/repos.txt)"
+  KEYS="$(ndt list-file-to-json keys $imagedir/keys.txt)"
   extra_args[${#extra_args[@]}]=-e
   extra_args[${#extra_args[@]}]="$REPOS"
   extra_args[${#extra_args[@]}]=-e

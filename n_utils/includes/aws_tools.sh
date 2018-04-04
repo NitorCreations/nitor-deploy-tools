@@ -20,7 +20,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/common_tools.sh"
 # Required template policies when CF_paramEipAllocationId is used: ec2:AssociateAddress
 # Required template policies when CF_paramEip is used: ec2:AssociateAddress, ec2:DescribeAddresses
 aws_ec2_associate_address () {
-  associate-eip
+  ndt associate-eip
 }
 
 # Required parameters in CloudFormation: CF_AWS__Region, CF_AWS__StackName
