@@ -2,10 +2,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 ContextClass: n_utils.cf_bootstrap.Network
 Parameters:
-  paramInfraName:
-    Description: Name of the infra account to initialize
-    Type: String
-    Default: infra
   paramVPCCidr:
     Description: VPC CIDR block
     Type: String

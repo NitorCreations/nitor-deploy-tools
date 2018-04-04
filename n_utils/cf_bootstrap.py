@@ -212,7 +212,7 @@ def _append_network_resources(public, letter, resources, availability_zone):
 
     resources[db_subnet]['Properties']['SubnetIds'].append({"Ref": subnet_to_create})
 
-def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml, common_yaml):
+def _get_network_yaml(network, vpc_cidr, subnet_prefixlen, subnet_base, network_yaml, common_yaml):
     subnet_bits = 32 - subnet_prefixlen
     subnet_size = 2 ** subnet_bits
     ec2 = boto3.client("ec2")
@@ -220,7 +220,7 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml, comm
     last_subnet = subnet_base  - subnet_size
     az_names = sorted([az_data['ZoneName'] for az_data in \
                az_response['AvailabilityZones']])
-    network_yaml['Parameters']['paramVPCCidr']['Default'] = str(network)
+    network_yaml['Parameters']['paramVPCCidr']['Default'] = str(vpc_cidr)
     for az_name in az_names:
         zone_letter = az_name[-1:]
         zone_upper_letter = zone_letter.upper()
@@ -268,7 +268,7 @@ def _get_network_yaml(network, subnet_prefixlen, subnet_base, network_yaml, comm
             priv_net = deepcopy(common_yaml['paramSubnetPrivA'])
             priv_net['Description'] = pub_net['Description'][:-1] + zone_upper_letter
             priv_net['Default']['StackRef']['paramName'] = \
-                pub_net['Default']['StackRef']['paramName'][:-1] + zone_upper_letter
+                priv_net['Default']['StackRef']['paramName'][:-1] + zone_upper_letter
             common_yaml['paramSubnetPriv' + zone_upper_letter] = priv_net
     return network_yaml, common_yaml
 
@@ -535,7 +535,7 @@ class Network(ContextClassBase):
     def set_template(self, template):
         common_yaml = yaml_load(open(find_include("creatable-templates/network/common.yaml")))
         self.template, self.common_yaml = \
-            _get_network_yaml(self.stack_name, self.subnet_prefixlen,
+            _get_network_yaml(self.stack_name, self.vpc_cidr, self.subnet_prefixlen,
                               self.subnet_base, template, common_yaml)
 
     def write(self, yes=False):
