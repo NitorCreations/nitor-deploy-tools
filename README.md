@@ -39,10 +39,13 @@ for an example.
 ```
 pip install nitor-deploy-tools
 ```
+On OSX you may need to add `--ignore-installed` to get around platform installed versions
+of `six` and other packages.
 
 ## Commands for getting started
 
-All of these are run in your project repository root. You need to have AWS credentials for command line access set up.
+All of these are run in your project repository root. You need to have AWS credentials for
+command line access set up.
 
 * To bake a new version of an image: `ndt bake-image <image-name>`
 * To build a new Docker container image `ndt bake-docker <component> <docker-name>`
