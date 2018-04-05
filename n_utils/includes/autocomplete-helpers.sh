@@ -68,3 +68,9 @@ job_properties() {
     bash -c "source source_infra_properties.sh $2 $3; set" | \
     egrep -v "$IGNORE_PROPS"
 }
+
+current_branch_job_properties() {
+  [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  GIT_BRANCH=${GIT_BRANCH##*/}
+  job_properties $GIT_BRANCH $1 $2
+}
