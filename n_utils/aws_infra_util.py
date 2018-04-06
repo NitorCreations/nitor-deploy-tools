@@ -24,7 +24,7 @@ import sys
 import yaml
 from yaml import ScalarNode, SequenceNode, MappingNode
 from copy import deepcopy
-from .cf_utils import stack_params_and_outputs, region, resolve_account
+from .cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
 
 stacks = dict()
 PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
@@ -143,6 +143,8 @@ def run_command(command):
     return output[0]
 
 def import_parameter_file(filename, params):
+    used_params = deepcopy(os.environ)
+    used_params.update(params)
     with open(filename, "r") as propfile:
         prevline = ""
         for line in propfile.readlines():
@@ -157,9 +159,9 @@ def import_parameter_file(filename, params):
                 key_val = line.split("=", 1)
                 if len(key_val) == 2:
                     key = key_val[0].strip()
-                    value = os.path.expandvars(key_val[1].strip())
+                    value = expand_vars(key_val[1].strip(), used_params, None, [])
                     params[key] = value
-                    os.environ[key] = value
+                    used_params[key] = value
 
 def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, branch=None):
     ret = {}

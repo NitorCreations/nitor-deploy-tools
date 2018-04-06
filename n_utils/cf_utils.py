@@ -27,6 +27,7 @@ import string
 import sys
 import time
 import tempfile
+from types import NoneType
 from collections import deque, OrderedDict
 from os.path import expanduser
 from threading import Event, Lock, Thread
@@ -584,10 +585,11 @@ def interpolate_file(file_name, destination=None, stack_name=None,
     os.unlink(dstfile.name)
 
 PARAM_RE = re.compile(r"\$\{([^\$\{\}]*)\}")
-def _process_line(line, params, vault, vault_keys):
+SIMPLE_PARAM_RE = re.compile(r"\$([a-zA-Z0-9_]*)")
+def expand_vars(line, params, vault, vault_keys):
     ret = line
     next_start = 0
-    match = PARAM_RE.search(line)
+    match = SIMPLE_PARAM_RE.search(line)
     while match is not None:
         param_value = None
         param_name = match.group(1)
@@ -597,8 +599,36 @@ def _process_line(line, params, vault, vault_keys):
             param_value = params[param_name]
         else:
             next_start = match.end()
-        if param_value:
-            ret = ret.replace("${" + param_name + "}", param_value)
+        if not isinstance(param_value, NoneType):
+            ret = ret[:match.start()] + param_value + ret[match.end():]
+        match = SIMPLE_PARAM_RE.search(ret, next_start)
+    return _process_line(ret, params, vault, vault_keys)
+
+def _process_line(line, params, vault, vault_keys):
+    ret = line
+    next_start = 0
+    match = PARAM_RE.search(line)
+    while match is not None:
+        param_value = None
+        param_match = match.group(1)
+        param_name = param_match
+        name_arg = None
+        for transform in VAR_OPERATIONS.keys():
+            if transform in param_name:
+                name_arg = param_name.split(transform, 1)
+                param_name = name_arg[0]
+                name_arg.append(transform)
+                break
+        if param_name in vault_keys:
+            param_value = vault.lookup(param_name)
+        elif param_name in params:
+            param_value = params[param_name]
+        else:
+            next_start = match.end()
+        if name_arg:
+            param_value = VAR_OPERATIONS[name_arg[2]](param_value, name_arg[1])
+        if not isinstance(param_value, NoneType):
+            ret = ret[:match.start()] + param_value + ret[match.end():]
         match = PARAM_RE.search(ret, next_start)
     return ret
 
