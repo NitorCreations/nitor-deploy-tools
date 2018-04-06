@@ -23,6 +23,7 @@ import subprocess
 import sys
 import yaml
 from yaml import ScalarNode, SequenceNode, MappingNode
+from copy import deepcopy
 from .cf_utils import stack_params_and_outputs, region, resolve_account
 
 stacks = dict()
@@ -37,9 +38,9 @@ if "CF_TEMPLATE_INCLUDE" in os.environ:
 
 include_dirs.append(os.path.join(os.path.dirname(__file__), "includes") +\
                     os.path.sep)
+
 ############################################################################
 # _THE_ yaml & json deserialize/serialize functions
-
 def descalar(target):
     if isinstance(target, ScalarNode) or isinstance(target, SequenceNode) or \
        isinstance(target, MappingNode):
@@ -132,6 +133,70 @@ INTRISINC_FUNCS = {
 }
 
 SOURCED_PARAMS = None
+
+def run_command(command):
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, universal_newlines=True)
+    output = proc.communicate()
+    if proc.returncode:
+        raise Exception("Failed to run " + str(command))
+    return output[0]
+
+def import_parameter_file(filename, params):
+    with open(filename, "r") as propfile:
+        prevline = ""
+        for line in propfile.readlines():
+            if line.startswith("#"):
+                prevline = ""
+                continue
+            if line.endswith("\\"):
+                prevline = prevline + line[:-1].strip()
+            else:
+                line = prevline + line
+                prevline = ""
+                key_val = line.split("=", 1)
+                if len(key_val) == 2:
+                    key = key_val[0].strip()
+                    value = os.path.expandvars(key_val[1].strip())
+                    params[key] = value
+                    os.environ[key] = value
+
+def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, branch=None):
+    ret = {}
+    if not branch:
+        if "GIT_BRANCH" in os.environ:
+            branch = os.environ["GIT_BRANCH"]
+        else:
+            branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    branch = branch.split("/")[-1:][0]
+    os.environ["GIT_BRANCH"] = branch
+    files = ["infra.properties", "infra-" + branch + ".properties" ]
+    if component:
+        files.append(component + os.sep + "infra.properties")
+        files.append(component + os.sep + "infra-" + branch + ".properties")
+        if stack:
+            os.environ["ORIG_STACK_NAME"] = stack
+            files.append(component + os.sep + "stack-" + stack + os.sep + "infra.properties")
+            files.append(component + os.sep + "stack-" + stack + os.sep + "infra-" + branch + ".properties")
+        if serverless:
+            os.environ["ORIG_SERVERLESS_NAME"] = serverless
+            files.append(component + os.sep + "serverless-" + serverless + os.sep + "infra.properties")
+            files.append(component + os.sep + "serverless-" + serverless + os.sep + "infra-" + branch + ".properties")
+        if docker:
+            os.environ["ORIG_DOCKER_NAME"] = docker
+            files.append(component + os.sep + "docker-" + docker + os.sep + "infra.properties")
+            files.append(component + os.sep + "docker-" + docker + os.sep + "infra-" + branch + ".properties")
+        if image:
+            files.append(component + os.sep + "image-" + image + os.sep + "infra.properties")
+            files.append(component + os.sep + "image-" + image + os.sep + "infra-" + branch + ".properties")
+        elif type(image) == str:
+            files.append(component + os.sep + "image" + os.sep + "infra.properties")
+            files.append(component + os.sep + "image" + os.sep + "infra-" + branch + ".properties")
+    for file in files:
+        if os.path.exists(file):
+            import_parameter_file(file, ret)
+    return ret
+
 
 def yaml_load(stream):
     for name in INTRISINC_FUNCS:

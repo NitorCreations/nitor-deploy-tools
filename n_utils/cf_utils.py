@@ -27,7 +27,7 @@ import string
 import sys
 import time
 import tempfile
-from collections import deque
+from collections import deque, OrderedDict
 from os.path import expanduser
 from threading import Event, Lock, Thread
 from operator import itemgetter
@@ -601,6 +601,84 @@ def _process_line(line, params, vault, vault_keys):
             ret = ret.replace("${" + param_name + "}", param_value)
         match = PARAM_RE.search(ret, next_start)
     return ret
+
+def _var_default(value, arg):
+    if value:
+        return value
+    return arg
+
+def _var_suffix(value, arg):
+    if value:
+        return value
+    return value
+
+def _var_prefix(value, arg):
+    if value:
+        return value
+    return value
+
+def _var_suffix_greedy(value, arg):
+    if value:
+        return value
+    return value
+
+def _var_prefix_greedy(value, arg):
+    if value and arg:
+        return value
+    return value
+
+def _var_upper(value, arg):
+    if value:
+        return value.upper()
+    return value
+
+def _var_lower(value, arg):
+    if value:
+        return value.lower()
+    return value
+
+def _var_upper_initial(value, arg):
+    if value:
+        if len(value) > 1:
+            return value[0].upper() + value[1:]
+        return value[0].upper()
+    return value
+
+def _var_lower_initial(value, arg):
+    if value:
+        if len(value) > 1:
+            return value[0].lower() + value[1:]
+        return value[0].lower()
+    return value
+
+def _var_offset(value, arg):
+    if value and arg:
+        ind_len = arg.split(":")
+        if len(ind_len) == 2:
+            start = int(ind_len[0])
+            end = start + (ind_len[1])
+            return value[start:end]
+    return value
+
+def _var_subst(value, arg):
+    if value and arg:
+        subst_repl = arg.split("/")
+        if len(subst_repl) == 2:
+            return value.replace(subst_repl[0], subst_repl[1])
+    return value
+
+VAR_OPERATIONS = OrderedDict()
+VAR_OPERATIONS[":-"] = _var_default
+VAR_OPERATIONS["##"] = _var_prefix_greedy
+VAR_OPERATIONS["%%"] = _var_suffix_greedy
+VAR_OPERATIONS["#"] = _var_prefix
+VAR_OPERATIONS["%"] = _var_suffix
+VAR_OPERATIONS["^^"] = _var_upper
+VAR_OPERATIONS[",,"] = _var_lower
+VAR_OPERATIONS["^"] = _var_upper_initial
+VAR_OPERATIONS[","] = _var_lower_initial
+VAR_OPERATIONS[":"] = _var_offset
+VAR_OPERATIONS["/"] = _var_subst
 
 def has_output_selector(stack, outputname, mapper):
     if not 'Outputs' in stack:
