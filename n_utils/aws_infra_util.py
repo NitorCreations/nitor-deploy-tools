@@ -639,8 +639,23 @@ def locate_launchconf_userdata(data):
     resources = data["Resources"]
     for val in resources.values():
         if "Type" in val and val["Type"] == "AWS::AutoScaling::LaunchConfiguration":
-            return val["Properties"]["UserData"]["Fn::Base64"]["Fn::Join"][1]
+            if "Properties" in val and "UserData" in val["Properties"] and \
+               "Fn::Base64" in val["Properties"]["UserData"] and \
+               "Fn::Join" in val["Properties"]["UserData"]["Fn::Base64"] and \
+               len(val["Properties"]["UserData"]["Fn::Base64"]["Fn::Join"]) >= 2:
+                return val["Properties"]["UserData"]["Fn::Base64"]["Fn::Join"][1]
+            else:
+                if "Properties" in val and "UserData" in val["Properties"] and \
+                   "Fn::Base64" in val["Properties"]["UserData"] and \
+                   "Fn::Sub" in val["Properties"]["UserData"]["Fn::Base64"]:
+                    return val["Properties"]["UserData"]["Fn::Base64"]["Fn::Sub"]
     return None
+
+def reset_launchconf_userdata(data, lc_userdata):
+    resources = data["Resources"]
+    for val in resources.values():
+        if "Type" in val and val["Type"] == "AWS::AutoScaling::LaunchConfiguration":
+            val["Properties"]["UserData"]["Fn::Base64"]["Fn::Sub"] = lc_userdata
 
 def get_refs(data, reflist=None):
     if not reflist:
@@ -659,7 +674,12 @@ def _patch_launchconf(data):
     lc_meta = locate_launchconf_metadata(data)
     if lc_meta is not None:
         lc_userdata = locate_launchconf_userdata(data)
-        lc_userdata.append("\nexit 0\n# metadata hash: " + str(hash(json_save(lc_meta))) + "\n")
+        if lc_userdata:
+            if isinstance(lc_userdata, list):
+                lc_userdata.append("\nexit 0\n# metadata hash: " + str(hash(json_save(lc_meta))) + "\n")
+            else:
+                lc_userdata += "\nexit 0\n# metadata hash: " + str(hash(json_save(lc_meta))) + "\n"
+                reset_launchconf_userdata(data, lc_userdata)
         lc_meta_refs = set(get_refs(lc_meta))
         if len(lc_meta_refs) > 0:
             first = 1
