@@ -33,7 +33,7 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt deploy-serverless [-h] component serverless-name" >&2
+  echo "usage: ndt deploy-serverless [-d] [-h] component serverless-name" >&2
   echo "" >&2
   echo "Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the" >&2
   echo "serverless project and runs sls deploy -s branch for the same" >&2
@@ -45,7 +45,8 @@ usage() {
   echo "                  you would give sender" >&2
   echo "" >&2
   echo "optional arguments:" >&2
-  echo "  -h, --help  show this help message and exit"  >&2
+  echo "  -d, --dryrun  dry-run - do only parameter expansion and template pre-processing and npm i"  >&2
+  echo "  -h, --help    show this help message and exit"  >&2
   if "$@"; then
     echo "" >&2
     echo "$@" >&2
@@ -55,7 +56,10 @@ usage() {
 if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi
-
+if [ "$1" = "-d" -o "$1" = "--dryrun" ]; then
+  DRYRUN=1
+  shift
+fi
 die () {
   echo "$1" >&2
   usage
@@ -86,6 +90,9 @@ fi
 
 npm i
 
+if [ -n "$DRYRUN" ]; then
+  exit 0
+fi
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(ndt assume-role $DEPLOY_ROLE_ARN)
