@@ -217,6 +217,8 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         ret["ORIG_SERVERLESS_NAME"] = os.environ["ORIG_SERVERLESS_NAME"]
     if "ORIG_IMAGE_NAME" in os.environ:
         ret["ORIG_IMAGE_NAME"] = os.environ["ORIG_IMAGE_NAME"]
+    if "GIT_BRANCH" not in ret:
+        ret["GIT_BRANCH"] = os.environ["GIT_BRANCH"]
     return ret
 
 
