@@ -20,15 +20,22 @@ MINOR=${VERSION##*.}
 if [ "$1" = "-m" ]; then
   MAJOR=$(($MAJOR + 1))
   MINOR="0"
+  NEW_VERSION=$MAJOR.$MINOR
+  shift
+elif [ "$1" = "-v" ]; then
+  shift
+  NEW_VERSION="$1"
   shift
 else
   MINOR=$(($MINOR + 1))
+  NEW_VERSION=$MAJOR.$MINOR
 fi
-sed -i "s/$VERSION/$MAJOR.$MINOR/g" setup.py
+
+sed -i "s/$VERSION/$NEW_VERSION/g" setup.py
 ./update-readme.sh
-sed -i "s/## Released version.*/## Released version $MAJOR.$MINOR/g" README.md
+sed -i "s/## Released version.*/## Released version $NEW_VERSION/g" README.md
 git commit -m "$1" setup.py
-git tag "$MAJOR.$MINOR" -m "$1"
+git tag "$NEW_VERSION" -m "$1"
 git push --tags origin master
 
 python setup.py register -r pypi
