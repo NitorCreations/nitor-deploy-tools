@@ -93,7 +93,7 @@ shift ||:
 IMAGE_JOB="$1"
 shift ||:
 
-eval "$(ndt load-parameters '$image' -s '$stackName' -e)"
+eval "$(ndt load-parameters $image -s $stackName -e)"
 
 if [ -z "$AMI_ID" ]; then
   AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"

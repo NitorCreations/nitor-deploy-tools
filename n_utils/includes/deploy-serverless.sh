@@ -74,7 +74,7 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
-eval "$(ndt load-parameters "$image" -i $serverless -e)"
+eval "$(ndt load-parameters "$image" -l $serverless -e)"
 
 ndt load-parameters $image -l $serverless -y > $image/serverless-$ORIG_SERVERLESS_NAME/variables.yml
 ndt yaml-to-yaml $image/serverless-$ORIG_SERVERLESS_NAME/template.yaml > $image/serverless-$ORIG_SERVERLESS_NAME/serverless.yml

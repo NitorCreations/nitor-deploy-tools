@@ -74,7 +74,7 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
-eval "$(ndt load-parameters "$image" -i $docker -e)"
+eval "$(ndt load-parameters "$image" -d $docker -e)"
 
 if [ -x "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
   cd "$image/docker-$ORIG_DOCKER_NAME"
