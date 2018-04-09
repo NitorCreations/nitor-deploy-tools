@@ -83,6 +83,7 @@ NDT_ONLY_SCRIPT = [
     'bake-image.sh',
     'deploy-stack.sh',
     'undeploy-stack.sh',
+    'deploy-serverless.sh',
     'list-jobs.sh',
     'print-create-instructions.sh'
 ]
