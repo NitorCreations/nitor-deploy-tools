@@ -100,4 +100,4 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-sls deploy -s $GIT_BRANCH
+sls deploy -s $paramEnvId

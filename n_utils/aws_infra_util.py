@@ -219,6 +219,10 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         ret["ORIG_IMAGE_NAME"] = os.environ["ORIG_IMAGE_NAME"]
     if "GIT_BRANCH" not in ret:
         ret["GIT_BRANCH"] = os.environ["GIT_BRANCH"]
+    if "paramEnvId" not in ret:
+        ret["paramEnvId"] = os.environ["GIT_BRANCH"]
+    if "JENKINS_JOB_PREFIX" not in ret:
+        ret["JENKINS_JOB_PREFIX"] = "aws" + ret["paramEnvId"]
     return ret
 
 
