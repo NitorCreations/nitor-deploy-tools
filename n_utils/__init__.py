@@ -22,7 +22,6 @@ PATH_COMMANDS = [
     'bin/lpssh',
     'bin/encrypt-and-mount.sh',
     'bin/setup-fetch-secrets.sh',
-    'bin/source_infra_properties.sh',
     'bin/ssh-hostkeys-collect.sh'
 ]
 NDT_AND_CONSOLE = [
@@ -52,6 +51,7 @@ NDT_ONLY = [
     'ec2-clean-snapshots=n_utils.cli:clean_snapshots',
     'ec2-instance-id=n_utils.cli:instance_id',
     'ec2-region=n_utils.cli:ec2_region',
+    'region=n_utils.cli:ec2_region',
     'ec2-get-tag=n_utils.cli:tag',
     'ec2-get-userdata=n_utils.cli:get_userdata',
     'detach-volume=n_utils.cli:detach_volume',
@@ -74,7 +74,8 @@ NDT_ONLY = [
     'create-stack=n_utils.cf_bootstrap:create_stack',
     'latest-snapshot=n_utils.volumes:latest_snapshot',
     'create-account=n_utils.cli:cli_create_account',
-    'serverless-deploy=n_utils.cli:cli_serverless_deploy'
+    'serverless-deploy=n_utils.cli:cli_serverless_deploy',
+    'load-parameters=n_utils.cli:cli_load_parameters'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',

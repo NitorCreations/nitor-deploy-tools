@@ -31,9 +31,10 @@ get_stacks() {
 }
 get_imageids() {
   if [ -r infra.properties -o -r infra-master.properties ]; then
-    source source_infra_properties.sh $1
+    [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    GIT_BRANCH=${GIT_BRANCH##*/}
     if [ -d "$1/image" ] && [ -r "$1/infra.properties" -o -r "$1/infra-$GIT_BRANCH.properties" ]; then
-      echo $(cache aws ec2 describe-images --filters "Name=name,Values=[${2}*]" --query "Images[*].[ImageId]" --output text)
+      ndt get-images $2 | cut -d: -f1
     fi
   fi
 }
@@ -59,18 +60,16 @@ checkout_branch() {
 }
 job_properties() {
   local GIT_BRANCH=$1
-  IGNORE_PROPS='^(BASH.*|DIR|TERM|.?UID|_|GROUPS|IFS|OPTERR|OPTIND|SHELL|PIPE|PS4|PPID|SHLVL|PATH|PWD|OSTYPE|HOST(NAME|TYPE)|MACHTYPE|SHELLOPTS|DIRSTACK|PIPESTATUS)='
   #If region not set in infra files, get the region of the instance or from env
-  [ "$REGION" ] || REGION=$(ndt ec2-region)
+  [ "$REGION" ] || REGION=$(ndt region)
   # Same logic as above for account id
   [ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(ndt account-id)
   env -i REGION="$REGION" ACCOUNT_ID="$ACCOUNT_ID" GIT_BRANCH="$GIT_BRANCH" \
-    bash -c "source source_infra_properties.sh $2 $3; set" | \
-    egrep -v "$IGNORE_PROPS"
+    ndt load-parameters $2 $3 $4
 }
 
 current_branch_job_properties() {
   [ "$GIT_BRANCH" ] || GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
   GIT_BRANCH=${GIT_BRANCH##*/}
-  job_properties $GIT_BRANCH $1 $2
+  job_properties $GIT_BRANCH $1 $2 $3
 }

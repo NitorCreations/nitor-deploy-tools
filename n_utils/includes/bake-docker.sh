@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script sources the infra*.properties files in the standard fashion. The image and stack name must be provided as arguments if applicable, otherwise an empty argument should be given instead e.g. ""
-# example: source source_infra_properties.sh "jenkins" "bob-jenkins"
 if [ "$_ARGCOMPLETE" ]; then
   # Handle command completion executions
   unset _ARGCOMPLETE
@@ -76,7 +74,7 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
-source source_infra_properties.sh "$image" "$docker"
+eval "$(ndt load-parameters "$image" -i $docker -e)"
 
 if [ -x "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
   cd "$image/docker-$ORIG_DOCKER_NAME"

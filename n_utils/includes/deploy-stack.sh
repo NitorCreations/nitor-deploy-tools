@@ -40,13 +40,13 @@ if [ "$_ARGCOMPLETE" ]; then
       compgen -W "$(get_stacks $IMAGE_DIR)" -- $COMP_CUR
       ;;
     4)
-      source source_infra_properties.sh $IMAGE $STACK
+      eval "$(ndt load-parameters $IMAGE_DIR -s $STACK -e)"
       JOB_NAME="${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
       IMAGE_IDS="$(get_imageids $IMAGE_DIR $JOB_NAME)"
       compgen -W "$IMAGE_IDS" -- $COMP_CUR
       ;;
     5)
-      source source_infra_properties.sh $IMAGE $STACK
+      eval "$(ndt load-parameters $IMAGE_DIR -s $STACK -e)"
       echo "${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
       ;;
     *)
@@ -93,7 +93,7 @@ shift ||:
 IMAGE_JOB="$1"
 shift ||:
 
-source source_infra_properties.sh "$image" "$stackName"
+eval "$(ndt load-parameters '$image' -s '$stackName' -e)"
 
 if [ -z "$AMI_ID" ]; then
   AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"
@@ -108,11 +108,11 @@ fi
 
 for DOCKER in $(get_dockers $image); do
   unset BAKE_IMAGE_BRANCH DOCKER_NAME
-  eval "$(job_properties ${GIT_BRANCH##*/} $image $DOCKER | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
+  eval "$(ndt load-parameters ${GIT_BRANCH##*/} $image -d $DOCKER -e | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
   if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH##*/}" != "$BAKE_IMAGE_BRANCH" ]; then
     checkout_branch $BAKE_IMAGE_BRANCH
     cd $BAKE_IMAGE_BRANCH-checkout
-    eval "$(job_properties $BAKE_IMAGE_BRANCH $image $DOCKER | egrep '^DOCKER_NAME=')"
+    eval "$(ndt load-parameters $BAKE_IMAGE_BRANCH $image -d $DOCKER -e | egrep '^DOCKER_NAME=')"
     cd ..
     rm -rf $BAKE_IMAGE_BRANCH-checkout
   fi

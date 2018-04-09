@@ -45,7 +45,7 @@ def ensure_repo(name):
         token = full_token[1]
         sudo = ""
         try:
-            FNULL = open(devnull, 'w')
+            FNULL = open(devnull, 'wb')
             if check_call(["sudo", "docker", "--help"], stdout=FNULL, stderr=STDOUT, close_fds=True) == 0:
                 sudo = "sudo "
         except:

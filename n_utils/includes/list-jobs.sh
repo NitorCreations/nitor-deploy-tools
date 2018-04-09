@@ -33,12 +33,16 @@ list_jobs() {
     done
     for IMAGE_DIR in $(get_stack_dirs); do
       for STACK in $(get_stacks $IMAGE_DIR); do
-        job_properties $GIT_BRANCH $IMAGE_DIR $STACK > "../job-properties/stack-$GIT_BRANCH-$IMAGE_DIR-$STACK.properties"
+        job_properties $GIT_BRANCH $IMAGE_DIR -s $STACK > "../job-properties/stack-$GIT_BRANCH-$IMAGE_DIR-$STACK.properties"
         echo "$IMAGE_DIR:$GIT_BRANCH:stack:$STACK"
       done
       for DOCKER in $(get_dockers $IMAGE_DIR); do
-         job_properties $GIT_BRANCH $IMAGE_DIR $DOCKER > "../job-properties/docker-$GIT_BRANCH-$IMAGE_DIR-$DOCKER.properties"
+         job_properties $GIT_BRANCH $IMAGE_DIR -d $DOCKER > "../job-properties/docker-$GIT_BRANCH-$IMAGE_DIR-$DOCKER.properties"
         echo "$IMAGE_DIR:$GIT_BRANCH:docker:$DOCKER"
+      done
+      for SERVERLESS in $(get_serverless $IMAGE_DIR); do
+         job_properties $GIT_BRANCH $IMAGE_DIR -s $SERVERLESS > "../job-properties/docker-$GIT_BRANCH-$IMAGE_DIR-$DOCKER.properties"
+        echo "$IMAGE_DIR:$GIT_BRANCH:serverless:$SERVERLESS"
       done
     done
     cd ..

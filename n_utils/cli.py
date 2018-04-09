@@ -14,16 +14,22 @@
 
 """ Command line tools for nitor-deploy-tools
 """
+from __future__ import print_function
 
+from builtins import input
+from builtins import str
 import argparse
 import json
 import locale
 import os
 import sys
 import time
+import re
 from inspect import currentframe, getframeinfo
+from types import NoneType
 from subprocess import PIPE, Popen
 import argcomplete
+import yaml
 from argcomplete import USING_PYTHON2, ensure_str, split_line
 from argcomplete.completers import ChoicesCompleter, FilesCompleter
 from pygments import highlight, lexers, formatters
@@ -47,8 +53,9 @@ from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
 from .account_utils import list_created_accounts, create_account
 SYS_ENCODING = locale.getpreferredencoding()
 from .serverless_utils import serverless_deploy
+from .aws_infra_util import load_parameters
 
-def get_parser():
+def get_parser(formatter=None):
     caller = currentframe().f_back
     func_name = getframeinfo(caller)[2]
     caller = caller.f_back
@@ -62,7 +69,7 @@ def get_parser():
 def ndt_register_complete():
     """Print out shell function and command to register ndt command completion
     """
-    print """_ndt_complete() {
+    print("""_ndt_complete() {
     local IFS=$'\\013'
     local COMP_CUR="${COMP_WORDS[COMP_CWORD]}"
     local COMP_PREV="${COMP_WORDS[COMP_CWORD-1]}"
@@ -88,7 +95,7 @@ def ndt_register_complete():
     fi
 }
 complete -o nospace -F _ndt_complete "ndt"
-"""
+""")
 
 def do_command_completion():
     """ ndt command completion function
@@ -111,7 +118,7 @@ def do_command_completion():
     comp_line = ensure_str(comp_line)
     comp_words = split_line(comp_line, comp_point)[3]
     if "COMP_CWORD" in os.environ and os.environ["COMP_CWORD"] == "1":
-        keys = [x for x in COMMAND_MAPPINGS.keys() if x.startswith(current)]
+        keys = [x for x in list(COMMAND_MAPPINGS.keys()) if x.startswith(current)]
         output_stream.write(ifs.join(keys).encode(SYS_ENCODING))
         output_stream.flush()
         sys.exit(0)
@@ -240,7 +247,7 @@ def get_account_id():
     """
     parser = get_parser()
     args = parser.parse_args()
-    print cf_utils.resolve_account()
+    print(cf_utils.resolve_account())
 
 def colorprint(data, output_format="yaml"):
     """ Colorized print for either a yaml or a json document given as argument
@@ -248,16 +255,15 @@ def colorprint(data, output_format="yaml"):
     lexer = lexers.get_lexer_by_name(output_format)
     formatter = formatters.get_formatter_by_name("256")
     formatter.__init__(style=get_style_by_name('emacs'))
-    colored = highlight(unicode(data, 'UTF-8'), lexer, formatter)
-    sys.stdout.write(colored.encode(locale.getpreferredencoding()))
+    colored = highlight(str(data, 'UTF-8'), lexer, formatter)
+    sys.stdout.write(colored)
 
 def yaml_to_json():
     """Convert Nitor CloudFormation yaml to CloudFormation json with some
     preprosessing
     """
     parser = get_parser()
-    parser.add_argument("--colorize", "-c", help="Colorize output",
-                        action="store_true")
+    parser.add_argument("--colorize", "-c", help="Colorize output", action="store_true")
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -267,7 +273,7 @@ def yaml_to_json():
     if args.colorize:
         colorprint(doc)
     else:
-        print doc
+        print(doc)
 
 def json_to_yaml():
     """Convert CloudFormation json to an approximation of a Nitor CloudFormation
@@ -285,7 +291,7 @@ def json_to_yaml():
     if args.colorize:
         colorprint(doc)
     else:
-        print doc
+        print(doc)
 
 def read_and_follow():
     """Read and print a file and keep following the end for new data
@@ -369,7 +375,7 @@ def instance_id():
     args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
-        print info.instance_id()
+        print(info.instance_id())
     else:
         sys.exit(1)
 
@@ -379,7 +385,7 @@ def ec2_region():
     parser = get_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    print region()
+    print(region())
 
 def tag():
     """ Get the value of a tag for an ec2 instance
@@ -392,7 +398,7 @@ def tag():
         info = InstanceInfo()
         value = info.tag(args.name)
         if value is not None:
-            print value
+            print(value)
         else:
             sys.exit("Tag " + args.name + " not found")
     else:
@@ -406,7 +412,7 @@ def stack_name():
     args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
-        print info.stack_name()
+        print(info.stack_name())
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
@@ -418,7 +424,7 @@ def stack_id():
     args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
-        print info.stack_id()
+        print(info.stack_id())
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
@@ -430,7 +436,7 @@ def logical_id():
     args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
-        print info.logical_id()
+        print(info.logical_id())
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
@@ -442,7 +448,7 @@ def cf_region():
     args = parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
-        print info.stack_id().split(":")[3]
+        print(info.stack_id().split(":")[3])
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
@@ -494,7 +500,7 @@ def tail_stack_logs():
         try:
             time.sleep(1)
         except KeyboardInterrupt:
-            print 'Closing...'
+            print('Closing...')
             cwlogs.stop()
             cfevents.stop()
             return
@@ -510,7 +516,7 @@ def resolve_include():
     if not inc_file:
         parser.error("Include " + args.file + " not found on include paths " +\
                      str(aws_infra_util.include_dirs))
-    print inc_file
+    print(inc_file)
 
 def resolve_all_includes():
     """Find a file from the first of the defined include paths
@@ -524,7 +530,7 @@ def resolve_all_includes():
         parser.error("Include " + args.pattern + " not found on include paths " +\
                      str(aws_infra_util.include_dirs))
     for next_file in inc_file:
-        print next_file
+        print(next_file)
 
 def assume_role():
     """Assume a defined role. Prints out environment variables
@@ -538,10 +544,10 @@ def assume_role():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     creds = cf_utils.assume_role(args.role_arn, mfa_token_name=args.mfa_token)
-    print "AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\""
-    print "AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\""
-    print "AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\""
-    print "export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN"
+    print("AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\"")
+    print("AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\"")
+    print("AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\"")
+    print("export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN")
 
 def get_parameter():
     """Get a parameter value from the stack
@@ -551,7 +557,7 @@ def get_parameter():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     info = InstanceInfo()
-    print info.stack_data(args.parameter)
+    print(info.stack_data(args.parameter))
 
 def volume_from_snapshot():
     """ Create a volume from an existing snapshot and mount it on the given
@@ -592,8 +598,8 @@ def snapshot_from_volume():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if is_ec2():
-        print volumes.create_snapshot(args.tag_key, args.tag_value,
-                                      args.mount_path, wait=args.wait)
+        print(volumes.create_snapshot(args.tag_key, args.tag_value,
+                                      args.mount_path, wait=args.wait))
     else:
         parser.error("Only makes sense on an EC2 instance")
 
@@ -661,11 +667,11 @@ def show_stack_params_and_outputs():
     resp = stack_params_and_outputs(args.region, args.stack_name)
     if args.parameter:
         if args.parameter in resp:
-            print resp[args.parameter]
+            print(resp[args.parameter])
         else:
             parser.error("Parameter " + args.parameter + " not found")
     else:
-        print json.dumps(resp, indent=2)
+        print(json.dumps(resp, indent=2))
 
 def cli_get_images():
     """ Gets a list of images given a bake job name
@@ -677,7 +683,7 @@ def cli_get_images():
     set_region()
     images = get_images(args.job_name)
     for image in images:
-        print image['ImageId'] + ":" + image['Name']
+        print(image['ImageId'] + ":" + image['Name'])
 
 def cli_promote_image():
     """  Promotes an image for use in another branch
@@ -759,7 +765,7 @@ def cli_ecr_repo_uri():
     if not uri:
         parser.error("Did not find uri for repo '" + args.name + "'")
     else:
-        print uri
+        print(uri)
 
 def cli_upsert_cloudfront_records():
     """ Upsert Route53 records for all aliases of a CloudFront distribution """
@@ -795,16 +801,16 @@ def cli_mfa_add_token():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if args.interactive:
-        args.token_secret = raw_input("Enter token secret: ")
+        args.token_secret = input("Enter token secret: ")
         code_1 = mfa_generate_code_with_secret(args.token_secret)
-        print "First sync code: " + code_1
-        print "Waiting to generate second sync code. This could take 30 seconds..."
+        print("First sync code: " + code_1)
+        print("Waiting to generate second sync code. This could take 30 seconds...")
         code_2 = mfa_generate_code_with_secret(args.token_secret)
         while code_1 == code_2:
             time.sleep(5)
             code_2 = mfa_generate_code_with_secret(args.token_secret)
-        print "Second sync code: " + code_2
-        args.token_arn = raw_input("Enter token ARN: ")
+        print("Second sync code: " + code_2)
+        args.token_arn = input("Enter token ARN: ")
     elif args.token_arn is None or args.token_secret is None:
         parser.error("Both token_arn and token_secret are required when not adding interactively.")
     try:
@@ -831,7 +837,7 @@ def cli_mfa_code():
                             ChoicesCompleter(list_mfa_tokens())
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    print mfa_generate_code(args.token_name)
+    print(mfa_generate_code(args.token_name))
 
 def cli_create_account():
     """ Creates a subaccount. """
@@ -864,3 +870,85 @@ def cli_serverless_deploy():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     serverless_deploy(args.component, args.name)
+
+def cli_load_parameters():
+    """ Load parameters from infra*.properties files in the order:
+    infra.properties,
+    infra-[branch].properties,
+    [component]/infra.properties,
+    [component]/infra-[branch].properties,
+    [component]/[subcomponent-type]-[subcomponent]/infra.properties,
+    [component]/[subcomponent-type]-[subcomponent]/infra-[branch].properties
+
+    Last parameter defined overwrites ones defined before in the files. Supports parameter expansion
+    and bash -like transformations. Namely:
+
+    ${PARAM##prefix} # strip prefix greedy
+    ${PARAM%%suffix} # strip suffix greedy
+    ${PARAM#prefix} # strip prefix not greedy
+    ${PARAM%suffix} # strip suffix not greedy
+    ${PARAM:-default} # default if empty
+    ${PARAM:4:2} # start:len
+    ${PARAM/substr/replace}
+    ${PARAM^} # upper initial
+    ${PARAM,} # lower initial
+    ${PARAM^^} # upper
+    ${PARAM,,} # lower
+
+    Comment lines start with '#'
+    Lines can be continued by adding '\' at the end
+
+    See https://www.tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_03.html
+    (arrays not supported)
+    """
+    parser = get_parser(formatter=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("component", nargs="?", help="Compenent to descend into")
+    parser.add_argument("--branch", "-b", help="Branch to get active parameters for")
+    subcomponent_group = parser.add_mutually_exclusive_group()
+    subcomponent_group.add_argument("--stack", "-s", help="CloudFormation subcomponent to descent into")
+    subcomponent_group.add_argument("--serverless", "-l", help="Serverless subcomponent to descent into")
+    subcomponent_group.add_argument("--docker", "-d", help="Docker image subcomponent to descent into")
+    subcomponent_group.add_argument("--image", "-i", const="", nargs="?", help="AMI image subcomponent to descent into")
+    format_group = parser.add_mutually_exclusive_group()
+    format_group.add_argument("--json", "-j", action="store_true", help="JSON format output (default)")
+    format_group.add_argument("--yaml", "-y", action="store_true", help="YAML format output")
+    format_group.add_argument("--properties", "-o", action="store_true", help="properties file format output")
+    format_group.add_argument("--export-statements", "-e", action="store_true", help="Output as eval-able export statements")
+    args = parser.parse_args()
+    printer = lambda params: print(json.dumps(params))
+    if args.export_statements:
+        printer = lambda params: print(map_to_exports(params))
+    if args.properties:
+        printer = lambda params: print(map_to_properties(params))
+    if args.yaml:
+        printer = lambda params: print(yaml.dump(params))
+    del args.export_statements
+    del args.yaml
+    del args.json
+    del args.properties
+    if (args.stack or args.serverless or args.docker or not isinstance(args.image, NoneType)) \
+       and not args.component:
+       parser.error("image, stack, doker or serverless do not make sense without component")
+    printer(load_parameters(**vars(args)))
+
+def map_to_exports(map):
+    """ Prints the map as eval-able set of environment variables. Keys
+    will be cleaned of all non-word letters and values will be escaped so
+    that they will be exported as literal values."""
+    ret = ""
+    keys = []
+    for key, val in map.items():
+        key = re.sub("[^a-zA-Z0-9_]", "", key)
+        ret += key + "='" + val.replace("'", "'\"'\"'") + "'" + os.linesep
+        keys.append(key)
+    ret += "export " + " ".join(keys) + os.linesep
+    return ret
+
+def map_to_properties(map):
+    """ Prints the map as loadable set of java properties. Keys
+    will be cleaned of all non-word letters."""
+    ret = ""
+    for key, val in map.items():
+        key = re.sub("[^a-zA-Z0-9_]", "", key)
+        ret += key + "=" + val + os.linesep
+    return ret

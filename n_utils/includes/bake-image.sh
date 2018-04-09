@@ -60,7 +60,7 @@ set -xe
 image="$1" ; shift
 [ "${image}" ] || die "You must give the image name as argument"
 
-source source_infra_properties.sh "$image" ""
+eval "$(ndt load-parameters "$image" -i $1 -e)"
 
 [ ! -d .cache ] || rm -rf .cache
 mkdir .cache

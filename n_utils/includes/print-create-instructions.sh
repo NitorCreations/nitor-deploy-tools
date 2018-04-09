@@ -49,7 +49,7 @@ STACK=$2
 
 if [ -d $COMPONENT/image ]; then
   echo "You can bake the component image by running 'ndt bake-image $COMPONENT'"
-  eval $(job_properties $GIT_BRANCH $1)
+  eval "$(ndt load-parameters $1)"
   AMI_SUFFIX=" \"\" $JENKINS_JOB_PREFIX-$1-bake"
 fi
 

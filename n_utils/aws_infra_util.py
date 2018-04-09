@@ -159,9 +159,18 @@ def import_parameter_file(filename, params):
                 key_val = line.split("=", 1)
                 if len(key_val) == 2:
                     key = key_val[0].strip()
-                    value = expand_vars(key_val[1].strip(), used_params, None, [])
+                    value = key_val[1].strip()
+                    if value.startswith("\"") and value.endswith("\""):
+                        value = value[1:-1]
+                    value = expand_vars(value, used_params, None, [])
                     params[key] = value
                     used_params[key] = value
+
+def _add_subcomponent_file(component, branch, type, name, files):
+    if name:
+        os.environ["ORIG_" + type.upper() + "_NAME"] = name
+        files.append(component + os.sep + type + "-" + name + os.sep + "infra.properties")
+        files.append(component + os.sep + type + "-" + name + os.sep + "infra-" + branch + ".properties")
 
 def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, branch=None):
     ret = {}
@@ -170,28 +179,17 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
             branch = os.environ["GIT_BRANCH"]
         else:
             branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    branch = branch.split("/")[-1:][0]
+    branch = branch.strip().split("/")[-1:][0]
     os.environ["GIT_BRANCH"] = branch
     files = ["infra.properties", "infra-" + branch + ".properties" ]
     if component:
         files.append(component + os.sep + "infra.properties")
         files.append(component + os.sep + "infra-" + branch + ".properties")
-        if stack:
-            os.environ["ORIG_STACK_NAME"] = stack
-            files.append(component + os.sep + "stack-" + stack + os.sep + "infra.properties")
-            files.append(component + os.sep + "stack-" + stack + os.sep + "infra-" + branch + ".properties")
-        if serverless:
-            os.environ["ORIG_SERVERLESS_NAME"] = serverless
-            files.append(component + os.sep + "serverless-" + serverless + os.sep + "infra.properties")
-            files.append(component + os.sep + "serverless-" + serverless + os.sep + "infra-" + branch + ".properties")
-        if docker:
-            os.environ["ORIG_DOCKER_NAME"] = docker
-            files.append(component + os.sep + "docker-" + docker + os.sep + "infra.properties")
-            files.append(component + os.sep + "docker-" + docker + os.sep + "infra-" + branch + ".properties")
-        if image:
-            files.append(component + os.sep + "image-" + image + os.sep + "infra.properties")
-            files.append(component + os.sep + "image-" + image + os.sep + "infra-" + branch + ".properties")
-        elif type(image) == str:
+        _add_subcomponent_file(component, branch, "stack", stack, files)
+        _add_subcomponent_file(component, branch, "serverless", serverless, files)
+        _add_subcomponent_file(component, branch, "docker", docker, files)
+        _add_subcomponent_file(component, branch, "image", image, files)
+        if type(image) == str:
             files.append(component + os.sep + "image" + os.sep + "infra.properties")
             files.append(component + os.sep + "image" + os.sep + "infra-" + branch + ".properties")
     for file in files:
@@ -359,27 +357,7 @@ def _get_params(data, template):
         image_name = os.path.basename(image_dir)
         stack_name = os.path.basename(template_dir)
         stack_name = re.sub('^stack-', '', stack_name)
-
-        get_vars_command = ['env', '-i', 'bash', '-c',
-                            'source source_infra_properties.sh "' + \
-                            image_name + '" "' + stack_name + '" ; set']
-
-        if 'GIT_BRANCH' in os.environ:
-            get_vars_command.insert(2, 'GIT_BRANCH=' + os.environ['GIT_BRANCH'])
-
-        proc = subprocess.Popen(get_vars_command, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, universal_newlines=True)
-        output = proc.communicate()
-        if proc.returncode:
-            sys.exit("Failed to retrieve infra*.properties")
-
-        for line in output[0].split('\n'):
-            line = line.strip()
-            if line:
-                k, val = line.split('=', 1)
-                if k in params or k.startswith("param"):
-                    val = val.strip("'").strip('"')
-                    SOURCED_PARAMS[k] = val
+        SOURCED_PARAMS = load_parameters(component=image_name, stack=stack_name)
         SOURCED_PARAMS.update(os.environ)
 
     params.update(SOURCED_PARAMS)

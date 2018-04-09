@@ -61,7 +61,7 @@ fi
 image="$1" ; shift
 stackName="$1" ; shift
 
-source source_infra_properties.sh "$image" "$stackName"
+eval "$(ndt load-parameters '$image' -s '$stackName' -e)"
 export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment

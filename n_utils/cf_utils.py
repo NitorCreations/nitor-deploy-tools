@@ -16,6 +16,10 @@
 
 """ Utilities to work with instances made by nitor-deploy-tools stacks
 """
+from __future__ import print_function
+from builtins import str
+from builtins import range
+from builtins import object
 import io
 import json
 import os
@@ -249,7 +253,7 @@ class LogSender(object):
             self._lock.acquire()
             self._messages.append(line.decode('utf-8', 'replace').rstrip())
             if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
-                print "Queued message"
+                print("Queued message")
         finally:
             self._lock.release()
 
@@ -292,7 +296,7 @@ class LogSender(object):
                                                          logStreamName=self.stream_name,
                                                          logEvents=events)
             if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
-                print "Sent " + str(len(events)) + " messages to " + self.stream_name
+                print("Sent " + str(len(events)) + " messages to " + self.stream_name)
             self.token = log_response['nextSequenceToken']
         except ClientError:
             self.token = None
@@ -327,8 +331,8 @@ def signal_status(status, resource_name=None):
     clf = boto3.client('cloudformation')
     if not resource_name:
         resource_name = info.logical_id()
-    print "Signalling " + status + " for " + info.stack_name() + "." +\
-          resource_name
+    print("Signalling " + status + " for " + info.stack_name() + "." +\
+          resource_name)
     clf.signal_resource(StackName=info.stack_name(),
                         LogicalResourceId=resource_name,
                         UniqueId=info.instance_id(),
@@ -358,7 +362,7 @@ def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
         if 'Addresses' in address_data and len(address_data['Addresses']) > 0 \
            and 'AllocationId' in address_data['Addresses'][0]:
             allocation_id = address_data['Addresses'][0]['AllocationId']
-    print "Allocating " + allocation_id + " on " + info.instance_id()
+    print("Allocating " + allocation_id + " on " + info.instance_id())
     ec2 = boto3.client('ec2')
     ec2.associate_address(InstanceId=info.instance_id(),
                           AllocationId=allocation_id,
@@ -371,7 +375,7 @@ def init():
 def get_userdata(outfile):
     response = requests.get('http://169.254.169.254/latest/user-data')
     if outfile == "-":
-        print response.text
+        print(response.text)
     else:
         with open(outfile, 'w') as outf:
             outf.write(response.text)
@@ -613,7 +617,7 @@ def _process_line(line, params, vault, vault_keys):
         param_match = match.group(1)
         param_name = param_match
         name_arg = None
-        for transform in VAR_OPERATIONS.keys():
+        for transform in list(VAR_OPERATIONS.keys()):
             if transform in param_name:
                 name_arg = param_name.split(transform, 1)
                 param_name = name_arg[0]
@@ -639,22 +643,22 @@ def _var_default(value, arg):
 
 def _var_suffix(value, arg):
     if value:
-        return value
+        return re.sub("^" + re.escape(arg[::-1]).replace("\\*", ".*?"), "", value[::-1])[::-1]
     return value
 
 def _var_prefix(value, arg):
     if value:
-        return value
+        return re.sub("^" + re.escape(arg).replace("\\*", ".*?"), "", value)
     return value
 
 def _var_suffix_greedy(value, arg):
     if value:
-        return value
+        return re.sub("^" + re.escape(arg[::-1]).replace("\\*", ".*"), "", value[::-1])[::-1]
     return value
 
 def _var_prefix_greedy(value, arg):
     if value and arg:
-        return value
+        return re.sub("^" + re.escape(arg).replace("\\*", ".*"), "", value)
     return value
 
 def _var_upper(value, arg):
