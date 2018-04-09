@@ -275,6 +275,22 @@ def yaml_to_json():
     else:
         print(doc)
 
+def yaml_to_yaml():
+    """ Do ndt preprocessing for a yaml file
+    """
+    parser = get_parser()
+    parser.add_argument("--colorize", "-c", help="Colorize output", action="store_true")
+    parser.add_argument("file", help="File to parse").completer = FilesCompleter()
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    if not os.path.isfile(args.file):
+        parser.error(args.file + " not found")
+    doc = aws_infra_util.yaml_to_yaml(args.file)
+    if args.colorize:
+        colorprint(doc)
+    else:
+        print(doc)
+
 def json_to_yaml():
     """Convert CloudFormation json to an approximation of a Nitor CloudFormation
     yaml with for example scripts externalized

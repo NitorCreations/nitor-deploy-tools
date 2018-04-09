@@ -349,6 +349,9 @@ def _get_params(data, template):
 
     # first load defaults for all parameters in "Parameters"
     _add_params(params, data, 'Parameters', True)
+    if "resources" in data:
+        _add_params(params, data['resources'], 'Parameters', True)
+        params['ServerlessDeploymentBucket'] = PARAM_NOT_AVAILABLE
 
     params['STACK_NAME'] = PARAM_NOT_AVAILABLE
 
@@ -387,6 +390,8 @@ def _get_params(data, template):
     params["AWS::NoValue"] = PARAM_NOT_AVAILABLE
     params["AWS::StackId"] = PARAM_NOT_AVAILABLE
     _add_params(params, data, 'Resources', False)
+    if "resources" in data:
+        _add_params(params, data['resources'], 'Resources', False)
     return params
 
 # replaces "((param))" references in `data` with values from `params` argument.
@@ -676,6 +681,10 @@ def yaml_to_dict(yaml_file_to_convert):
 def yaml_to_json(yaml_file_to_convert):
     data = yaml_to_dict(yaml_file_to_convert)
     return json_save(data)
+
+def yaml_to_yaml(yaml_file_to_convert):
+    data = yaml_to_dict(yaml_file_to_convert)
+    return yaml_save(data)
 
 def json_to_yaml(json_file_to_convert):
     data = json_load(open(json_file_to_convert).read())

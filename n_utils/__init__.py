@@ -38,6 +38,7 @@ NDT_ONLY = [
     'list-file-to-json=n_utils.cli:list_file_to_json',
     'add-deployer-server=n_utils.cli:add_deployer_server',
     'yaml-to-json=n_utils.cli:yaml_to_json',
+    'yaml-to-yaml=n_utils.cli:yaml_to_yaml',
     'json-to-yaml=n_utils.cli:json_to_yaml',
     'pytail=n_utils.cli:read_and_follow',
     'account-id=n_utils.cli:get_account_id',
