@@ -142,6 +142,20 @@ def run_command(command):
         raise Exception("Failed to run " + str(command))
     return output[0]
 
+def _process_line(line, params, used_params):
+    key_val = line.split("=", 1)
+    if len(key_val) == 2:
+        key = re.sub("[^a-zA-Z0-9_]", "", key_val[0].strip())
+        if key in os.environ:
+            value = os.environ[key]
+        else:
+            value = key_val[1].strip()
+        if value.startswith("\"") and value.endswith("\""):
+            value = value[1:-1]
+        value = expand_vars(value, used_params, None, [])
+        params[key] = value
+        used_params[key] = value
+
 def import_parameter_file(filename, params):
     used_params = deepcopy(os.environ)
     used_params.update(params)
@@ -152,19 +166,13 @@ def import_parameter_file(filename, params):
                 prevline = ""
                 continue
             if line.endswith("\\"):
-                prevline = prevline + line[:-1].strip()
+                prevline = prevline + line[:-1]
             else:
                 line = prevline + line
                 prevline = ""
-                key_val = line.split("=", 1)
-                if len(key_val) == 2:
-                    key = key_val[0].strip()
-                    value = key_val[1].strip()
-                    if value.startswith("\"") and value.endswith("\""):
-                        value = value[1:-1]
-                    value = expand_vars(value, used_params, None, [])
-                    params[key] = value
-                    used_params[key] = value
+                _process_line(line, params, used_params)
+        if prevline:
+            _process_line(prevline, params, used_params)
 
 def _add_subcomponent_file(component, branch, type, name, files):
     if name:
@@ -195,6 +203,12 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
     for file in files:
         if os.path.exists(file):
             import_parameter_file(file, ret)
+    if "REGION" not in ret:
+        ret["REGION"] = region()
+    if "ACCOUNT_ID" not in ret:
+        account = resolve_account()
+        if account:
+            ret["ACCOUNT_ID"] = account
     return ret
 
 

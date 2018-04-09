@@ -44,6 +44,7 @@ from requests.exceptions import ConnectionError
 from n_vault import Vault
 from .mfa_utils import mfa_read_token, mfa_generate_code
 
+ACCOUNT_ID = None
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
         firstly from the metadata service and then from EC2 tags and then
@@ -398,8 +399,14 @@ def assume_role(role_arn, mfa_token_name=None):
     return response['Credentials']
 
 def resolve_account():
-    sts = boto3.client("sts")
-    return sts.get_caller_identity()['Account']
+    global ACCOUNT_ID
+    if not ACCOUNT_ID:
+        try:
+            sts = boto3.client("sts")
+            ACCOUNT_ID = sts.get_caller_identity()['Account']
+        except:
+            pass
+    return ACCOUNT_ID
 
 def is_ec2():
     if sys.platform.startswith("win"):
