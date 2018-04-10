@@ -26,7 +26,6 @@ import sys
 import time
 import re
 from inspect import currentframe, getframeinfo
-from types import NoneType
 from subprocess import PIPE, Popen
 import argcomplete
 import yaml
@@ -54,6 +53,8 @@ from .account_utils import list_created_accounts, create_account
 SYS_ENCODING = locale.getpreferredencoding()
 from .serverless_utils import serverless_deploy
 from .aws_infra_util import load_parameters
+
+NoneType = type(None)
 
 def get_parser(formatter=None):
     caller = currentframe().f_back

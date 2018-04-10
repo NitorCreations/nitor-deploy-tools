@@ -31,7 +31,6 @@ import string
 import sys
 import time
 import tempfile
-from types import NoneType
 from collections import deque, OrderedDict
 from os.path import expanduser
 from threading import Event, Lock, Thread
@@ -44,6 +43,7 @@ from requests.exceptions import ConnectionError
 from n_vault import Vault
 from .mfa_utils import mfa_read_token, mfa_generate_code
 
+NoneType = type(None)
 ACCOUNT_ID = None
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2

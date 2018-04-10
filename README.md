@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 0.223
+## Released version 1.0-alpha1
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -297,6 +297,25 @@ optional arguments:
   -y, --yes   Answer yes or use default to all questions
 ```
 
+### `ndt deploy-serverless`
+
+```bash
+usage: ndt deploy-serverless [-d] [-h] component serverless-name
+
+Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the
+serverless project and runs sls deploy -s branch for the same
+
+positional arguments:
+  component   the component directory where the serverless directory is
+  serverless-name the name of the serverless directory that has the template
+                  For example for lambda/serverless-sender/template.yaml
+                  you would give sender
+
+optional arguments:
+  -d, --dryrun  dry-run - do only parameter expansion and template pre-processing and npm i
+  -h, --help    show this help message and exit
+```
+
 ### `ndt deploy-stack`
 
 ```bash
@@ -528,20 +547,49 @@ optional arguments:
 fatal: Not a valid object name
 ```
 
-### `ndt logs-to-cloudwatch`
+### `ndt load-parameters`
 
 ```bash
-usage: ndt logs-to-cloudwatch [-h] file
+usage: ndt load-parameters [-h] [--branch BRANCH]
+                           [--stack STACK | --serverless SERVERLESS | --docker DOCKER | --image [IMAGE]]
+                           [--json | --yaml | --properties | --export-statements]
+                           [component]
 
-Read a file and send rows to cloudwatch and keep following the end for new
-data. The log group will be the stack name that created instance and the
-logstream will be the instance id and filename.
+Load parameters from infra*.properties files in the order: infra.properties,
+infra-[branch].properties, [component]/infra.properties,
+[component]/infra-[branch].properties, [component]/[subcomponent-
+type]-[subcomponent]/infra.properties, [component]/[subcomponent-
+type]-[subcomponent]/infra-[branch].properties Last parameter defined
+overwrites ones defined before in the files. Supports parameter expansion and
+bash -like transformations. Namely: ${PARAM##prefix} # strip prefix greedy
+${PARAM%%suffix} # strip suffix greedy ${PARAM#prefix} # strip prefix not
+greedy ${PARAM%suffix} # strip suffix not greedy ${PARAM:-default} # default
+if empty ${PARAM:4:2} # start:len ${PARAM/substr/replace} ${PARAM^} # upper
+initial ${PARAM,} # lower initial ${PARAM^^} # upper ${PARAM,,} # lower
+Comment lines start with \'#\' Lines can be continued by adding \'\' at the end
+See https://www.tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_03.html (arrays
+not supported)
 
 positional arguments:
-  file        File to follow
+  component             Compenent to descend into
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help            show this help message and exit
+  --branch BRANCH, -b BRANCH
+                        Branch to get active parameters for
+  --stack STACK, -s STACK
+                        CloudFormation subcomponent to descent into
+  --serverless SERVERLESS, -l SERVERLESS
+                        Serverless subcomponent to descent into
+  --docker DOCKER, -d DOCKER
+                        Docker image subcomponent to descent into
+  --image [IMAGE], -i [IMAGE]
+                        AMI image subcomponent to descent into
+  --json, -j            JSON format output (default)
+  --yaml, -y            YAML format output
+  --properties, -o      properties file format output
+  --export-statements, -e
+                        Output as eval-able export statements
 ```
 
 ### `ndt mfa-add-token`
@@ -643,6 +691,17 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+### `ndt region`
+
+```bash
+usage: ndt region [-h]
+
+Get default region - the region of the instance if run in an EC2 instance
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
 ### `ndt register-private-dns`
 
 ```bash
@@ -656,6 +715,21 @@ positional arguments:
 
 optional arguments:
   -h, --help   show this help message and exit
+```
+
+### `ndt serverless-deploy`
+
+```bash
+usage: ndt serverless-deploy [-h] component name
+
+Deploys a Serverless Framework service under [component]/serverless-[name]
+
+positional arguments:
+  component   The component that contains the serverless service
+  name        The name of the serverless service
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt setup-cli`
@@ -793,6 +867,21 @@ optional arguments:
   --colorize, -c  Colorize output
 ```
 
+### `ndt yaml-to-yaml`
+
+```bash
+usage: ndt yaml-to-yaml [-h] [--colorize] file
+
+Do ndt preprocessing for a yaml file
+
+positional arguments:
+  file            File to parse
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --colorize, -c  Colorize output
+```
+
 ### `[ndt ]associate-eip`
 
 ```bash
@@ -847,6 +936,18 @@ optional arguments:
   -p ALLOCATIONIDPARAM, --allocationidparam ALLOCATIONIDPARAM
                         Parameter to look up for Elastic IP Allocation ID in
                         the stack - default is paramEipAllocationId
+```
+
+### `[ndt ]logs-to-cloudwatch`
+
+```bash
+usage: logs-to-cloudwatch [-h] file
+
+positional arguments:
+  file        File to follow
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `[ndt ]n-include`
@@ -979,23 +1080,6 @@ positional arguments
 
 optional arguments:
   -h, --help  show this help message and exit exit 1
-```
-
-### `source_infra_properties.sh`
-
-```bash
-usage: source source_infra_properties.sh component [stack-or-docker-name]
-
-Merges the properties of a component, stack and image from the relevant infra.properties
-and infra-<branch>.properties files. This script is meant to be sourced to get the
-parameters into environment variables.
-
-positional arguments
-  component             the component directory to look for additional properties files
-  stack-or-docker-name  the stack or docker directory to look for more properties files
-
-optional arguments:
-  -h, --help  show this help message and exit
 ```
 
 ### `ssh-hostkeys-collect.sh`
