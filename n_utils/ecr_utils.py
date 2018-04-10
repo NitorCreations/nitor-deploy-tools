@@ -41,7 +41,7 @@ def ensure_repo(name):
     token_resp = ecr.get_authorization_token(registryIds=[repo['registryId']])
     if 'authorizationData' in token_resp:
         auth_data = token_resp['authorizationData'][0]
-        full_token = base64.b64decode(auth_data['authorizationToken']).split(":")
+        full_token = base64.b64decode(auth_data['authorizationToken']).decode("utf-8").split(":")
         user = full_token[0]
         token = full_token[1]
         sudo = ""
