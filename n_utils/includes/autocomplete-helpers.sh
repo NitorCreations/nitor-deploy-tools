@@ -59,13 +59,7 @@ checkout_branch() {
   fi
 }
 job_properties() {
-  local GIT_BRANCH=$1
-  #If region not set in infra files, get the region of the instance or from env
-  [ "$REGION" ] || REGION=$(ndt region)
-  # Same logic as above for account id
-  [ "$ACCOUNT_ID" ] || ACCOUNT_ID=$(ndt account-id)
-  env -i REGION="$REGION" ACCOUNT_ID="$ACCOUNT_ID" GIT_BRANCH="$GIT_BRANCH" \
-    ndt load-parameters $2 $3 $4
+  ndt load-parameters $2 $3 $4 -p -b $1
 }
 
 current_branch_job_properties() {

@@ -929,7 +929,7 @@ def cli_load_parameters():
     format_group = parser.add_mutually_exclusive_group()
     format_group.add_argument("--json", "-j", action="store_true", help="JSON format output (default)")
     format_group.add_argument("--yaml", "-y", action="store_true", help="YAML format output")
-    format_group.add_argument("--properties", "-o", action="store_true", help="properties file format output")
+    format_group.add_argument("--properties", "-p", action="store_true", help="properties file format output")
     format_group.add_argument("--export-statements", "-e", action="store_true", help="Output as eval-able export statements")
     args = parser.parse_args()
     printer = lambda params: print(json.dumps(params))
