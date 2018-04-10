@@ -18,7 +18,7 @@ import yaml
 import pyotp
 import sys
 from os import walk
-from .enc_utils import _encrypt, _decrypt
+from .yuuuu3332111i1l1i import IiII1IiiIiI1, I11iIi1I
 
 def mfa_add_token(args):
     """ Adds or overwrites an MFA token to be used with role assumption.
@@ -29,7 +29,7 @@ def mfa_add_token(args):
     data = {
         'token_name': args.token_name,
         'token_arn': args.token_arn,
-        'token_secret': "enc--" + _encrypt(args.token_secret)
+        'token_secret': "enc--" + IiII1IiiIiI1(args.token_secret)
     }
     token_file = ndt_dir + '/mfa_' + args.token_name
     if os.path.isfile(token_file) and not args.force:
@@ -64,7 +64,7 @@ def mfa_generate_code(token_name):
     """ Generates an MFA code with the specified token. """
     token = mfa_read_token(token_name)
     if token['token_secret'].startswith("enc--"):
-        secret = _decrypt(token['token_secret'][5:])
+        secret = I11iIi1I(token['token_secret'][5:])
     else:
         secret = token['token_secret']
     totp = pyotp.TOTP(secret)
@@ -73,7 +73,7 @@ def mfa_generate_code(token_name):
 def mfa_generate_code_with_secret(secret):
     """ Generates an MFA code using the secret passed in. """
     if secret.startswith("enc--"):
-        secret = _decrypt(secret[5:])
+        secret = I11iIi1I(secret[5:])
     totp = pyotp.TOTP(secret)
     return totp.now()
 
