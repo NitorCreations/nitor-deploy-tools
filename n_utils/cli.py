@@ -817,7 +817,7 @@ def cli_mfa_add_token():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if args.interactive:
-        args.token_secret = input("Enter token secret: ")
+        args.token_secret = eval(input("Enter token secret: "))
         code_1 = mfa_generate_code_with_secret(args.token_secret)
         print("First sync code: " + code_1)
         print("Waiting to generate second sync code. This could take 30 seconds...")
@@ -826,7 +826,7 @@ def cli_mfa_add_token():
             time.sleep(5)
             code_2 = mfa_generate_code_with_secret(args.token_secret)
         print("Second sync code: " + code_2)
-        args.token_arn = input("Enter token ARN: ")
+        args.token_arn = eval(input("Enter token ARN: "))
     elif args.token_arn is None or args.token_secret is None:
         parser.error("Both token_arn and token_secret are required when not adding interactively.")
     try:
@@ -953,7 +953,7 @@ def map_to_exports(map):
     that they will be exported as literal values."""
     ret = ""
     keys = []
-    for key, val in map.items():
+    for key, val in list(map.items()):
         key = re.sub("[^a-zA-Z0-9_]", "", key)
         ret += key + "='" + val.replace("'", "'\"'\"'") + "'" + os.linesep
         keys.append(key)
@@ -964,7 +964,7 @@ def map_to_properties(map):
     """ Prints the map as loadable set of java properties. Keys
     will be cleaned of all non-word letters."""
     ret = ""
-    for key, val in map.items():
+    for key, val in list(map.items()):
         key = re.sub("[^a-zA-Z0-9_]", "", key)
         ret += key + "=" + val + os.linesep
     return ret

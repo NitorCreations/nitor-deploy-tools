@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from n_utils import COMMAND_MAPPINGS, PATH_COMMANDS, NDT_AND_CONSOLE
 from subprocess import Popen, PIPE
 
@@ -12,23 +13,23 @@ def do_call(command):
 for command in sorted(COMMAND_MAPPINGS.keys()):
     if command in CONSOLE_PREFERRED:
         continue
-    print "### `ndt " + command + "`"
-    print ""
-    print "```bash"
-    print do_call(["ndt", command, "-h"])
-    print "```\n"
+    print("### `ndt " + command + "`")
+    print("")
+    print("```bash")
+    print(do_call(["ndt", command, "-h"]))
+    print("```\n")
 
 for command in CONSOLE_PREFERRED:
-    print "### `[ndt ]" + command + "`"
-    print ""
-    print "```bash"
-    print do_call([command, "-h"])
-    print "```\n"
+    print("### `[ndt ]" + command + "`")
+    print("")
+    print("```bash")
+    print(do_call([command, "-h"]))
+    print("```\n")
 
 for script in sorted(PATH_COMMANDS):
     name = script.split("/")[-1]
-    print "### `" + name + "`"
-    print ""
-    print "```bash"
-    print do_call([name, "-h"])
-    print "```\n"
+    print("### `" + name + "`")
+    print("")
+    print("```bash")
+    print(do_call([name, "-h"]))
+    print("```\n")

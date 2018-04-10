@@ -16,7 +16,12 @@
 
 """ Utilities to bootsrap AWS accounts into use with nitor-deploy-tools
 """
+from __future__ import print_function
 
+from builtins import zip
+from builtins import input
+from builtins import str
+from builtins import object
 import os
 import random
 import re
@@ -122,20 +127,20 @@ def has_entry(prefix, name, file_name):
 
 def setup_cli(name=None, key_id=None, secret=None, region=None):
     if name is None:
-        name = raw_input("Profile name: ")
+        name = input("Profile name: ")
     home_dir = os.path.expanduser("~")
     config_file = os.path.join(home_dir, ".aws", "config")
     credentials_file = os.path.join(home_dir, ".aws", "credentials")
     if has_entry("profile ", name, config_file) or \
        has_entry("", name, credentials_file):
-        print "Profile " + name + " already exists. Not overwriting."
+        print("Profile " + name + " already exists. Not overwriting.")
         return
     if key_id is None:
-        key_id = raw_input("Key ID: ")
+        key_id = input("Key ID: ")
     if secret is None:
-        secret = raw_input("Key secret: ")
+        secret = input("Key secret: ")
     if region is None:
-        region = raw_input("Default region: ")
+        region = input("Default region: ")
     writer = ConfigFileWriter()
     config_values = {
         "__section__": "profile " + name,
@@ -276,7 +281,7 @@ def _set_first_parameter(root, name, value):
     if name in root:
         root[name]["Default"] = value
         return True
-    for k, v in root.items():
+    for k, v in list(root.items()):
         if isinstance(v, dict) or isinstance(v, OrderedDict):
             return _set_first_parameter(v, name, value)
         elif isinstance(v, list):
@@ -288,7 +293,7 @@ def _map_ssh_key(context, param, value):
     key_name = None
     default_name = "ndt-" + context.__class__.__name__.lower() + "-instance"
     if value == "1":
-        key_name = raw_input("Name for new key pair (" + default_name + "): ")
+        key_name = input("Name for new key pair (" + default_name + "): ")
         if not key_name:
             key_name = default_name
         ec2 = boto3.client("ec2")
@@ -302,7 +307,7 @@ def _map_ssh_key(context, param, value):
             index = int(value) - 2
             key_name = context.ssh_keys[index]
         except (ValueError, IndexError):
-            print "Invalid ssh key selection " + value
+            print("Invalid ssh key selection " + value)
             sys.exit(1)
     return key_name
 
@@ -323,7 +328,7 @@ def _map_elastic_ip(context, param, value):
             index = int(value) - 2
             eip = context.elastic_ips[index]
         except (ValueError, IndexError):
-            print "Invalid elastic ip selection " + value
+            print("Invalid elastic ip selection " + value)
             sys.exit(1)
     return eip
 
@@ -333,10 +338,10 @@ def _map_list(context, param, value):
         index = int(value) - 1
         return select_list[index]
     except (ValueError, IndexError):
-        print "Invalid " + param +" selection " + value
+        print("Invalid " + param +" selection " + value)
         sys.exit(1)
 
-class ContextClassBase:
+class ContextClassBase(object):
     """ Base class for template contexts. Can be directly used for
     bootstrap stacks with no parameters to ask can use it directly
     """
@@ -410,7 +415,7 @@ class ContextClassBase:
                 setattr(self, param, getattr(args, param + "_default")())
             else:
                 default = self.getattr(param + "_default")()
-                setval = raw_input(self.format_prompt(param, default=default))
+                setval = input(self.format_prompt(param, default=default))
                 if not setval:
                     setval = default
                 if param in self.value_mappers:
@@ -460,7 +465,7 @@ class ContextClassBase:
     def write(self, yes=False):
         if "Files" in self.template:
             for entry in self.template["Files"]:
-                for source, dest in entry.items():
+                for source, dest in list(entry.items()):
                     dest = self.component_name + os.sep + dest % self.__dict__
                     dest = os.path.normpath(dest)
                     dest_dir = os.path.normpath(os.path.dirname(dest))
@@ -480,7 +485,7 @@ class ContextClassBase:
                     stack_props_file.write("STACK_NAME=$ORIG_STACK_NAME\n")
         stack_template = os.path.join(stack_dir, "template.yaml")
         if os.path.exists(stack_template) and not yes:
-            answer = raw_input("Overwrite " + self.stack_name + " stack? (n): ")
+            answer = input("Overwrite " + self.stack_name + " stack? (n): ")
             if not answer or not answer.lower() == "y":
                 return False
         with open(stack_template, "w") as stack_file:

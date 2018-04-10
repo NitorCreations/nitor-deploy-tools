@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 import base64
 from os import devnull
 from subprocess import check_call, STDOUT
@@ -36,7 +37,7 @@ def ensure_repo(name):
             repo = repo_resp['repository']
     if not repo:
         raise Exception("Failed to find or create repo")
-    print "REPO=\"" + repo['repositoryUri'] + "\""
+    print("REPO=\"" + repo['repositoryUri'] + "\"")
     token_resp = ecr.get_authorization_token(registryIds=[repo['registryId']])
     if 'authorizationData' in token_resp:
         auth_data = token_resp['authorizationData'][0]
@@ -50,8 +51,8 @@ def ensure_repo(name):
                 sudo = "sudo "
         except:
             pass
-        print sudo + "docker login -u " + user + " -p " + token + " " + \
-              auth_data['proxyEndpoint']
+        print(sudo + "docker login -u " + user + " -p " + token + " " + \
+              auth_data['proxyEndpoint'])
 
 def repo_uri(name):
     ecr = boto3.client("ecr", region_name=region())

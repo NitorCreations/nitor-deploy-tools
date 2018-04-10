@@ -1,3 +1,4 @@
+from __future__ import division
 # Copyright 2017 Nitor Creations Oy
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from past.utils import old_div
 from botocore.exceptions import ClientError
 from collections import deque
 from datetime import datetime
@@ -26,7 +28,7 @@ import time
 
 
 def millis2iso(millis):
-    return fmttime(datetime.utcfromtimestamp(millis/1000.0))
+    return fmttime(datetime.utcfromtimestamp(old_div(millis,1000.0)))
 
 def timestamp(tstamp):
     return (tstamp.replace(tzinfo=None) - datetime(1970, 1, 1, tzinfo=None))\
@@ -44,8 +46,8 @@ class LogEventThread(Thread):
     def __init__(self, log_group_name, start_time=None):
         Thread.__init__(self)
         self.log_group_name = log_group_name
-        self.start_time = long(start_time) * 1000 if start_time else \
-                          long((time.time() - 60) * 1000)
+        self.start_time = int(start_time) * 1000 if start_time else \
+                          int((time.time() - 60) * 1000)
         self._stopped = Event()
 
     def list_logs(self):
@@ -149,7 +151,7 @@ class CloudFormationEvents(LogEventThread):
 
                 if len(unseen_events) > 0:
                     seen_events_up_to = \
-                        long(timestamp(unseen_events[0]['Timestamp']))
+                        int(timestamp(unseen_events[0]['Timestamp']))
                     for event in reversed(unseen_events):
                         yield event
 

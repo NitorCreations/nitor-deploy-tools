@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from builtins import str
 import collections
 import hashlib
 import locale
@@ -43,7 +44,7 @@ def log_data(data, output_format="yaml"):
     lexer = lexers.get_lexer_by_name(output_format)
     formatter = formatters.get_formatter_by_name("256")
     formatter.__init__(style=get_style_by_name('emacs'))
-    colored_yaml = os.linesep + highlight(unicode(formatted, 'UTF-8'),
+    colored_yaml = os.linesep + highlight(str(formatted, 'UTF-8'),
                                           lexer, formatter)
     log(colored_yaml)
 
@@ -266,7 +267,7 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
 
     # Create/update stack
     params_doc = []
-    for key in template_parameters.keys():
+    for key in list(template_parameters.keys()):
         if key in os.environ:
             val = os.environ[key]
             log("Parameter " + key + ": using \033[32;1mCUSTOM value " + \

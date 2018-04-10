@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+from builtins import str
+from builtins import range
+from past.builtins import basestring
 import collections
 import json
 import glob
@@ -246,7 +250,7 @@ def yaml_save(data):
     def _dict_representer(dumper, data):
         return dumper.represent_mapping(
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-            data.items())
+            list(data.items()))
     OrderedDumper.add_representer(collections.OrderedDict, _dict_representer)
     return yaml.dump(data, None, OrderedDumper)
 
@@ -355,7 +359,7 @@ PARAM_NOT_AVAILABLE = "N/A"
 
 def _add_params(target, source, source_prop, use_value):
     if source_prop in source:
-        for k, val in source[source_prop].items():
+        for k, val in list(source[source_prop].items()):
             target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
 
 def _get_params(data, template):
@@ -412,7 +416,7 @@ def _get_params(data, template):
 # Param references with no association in `params` are left as-is.
 def apply_params(data, params):
     if isinstance(data, collections.OrderedDict) or isinstance(data, dict):
-        for k, val in data.items():
+        for k, val in list(data.items()):
             key2 = apply_params(k, params)
             val2 = apply_params(val, params)
             if k != key2:
@@ -421,7 +425,7 @@ def apply_params(data, params):
     elif isinstance(data, list):
         for i in range(0, len(data)):
             data[i] = apply_params(data[i], params)
-    elif isinstance(data, str) or isinstance(data, unicode):
+    elif isinstance(data, str) or isinstance(data, str):
         prev_end = None
         res = ''
         for match in PARAM_REF_RE.finditer(data):
@@ -446,7 +450,7 @@ def apply_source(data, filename, optional, default):
             if optional == "#optional":
                 data['__optional'] = "true"
                 data['__default'] = default
-        for k, val in data.items():
+        for k, val in list(data.items()):
             apply_source(k, filename, optional, default)
             apply_source(val, filename, optional, default)
 
@@ -464,9 +468,9 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                 contents = import_script(script_import)
                 data['Fn::Join'] = ["", contents]
             else:
-                print "ERROR: " + val + ": Can't import file \"" + val + \
+                print("ERROR: " + val + ": Can't import file \"" + val + \
                       "\" - file not found on include paths or relative to " + \
-                      basefile
+                      basefile)
                 gotImportErrors = True
         elif 'Fn::ImportYaml' in data:
             val = data['Fn::ImportYaml']
@@ -477,7 +481,7 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                 contents = apply_params(contents, data)
                 data.clear()
                 if isinstance(contents, collections.OrderedDict):
-                    for k, val in contents.items():
+                    for k, val in list(contents.items()):
                         data[k] = import_scripts_pass1(val, yaml_file, path + \
                                                        k + "_", templateParams)
                 elif isinstance(contents, list):
@@ -486,15 +490,15 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                         data[i] = import_scripts_pass1(data[i], yaml_file,
                                                        path + str(i) + "_", templateParams)
                 else:
-                    print "ERROR: " + path + ": Can't import yaml file \"" + \
+                    print("ERROR: " + path + ": Can't import yaml file \"" + \
                           yaml_file + "\" that isn't an associative array or" +\
-                          " a list in file " + basefile
+                          " a list in file " + basefile)
                     gotImportErrors = True
             else:
                 if not ('optional' in data and data['optional']):
-                    print "ERROR: " + val + ": Can't import file \"" + val + \
+                    print("ERROR: " + val + ": Can't import file \"" + val + \
                           "\" - file not found on include paths or relative to " + \
-                          basefile
+                          basefile)
                     gotImportErrors = True
                 else:
                     for k in data:
@@ -504,7 +508,7 @@ def import_scripts_pass1(data, basefile, path, templateParams):
         elif 'Fn::Merge' in data:
             merge_list = data['Fn::Merge']
             if not isinstance(merge_list, list):
-                print "ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile
+                print("ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile)
                 gotImportErrors = True
                 return data
             data = import_scripts_pass1(merge_list[0], basefile, path + "0_", templateParams)
@@ -512,31 +516,31 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                 merge = import_scripts_pass1(merge_list[i], basefile, path + str(i) + "_", templateParams)
                 if isinstance(data, collections.OrderedDict):
                     if not isinstance(merge, collections.OrderedDict):
-                        print "ERROR: " + path + ": First Fn::Merge entry " +\
+                        print("ERROR: " + path + ": First Fn::Merge entry " +\
                               "was an object, but entry " + str(i) + " was " + \
                               "not an object: " + str(merge) + " in file " +\
-                              basefile
+                              basefile)
                         gotImportErrors = True
                     else:
-                        for k, val in merge.items():
+                        for k, val in list(merge.items()):
                             data[k] = val
                 elif isinstance(data, list):
                     if not isinstance(merge, list):
-                        print "ERROR: " + path + ": First Fn::Merge entry " +\
+                        print("ERROR: " + path + ": First Fn::Merge entry " +\
                               "was a list, but entry " + str(i) + " was not" +\
-                              " a list: " + str(merge)
+                              " a list: " + str(merge))
                         gotImportErrors = True
                     else:
                         for k in range(0, len(merge)):
                             data.append(merge[k])
                 else:
-                    print "ERROR: " + path + ": Unsupported " + str(type(data))
+                    print("ERROR: " + path + ": Unsupported " + str(type(data)))
                     gotImportErrors = True
                     break
         elif 'Ref' in data:
             data['__source'] = basefile
         else:
-            for k, val in data.items():
+            for k, val in list(data.items()):
                 data[k] = import_scripts_pass1(val, basefile, path + k + "_", templateParams)
     elif isinstance(data, list):
         for i in range(0, len(data)):
@@ -558,19 +562,19 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                 if '__optional' in data:
                     data = data['__default']
                 else:
-                    print "ERROR: " + path + ": Referenced parameter \"" + \
+                    print("ERROR: " + path + ": Referenced parameter \"" + \
                           var_name + "\" in file " + filename + \
                           " not declared in template parameters in " + \
-                          templateFile
+                          templateFile)
                     gotImportErrors = True
             else:
                 if resolveRefs:
                     data = templateParams[var_name]
                     if data == PARAM_NOT_AVAILABLE:
-                        print "ERROR: " + path + ": Referenced parameter \"" +\
+                        print("ERROR: " + path + ": Referenced parameter \"" +\
                               var_name + "\" in file " + filename +\
                               " is resolved later by AWS; cannot resolve its" +\
-                              " value now"
+                              " value now")
                         gotImportErrors = True
             if '__optional' in data:
                 del data['__optional']
@@ -595,7 +599,7 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                          " in stack " + stack_name)
             data = stack_params[stack_param]
         else:
-            for k, val in data.items():
+            for k, val in list(data.items()):
                 data[k] = import_scripts_pass2(val, templateFile, path + k +\
                                                "_", templateParams, resolveRefs)
     elif isinstance(data, list):
@@ -640,7 +644,7 @@ def extract_script(prefix, path, join_args):
     for element in join_args:
         if isinstance(element, collections.OrderedDict):
             if not 'Ref' in element:
-                print "Dict with no ref"
+                print("Dict with no ref")
                 json_save(element)
             else:
                 var_name = element['Ref']
@@ -663,7 +667,7 @@ def extract_script(prefix, path, join_args):
     with open(filename, "w") as script_file: #opens file with name of "test.txt"
         script_file.write(code[0])
         script_file.write("\n")
-        for var_name, var_decl in var_decls.items():
+        for var_name, var_decl in list(var_decls.items()):
             script_file.write(var_decl)
         script_file.write("\n")
         script_file.write(code[1])
@@ -673,7 +677,7 @@ def extract_script(prefix, path, join_args):
 def extract_scripts(data, prefix, path=""):
     if not isinstance(data, collections.OrderedDict):
         return
-    for k, val in data.items():
+    for k, val in list(data.items()):
         extract_scripts(val, prefix, path + k + "_")
         if k == "Fn::Join":
             if not val[0] == "":
@@ -711,7 +715,7 @@ def json_to_yaml(json_file_to_convert):
 def locate_launchconf_metadata(data):
     if "Resources" in data:
         resources = data["Resources"]
-        for val in resources.values():
+        for val in list(resources.values()):
             if "Type" in val and val["Type"] == "AWS::AutoScaling::LaunchConfiguration" and \
                 "Metadata" in val:
                 return val["Metadata"]
@@ -719,7 +723,7 @@ def locate_launchconf_metadata(data):
 
 def locate_launchconf_userdata(data):
     resources = data["Resources"]
-    for val in resources.values():
+    for val in list(resources.values()):
         if "Type" in val and val["Type"] == "AWS::AutoScaling::LaunchConfiguration":
             if "Properties" in val and "UserData" in val["Properties"] and \
                "Fn::Base64" in val["Properties"]["UserData"] and \
@@ -735,7 +739,7 @@ def locate_launchconf_userdata(data):
 
 def reset_launchconf_userdata(data, lc_userdata):
     resources = data["Resources"]
-    for val in resources.values():
+    for val in list(resources.values()):
         if "Type" in val and val["Type"] == "AWS::AutoScaling::LaunchConfiguration":
             val["Properties"]["UserData"]["Fn::Base64"]["Fn::Sub"] = lc_userdata
 
@@ -745,7 +749,7 @@ def get_refs(data, reflist=None):
     if isinstance(data, collections.OrderedDict):
         if "Ref" in data:
             reflist.append(data["Ref"])
-        for val in data.values():
+        for val in list(data.values()):
             get_refs(val, reflist)
     elif isinstance(data, list):
         for ref in data:

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from builtins import chr
+from builtins import str
 import argparse
 import time
 import json
@@ -22,7 +25,7 @@ def letter_to_target_id(letter):
     return ord(letter)-ord("f")+5
 
 def target_id_to_letter(target_id):
-    return str(unichr(target_id-5+ord("f")))
+    return str(chr(target_id-5+ord("f")))
 
 def wmic_partition_get():
     return wmic_get("partition")
@@ -82,10 +85,10 @@ def latest_snapshot():
     parser.add_argument("tag", help="The tag to find snapshots with")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    print first_free_device()
+    print(first_free_device())
     snapshot = get_latest_snapshot(args.tag, args.tag)
     if snapshot:
-        print snapshot.id
+        print(snapshot.id)
     else:
         sys.exit(1)
 
@@ -94,17 +97,17 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
     set_region()
     snapshot = get_latest_snapshot(tag_key, tag_value)
     if snapshot:
-        print "Found snapshot " + snapshot.id
+        print("Found snapshot " + snapshot.id)
         volume = create_volume(snapshot.id, availability_zone=availability_zone,
                                size_gb=size_gb)
     else:
         if not size_gb:
             size_gb = 32
-        print "Creating empty volyme of size " + str(size_gb)
+        print("Creating empty volyme of size " + str(size_gb))
         volume = create_empty_volume(size_gb,
                                      availability_zone=availability_zone)
     device = first_free_device()
-    print "Attaching volume " + volume + " to " + device
+    print("Attaching volume " + volume + " to " + device)
     attach_volume(volume, device)
     if del_on_termination:
         delete_on_termination(device)
@@ -123,13 +126,13 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                    "-DiskNumber", disk_number,
                                    "-UseMaximumSize", "-DriveLetter",
                                    drive_letter])
-            print "Formatting " + device + "(" + drive_letter + ":)"
+            print("Formatting " + device + "(" + drive_letter + ":)")
             subprocess.check_call(["powershell.exe", "Format-Volume",
                                    "-DriveLetter", drive_letter, "-FileSystem",
                                    "NTFS", "-Force", "-Confirm:$False"])
         else:
             #linux format
-            print "Formatting " + device
+            print("Formatting " + device)
             subprocess.check_call(["mkfs.ext4", device])
     else:
         if sys.platform.startswith('win'):
@@ -163,12 +166,12 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                        max_size])
         else:
             if size_gb and not size_gb == snapshot.volume_size:
-                print "Resizing " + device + " from " + \
-                       str(snapshot.volume_size) + "GB to " + str(size_gb)
+                print("Resizing " + device + " from " + \
+                       str(snapshot.volume_size) + "GB to " + str(size_gb))
                 try:
                     subprocess.check_call(["e2fsck", "-f", "-p", device])
                 except CalledProcessError as e:
-                    print "Filesystem check returned " + str(e.returncode)
+                    print("Filesystem check returned " + str(e.returncode))
                     if e.returncode > 1:
                         raise Exception("Uncorrected filesystem errors - please fix manually")
                 subprocess.check_call(["resize2fs", device])
@@ -187,7 +190,7 @@ def first_free_device():
             return "/dev/xvd" + target_id_to_letter(max_target + 1)
     else:
         devices = [x.device for x in psutil.disk_partitions()]
-        print devices
+        print(devices)
         for letter in "fghijklmnopqrstuvxyz":
             device = "/dev/xvd" + letter
             if device not in devices and not os.path.exists(device):
@@ -358,20 +361,20 @@ def clean_snapshots(days, tags):
                                                        tz.tzlocal()).timetuple()
             compare_time = snapshot['StartTime'].replace(tzinfo=None)
             if compare_time < newest_timestamp:
-                print colored("Deleting " + snapshot['SnapshotId'], "yellow") +\
+                print(colored("Deleting " + snapshot['SnapshotId'], "yellow") +\
                               " || " +\
                               time.strftime("%a, %d %b %Y %H:%M:%S",
                                             print_time) + \
-                              " || " + json.dumps(tags)
+                              " || " + json.dumps(tags))
                 try:
                     ec2.delete_snapshot(SnapshotId=snapshot['SnapshotId'])
                     time.sleep(0.2)
                 except ClientError as err:
-                    print colored("Delete failed: " + \
-                                  err.response['Error']['Message'], "red")
+                    print(colored("Delete failed: " + \
+                                  err.response['Error']['Message'], "red"))
             else:
-                print colored("Skipping " + snapshot['SnapshotId'], "cyan") +\
+                print(colored("Skipping " + snapshot['SnapshotId'], "cyan") +\
                               " || " + \
                               time.strftime("%a, %d %b %Y %H:%M:%S",
                                             print_time) +\
-                              " || " + json.dumps(tags)
+                              " || " + json.dumps(tags))

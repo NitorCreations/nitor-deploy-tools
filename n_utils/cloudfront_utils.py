@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
+from __future__ import print_function
+from builtins import str
 import json
 import time
 import boto3
@@ -68,7 +70,7 @@ def upsert_cloudfront_records(args):
     changes = {}
     for distribution in distributions:
         if 'Aliases' in distribution:
-            print "Upserting records for " + distribution['Id'] + " (" + distribution['Comment'] + ")"
+            print("Upserting records for " + distribution['Id'] + " (" + distribution['Comment'] + ")")
             for alias in distribution['Aliases']['Items']:
                 change = get_record_change(alias, distribution['DomainName'], distribution['Id'], zones)
                 if not change['HostedZoneId'] in changes:
@@ -89,10 +91,10 @@ def upsert_cloudfront_records(args):
                 if not route53.get_change(Id=req['Id'])['ChangeInfo']['Status'] == 'INSYNC':
                     not_synced_count = not_synced_count + 1
             if not_synced_count > 0:
-                print "Waiting for requests to sync - " + str(not_synced_count) + " not synced"
+                print("Waiting for requests to sync - " + str(not_synced_count) + " not synced")
                 time.sleep(2)
             else:
-                print str(len(requests)) + " requests INSYNC"
+                print(str(len(requests)) + " requests INSYNC")
 
 def longest_matching_zone(alias, hosted_zones):
     ret = {'Name': ''}
@@ -104,7 +106,7 @@ def longest_matching_zone(alias, hosted_zones):
 def get_record_change(alias, dns_name, distribution_id, hosted_zones):
     zone = longest_matching_zone(alias, hosted_zones)
     if zone:
-        print alias + " => " + dns_name + "(" + distribution_id + ") in " + zone['Name']
+        print(alias + " => " + dns_name + "(" + distribution_id + ") in " + zone['Name'])
         if alias + "." == zone['Name']:
             type = "A"
         else:

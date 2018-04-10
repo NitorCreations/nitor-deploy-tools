@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
+from __future__ import print_function
+from builtins import object
 import os
 import yaml
 import pyotp
@@ -35,7 +37,7 @@ def mfa_add_token(args):
     if os.path.isfile(token_file) and not args.force:
         raise ValueError('A token with the name ' + args.token_name + ' already exists!')
     with open(token_file, 'w') as outfile:
-        os.chmod(token_file, 0600)
+        os.chmod(token_file, 0o600)
         yaml.dump(data, outfile, default_flow_style=False)
 
 def mfa_read_token(token_name):
@@ -45,7 +47,7 @@ def mfa_read_token(token_name):
         try:
             data = yaml.load(infile)
         except yaml.YAMLError as exc:
-            print exc
+            print(exc)
     if data:
         if not data['token_secret'].startswith("enc--"):
             data['force'] = True
