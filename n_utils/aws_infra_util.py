@@ -213,18 +213,20 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         account = resolve_account()
         if account:
             ret["ACCOUNT_ID"] = account
-    if "ORIG_STACK_NAME" in os.environ:
-        ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
-    if "ORIG_DOCKER_NAME" in os.environ:
-        ret["ORIG_DOCKER_NAME"] = os.environ["ORIG_DOCKER_NAME"]
-    if "ORIG_SERVERLESS_NAME" in os.environ:
-        ret["ORIG_SERVERLESS_NAME"] = os.environ["ORIG_SERVERLESS_NAME"]
-    if "ORIG_IMAGE_NAME" in os.environ:
-        ret["ORIG_IMAGE_NAME"] = os.environ["ORIG_IMAGE_NAME"]
     if "GIT_BRANCH" not in ret:
         ret["GIT_BRANCH"] = os.environ["GIT_BRANCH"]
     if "paramEnvId" not in ret:
         ret["paramEnvId"] = os.environ["GIT_BRANCH"]
+    if "ORIG_STACK_NAME" in os.environ:
+        ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
+    if "ORIG_DOCKER_NAME" in os.environ:
+        ret["ORIG_DOCKER_NAME"] = os.environ["ORIG_DOCKER_NAME"]
+        if "DOCKER_NAME" not in ret:
+            ret["DOCKER_NAME"] = component + "/" + ret["paramEnvId"] + "-" + ret["ORIG_DOCKER_NAME"]
+    if "ORIG_SERVERLESS_NAME" in os.environ:
+        ret["ORIG_SERVERLESS_NAME"] = os.environ["ORIG_SERVERLESS_NAME"]
+    if "ORIG_IMAGE_NAME" in os.environ:
+        ret["ORIG_IMAGE_NAME"] = os.environ["ORIG_IMAGE_NAME"]
     if "JENKINS_JOB_PREFIX" not in ret:
         ret["JENKINS_JOB_PREFIX"] = "aws" + ret["paramEnvId"]
     return ret
