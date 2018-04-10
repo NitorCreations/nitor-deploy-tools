@@ -428,7 +428,7 @@ def apply_params(data, params):
     elif isinstance(data, list):
         for i in range(0, len(data)):
             data[i] = apply_params(data[i], params)
-    elif isinstance(data, str):
+    elif isinstance(data, str) or isinstance(data, bytes):
         data = expand_vars(data, params, None, [])
     return data
 
