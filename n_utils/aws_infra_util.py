@@ -31,7 +31,6 @@ from copy import deepcopy
 from .cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
 
 stacks = dict()
-PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
 include_dirs = []
 if "CF_TEMPLATE_INCLUDE" in os.environ:
@@ -429,21 +428,10 @@ def apply_params(data, params):
     elif isinstance(data, list):
         for i in range(0, len(data)):
             data[i] = apply_params(data[i], params)
-    elif isinstance(data, str) or isinstance(data, str):
-        prev_end = None
-        res = ''
-        for match in PARAM_REF_RE.finditer(data):
-            k = match.group(1)
-            if k in params:
-                span = match.span()
-                # support non-string values only when value contains nothing but
-                # the reference
-                if span[0] == 0 and span[1] == len(data):
-                    return params[k]
-                res += data[prev_end:span[0]]
-                res += params[k]
-                prev_end = span[1]
-        data = res + data[prev_end:]
+    else:
+        print(str(type(data)) + ": " + data + "\n=> " + json.dumps(params))
+        # isinstance(data, str) or isinstance(data, str):
+        data = expand_vars(data, params, None, [])
     return data
 
 # Applies recursively source to script inline expression

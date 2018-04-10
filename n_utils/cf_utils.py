@@ -597,10 +597,11 @@ def interpolate_file(file_name, destination=None, stack_name=None,
 
 PARAM_RE = re.compile(r"\$\{([^\$\{\}]*)\}")
 SIMPLE_PARAM_RE = re.compile(r"\$([a-zA-Z0-9_]*)")
-def expand_vars(line, params, vault, vault_keys):
+PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
+def _apply_simple_regex(RE, line, params, vault, vault_keys):
     ret = line
     next_start = 0
-    match = SIMPLE_PARAM_RE.search(line)
+    match = RE.search(line)
     while match is not None:
         param_value = None
         param_name = match.group(1)
@@ -611,8 +612,20 @@ def expand_vars(line, params, vault, vault_keys):
         else:
             next_start = match.end()
         if not isinstance(param_value, NoneType):
-            ret = ret[:match.start()] + param_value + ret[match.end():]
-        match = SIMPLE_PARAM_RE.search(ret, next_start)
+            if isinstance(param_value, OrderedDict):
+                return param_value
+            else:
+                ret = ret[:match.start()] + param_value + ret[match.end():]
+        match = RE.search(ret, next_start)
+    return ret
+
+def expand_vars(line, params, vault, vault_keys):
+    ret = _apply_simple_regex(SIMPLE_PARAM_RE, line, params, vault, vault_keys)
+    if isinstance(ret, OrderedDict):
+        return ret
+    ret = _apply_simple_regex(PARAM_REF_RE, ret, params, vault, vault_keys)
+    if isinstance(ret, OrderedDict):
+        return ret
     return _process_line(ret, params, vault, vault_keys)
 
 def _process_line(line, params, vault, vault_keys):
