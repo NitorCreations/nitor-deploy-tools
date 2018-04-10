@@ -108,11 +108,11 @@ fi
 
 for DOCKER in $(get_dockers $image); do
   unset BAKE_IMAGE_BRANCH DOCKER_NAME
-  eval "$(ndt load-parameters ${GIT_BRANCH##*/} $image -d $DOCKER -e | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
+  eval "$(ndt load-parameters -b ${GIT_BRANCH} $image -d $DOCKER -e | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
   if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH##*/}" != "$BAKE_IMAGE_BRANCH" ]; then
     checkout_branch $BAKE_IMAGE_BRANCH
     cd $BAKE_IMAGE_BRANCH-checkout
-    eval "$(ndt load-parameters $BAKE_IMAGE_BRANCH $image -d $DOCKER -e | egrep '^DOCKER_NAME=')"
+    eval "$(ndt load-parameters -b $BAKE_IMAGE_BRANCH $image -d $DOCKER -e | egrep '^DOCKER_NAME=')"
     cd ..
     rm -rf $BAKE_IMAGE_BRANCH-checkout
   fi
