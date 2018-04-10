@@ -219,6 +219,8 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         ret["paramEnvId"] = os.environ["GIT_BRANCH"]
     if "ORIG_STACK_NAME" in os.environ:
         ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
+        if "STACK_NAME" not in ret:
+            ret["DOCKER_NAME"] = component + "-" + ret["ORIG_DOCKER_NAME"] + "-" + ret["paramEnvId"]
     if "ORIG_DOCKER_NAME" in os.environ:
         ret["ORIG_DOCKER_NAME"] = os.environ["ORIG_DOCKER_NAME"]
         if "DOCKER_NAME" not in ret:
