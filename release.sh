@@ -34,7 +34,7 @@ fi
 sed -i "s/$VERSION/$NEW_VERSION/g" setup.py
 ./update-readme.sh
 sed -i "s/## Released version.*/## Released version $NEW_VERSION/g" README.md
-git commit -m "$1" setup.py
+git commit -m "$1" setup.py README.md
 git tag "$NEW_VERSION" -m "$1"
 git push --tags origin master
 
