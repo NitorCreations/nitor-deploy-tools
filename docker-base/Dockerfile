@@ -13,10 +13,10 @@
 FROM ubuntu:16.04
 
 ENV DOCKER_BUCKET="download.docker.com" \
-    DOCKER_VERSION="17.09.0-ce" \
+    DOCKER_VERSION="18.03.0-ce" \
     DOCKER_CHANNEL="stable" \
-    DOCKER_SHA256="a9e90a73c3cdfbf238f148e1ec0eaff5eb181f92f35bdd938fd7dab18e1c4647" \
-    DIND_COMMIT="3b5fac462d21ca164b3778647420016315289034" \
+    DOCKER_SHA256="e5dff6245172081dbf14285dafe4dede761f8bc1750310156b89928dbf56a9ee" \
+    DIND_COMMIT="52379fa76dee07ca038624d639d9e14f4fb719ff" \
     DOCKER_COMPOSE_VERSION="1.16.1"
 
 # Building git from source code:
