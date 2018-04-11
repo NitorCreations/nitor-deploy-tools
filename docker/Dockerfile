@@ -84,4 +84,4 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git
   && wget -O /usr/bin/lein "https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein" \
   && chmod 755 /usr/bin/lein \
   && lein version
-RUN pip install nitor-deploy-tools==1.0a12
+RUN pip install nitor-deploy-tools==1.0a13
