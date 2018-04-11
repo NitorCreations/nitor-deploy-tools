@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 1.0a13
+## Released version 1.0a14
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
