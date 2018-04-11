@@ -69,7 +69,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git
   && ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn \
   && ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg \
   && rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz \
-  && pip install nitor-deploy-tools==1.0a11 ansible boto \
+  && pip install ansible boto awscli boto3 nitor-vault \
   && npm i -g npm serverless \
   && wget -nv -O - "http://www.nic.funet.fi/pub/mirrors/apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" | tar -xzf - -C /opt \
   && ln -snf /opt/apache-maven-${MAVEN_VERSION} /opt/maven \
@@ -84,3 +84,4 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git
   && wget -O /usr/bin/lein "https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein" \
   && chmod 755 /usr/bin/lein \
   && lein version
+RUN pip install nitor-deploy-tools==1.0a11

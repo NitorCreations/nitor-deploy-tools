@@ -34,7 +34,8 @@ fi
 sed -i "s/$VERSION/$NEW_VERSION/g" setup.py
 ./update-readme.sh
 sed -i "s/## Released version.*/## Released version $NEW_VERSION/g" README.md
-git commit -m "$1" setup.py README.md
+sed -i "s/nitor-deploy-tools==.*/nitor-deploy-tools==$NEW_VERSION/g" docker/Dockerfile
+git commit -m "$1" setup.py README.md docker/Dockerfiles
 git tag "$NEW_VERSION" -m "$1"
 git push --tags origin master
 
