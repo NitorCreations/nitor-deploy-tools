@@ -1,4 +1,4 @@
-FROM python:3-stretch
+FROM nitor/docker-base:latest
 
 ENV NODE_VERSION=8.11.1 \
  YARN_VERSION=1.5.1 \
@@ -7,12 +7,12 @@ ENV NODE_VERSION=8.11.1 \
  MAVEN_VERSION=3.5.3 \
  PHANTOMJS_VERSION=2.1.1
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git openssh-client unzip chromium \
-  && set -ex \
-  && groupadd --gid 1000 node \
-  && useradd --uid 1000 --gid node --shell /bin/bash --create-home node \
-  && groupadd --gid 1001 ndt \
-  && useradd --uid 1001 --gid ndt --shell /bin/bash --create-home ndt \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git openssh-client unzip chromium-bsu jq
+RUN set -ex \
+  && groupadd --gid 1010 node \
+  && useradd --uid 1010 --gid node --shell /bin/bash --create-home node \
+  && groupadd --gid 1011 ndt \
+  && useradd --uid 1011 --gid ndt --shell /bin/bash --create-home ndt \
   && for key in \
     94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
     FD3A5288F042B6850C66B31F09FE44734EB7990E \
