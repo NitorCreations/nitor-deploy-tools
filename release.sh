@@ -45,3 +45,7 @@ docker build -t ndt docker
 docker login -u "$(git config docker.username)" -p "$(lpass show --password docker.com)"
 docker tag ndt:latest nitor/ndt:$NEW_VERSION
 docker push nitor/ndt:$NEW_VERSION
+if ! echo "$NEW_VERSION" | grep "a" > /dev/null; then
+  docker tag ndt:latest nitor/ndt:latest
+  docker push nitor/ndt:latest
+fi
