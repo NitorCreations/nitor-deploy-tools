@@ -46,7 +46,7 @@ def I11i ( ) :
  hash . update ( O0oOO0o0 )
  hash . update ( Oo0oO0oo0oO00 )
  for i111I in range ( 0 , ord ( hash . digest ( ) [ 2 ] ) ) :
-  jjjjjjj33934__23 = bytes ( str ( i111I + 1337 ) )
+  jjjjjjj33934__23 = bytes ( str ( i111I + 1337 ), "utf-8" )
   hash . update ( jjjjjjj33934__23 )
   hash . update ( O0oOO0o0 )
   hash . update ( Oo0oO0oo0oO00 )
