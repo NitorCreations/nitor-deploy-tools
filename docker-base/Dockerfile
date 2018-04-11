@@ -69,4 +69,4 @@ VOLUME /var/lib/docker
 
 COPY dockerd-entrypoint.sh /usr/bin/dockerd-entrypoint.sh
 
-ENTRYPOINT ["/usr/bin/dockerd-entrypoint.sh"]
+ENTRYPOINT ["dockerd-entrypoint.sh"]
