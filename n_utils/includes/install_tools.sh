@@ -16,7 +16,7 @@
 
 set -xe
 
-if [ -z "$1" -o "$1" = "latest" ]; then
+if [ -z "$1" -o "$1" = "latest" -o "$1" = "alpha" ]; then
   DEPLOYTOOLS_VERSION=""
 else
   DEPLOYTOOLS_VERSION="==$1"
@@ -30,7 +30,13 @@ if [ "$OS_TYPE" = "ubuntu" ]; then
   locale-gen --purge en_US.UTF-8
   echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
 fi
-pip install -U pip setuptools awscli boto3 "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
+pip install -U pip setuptools awscli boto3
+# If alpha, get first all non-alpha dependencies
+pip install -U "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
+if [ "$1" = "alpha" ]; then
+  # Upgrade just ndt to alpha
+  pip install -U --pre --no-deps "nitor-deploy-tools"
+fi
 aws configure set default.s3.signature_version s3v4
 rm -f /opt/nitor/instance-data.json
 # Make sure we get logging
