@@ -60,7 +60,7 @@ set -xe
 image="$1" ; shift
 [ "${image}" ] || die "You must give the image name as argument"
 
-eval "$(ndt load-parameters "$image" -i $1 -e)"
+eval "$(ndt load-parameters "$image" -i "$1" -e)"
 
 [ ! -d .cache ] || rm -rf .cache
 mkdir .cache

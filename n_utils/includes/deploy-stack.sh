@@ -37,16 +37,16 @@ if [ "$_ARGCOMPLETE" ]; then
       compgen -W "-h $DRY$(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
-      compgen -W "$(get_stacks $IMAGE_DIR)" -- $COMP_CUR
+      compgen -W "$(get_stacks "$IMAGE_DIR")" -- $COMP_CUR
       ;;
     4)
-      eval "$(ndt load-parameters $IMAGE_DIR -s $STACK -e)"
+      eval "$(ndt load-parameters "$IMAGE_DIR" -s "$STACK" -e)"
       JOB_NAME="${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
       IMAGE_IDS="$(get_imageids $IMAGE_DIR $JOB_NAME)"
       compgen -W "$IMAGE_IDS" -- $COMP_CUR
       ;;
     5)
-      eval "$(ndt load-parameters $IMAGE_DIR -s $STACK -e)"
+      eval "$(ndt load-parameters "$IMAGE_DIR" -s "$STACK" -e)"
       echo "${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
       ;;
     *)
@@ -78,7 +78,7 @@ if [ "$1" = "--help" -o "$1" = "-h" ]; then
   usage
 fi
 
-source $(n-include autocomplete-helpers.sh)
+source "$(n-include autocomplete-helpers.sh)"
 
 set -xe
 
@@ -93,7 +93,7 @@ shift ||:
 IMAGE_JOB="$1"
 shift ||:
 
-eval "$(ndt load-parameters $image -s $stackName -e)"
+eval "$(ndt load-parameters "$image" -s "$stackName" -e)"
 
 if [ -z "$AMI_ID" ]; then
   AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"
@@ -108,13 +108,13 @@ fi
 
 for DOCKER in $(get_dockers $image); do
   unset BAKE_IMAGE_BRANCH DOCKER_NAME
-  eval "$(ndt load-parameters -b ${GIT_BRANCH} $image -d $DOCKER -e | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
-  if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH##*/}" != "$BAKE_IMAGE_BRANCH" ]; then
-    checkout_branch $BAKE_IMAGE_BRANCH
-    cd $BAKE_IMAGE_BRANCH-checkout
-    eval "$(ndt load-parameters -b $BAKE_IMAGE_BRANCH $image -d $DOCKER -e | egrep '^DOCKER_NAME=')"
+  eval "$(ndt load-parameters -b "${GIT_BRANCH}" "$image" -d "$DOCKER" -e | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
+  if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH}" != "$BAKE_IMAGE_BRANCH" ]; then
+    checkout_branch "$BAKE_IMAGE_BRANCH"
+    cd "$BAKE_IMAGE_BRANCH-checkout"
+    eval "$(ndt load-parameters -b "$BAKE_IMAGE_BRANCH" "$image" -d "$DOCKER" -e | egrep '^DOCKER_NAME=')"
     cd ..
-    rm -rf $BAKE_IMAGE_BRANCH-checkout
+    rm -rf "$BAKE_IMAGE_BRANCH-checkout"
   fi
   DOCKER_PARAM_NAME="paramDockerUri$DOCKER"
   URI="$(ndt ecr-repo-uri $DOCKER_NAME)"

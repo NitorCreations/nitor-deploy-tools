@@ -74,7 +74,7 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
-eval "$(ndt load-parameters "$image" -d $docker -e)"
+eval "$(ndt load-parameters "$image" -d "$docker" -e)"
 
 if [ -x "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
   cd "$image/docker-$ORIG_DOCKER_NAME"
@@ -88,12 +88,12 @@ $SUDO docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
-  eval $(ndt assume-role $DEPLOY_ROLE_ARN)
+  eval "$(ndt assume-role "$DEPLOY_ROLE_ARN")"
 elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
-  eval $(assume-deploy-role.sh)
+  eval "$(assume-deploy-role.sh)"
 fi
 
-eval "$(ndt ecr-ensure-repo $DOCKER_NAME)"
+eval "$(ndt ecr-ensure-repo "$DOCKER_NAME")"
 $SUDO docker tag $DOCKER_NAME:latest $DOCKER_NAME:$BUILD_NUMBER
 $SUDO docker tag $DOCKER_NAME:latest $REPO:latest
 $SUDO docker tag $DOCKER_NAME:$BUILD_NUMBER $REPO:$BUILD_NUMBER
