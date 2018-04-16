@@ -20,7 +20,7 @@ if [ "$_ARGCOMPLETE" ]; then
   source $(n-include autocomplete-helpers.sh)
   case $COMP_CWORD in
     2)
-      compgen -W "-h $(get_stack_dirs)" -- $COMP_CUR
+      compgen -W "-h -d $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
       compgen -W "$(get_dockers $COMP_PREV)" -- $COMP_CUR
