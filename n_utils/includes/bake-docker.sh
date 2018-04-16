@@ -33,7 +33,7 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt bake-docker [-h] component docker-name" >&2
+  echo "usage: ndt bake-docker [-h] [-d] component docker-name" >&2
   echo "" >&2
   echo "Runs a docker build, ensures that an ecr repository with the docker name" >&2
   echo "(by default <component>/<branch>-<docker-name>) exists and pushes the built" >&2
@@ -47,6 +47,7 @@ usage() {
   echo "" >&2
   echo "optional arguments:" >&2
   echo "  -h, --help  show this help message and exit"  >&2
+  echo "  -d, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline"  >&2
   if "$@"; then
     echo "" >&2
     echo "$@" >&2

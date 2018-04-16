@@ -116,7 +116,7 @@ optional arguments:
 ### `ndt bake-docker`
 
 ```bash
-usage: ndt bake-docker [-h] component docker-name
+usage: ndt bake-docker [-h] [-d] component docker-name
 
 Runs a docker build, ensures that an ecr repository with the docker name
 (by default <component>/<branch>-<docker-name>) exists and pushes the built
@@ -130,6 +130,7 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
+  -d, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline
 ```
 
 ### `ndt bake-image`
