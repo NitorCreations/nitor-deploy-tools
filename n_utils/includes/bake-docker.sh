@@ -62,6 +62,11 @@ die () {
 }
 set -xe
 
+if [ "$1" = "--imagedefinitions" -o "$1" = "-d" ]; then
+  shift
+  OUTPUT_DEFINITION=1
+fi
+
 image="$1" ; shift
 [ "${image}" ] || die "You must give the image name as argument"
 docker="$1"; shift
@@ -99,3 +104,7 @@ $SUDO docker tag $DOCKER_NAME:latest $REPO:latest
 $SUDO docker tag $DOCKER_NAME:$BUILD_NUMBER $REPO:$BUILD_NUMBER
 $SUDO docker push $REPO:latest
 $SUDO docker push $REPO:$BUILD_NUMBER
+
+if [ -n "$OUTPUT_DEFINITION" ]; then
+  printf '[{"name":"%s","imageUri":"%s"}]' $docker $REPO:$BUILD_NUMBER > imagedefinitions.json
+fi
