@@ -20,7 +20,7 @@ if [ "$_ARGCOMPLETE" ]; then
   source $(n-include autocomplete-helpers.sh)
   case $COMP_CWORD in
     2)
-      compgen -W "-h $(get_stack_dirs)" -- $COMP_CUR
+      compgen -W "-h -d $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
       compgen -W "$(get_dockers $COMP_PREV)" -- $COMP_CUR
@@ -33,7 +33,7 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt bake-docker [-h] component docker-name" >&2
+  echo "usage: ndt bake-docker [-h] [-d] component docker-name" >&2
   echo "" >&2
   echo "Runs a docker build, ensures that an ecr repository with the docker name" >&2
   echo "(by default <component>/<branch>-<docker-name>) exists and pushes the built" >&2
@@ -47,6 +47,7 @@ usage() {
   echo "" >&2
   echo "optional arguments:" >&2
   echo "  -h, --help  show this help message and exit"  >&2
+  echo "  -d, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline"  >&2
   if "$@"; then
     echo "" >&2
     echo "$@" >&2
@@ -61,6 +62,11 @@ die () {
   usage
 }
 set -xe
+
+if [ "$1" = "--imagedefinitions" -o "$1" = "-d" ]; then
+  shift
+  OUTPUT_DEFINITION=1
+fi
 
 image="$1" ; shift
 [ "${image}" ] || die "You must give the image name as argument"
@@ -99,3 +105,7 @@ $SUDO docker tag $DOCKER_NAME:latest $REPO:latest
 $SUDO docker tag $DOCKER_NAME:$BUILD_NUMBER $REPO:$BUILD_NUMBER
 $SUDO docker push $REPO:latest
 $SUDO docker push $REPO:$BUILD_NUMBER
+
+if [ -n "$OUTPUT_DEFINITION" ]; then
+  printf '[{"name":"%s","imageUri":"%s"}]' $docker $REPO:$BUILD_NUMBER > imagedefinitions.json
+fi
