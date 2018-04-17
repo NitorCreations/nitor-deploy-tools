@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 1.0a20
+## Released version 
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -68,13 +68,20 @@ eval "$(nitor-dt-register-complete)"
 ### `ndt account-id`
 
 ```bash
-usage: ndt account-id [-h]
-
-Get current account id. Either from instance metadata or current cli
-configuration.
-
-optional arguments:
-  -h, --help  show this help message and exit
+Traceback (most recent call last):
+  File "/usr/local/bin/ndt", line 9, in <module>
+    load_entry_point(\'nitor-deploy-tools==0.214\', \'console_scripts\', \'ndt\')()
+  File "/usr/local/lib/python2.7/dist-packages/n_utils/cli.py", line 165, in ndt
+    my_func()
+  File "/usr/local/lib/python2.7/dist-packages/n_utils/cli.py", line 227, in get_account_id
+    print cf_utils.resolve_account()
+  File "/usr/local/lib/python2.7/dist-packages/n_utils/cf_utils.py", line 389, in resolve_account
+    return sts.get_caller_identity()[\'Account\']
+  File "/usr/local/lib/python2.7/dist-packages/botocore/client.py", line 324, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/botocore/client.py", line 622, in _make_api_call
+    raise error_class(parsed_response, operation_name)
+botocore.exceptions.ClientError: An error occurred (InvalidClientTokenId) when calling the GetCallerIdentity operation: The security token included in the request is invalid.
 ```
 
 ### `ndt add-deployer-server`
@@ -116,36 +123,80 @@ optional arguments:
 ### `ndt bake-docker`
 
 ```bash
-usage: ndt bake-docker [-h] [-i] component docker-name
-
-Runs a docker build, ensures that an ecr repository with the docker name
-(by default <component>/<branch>-<docker-name>) exists and pushes the built
-image to that repository with the tags "latest" and "$BUILD_NUMBER"
-
-positional arguments:
-  component   the component directory where the docker directory is
-  docker-name the name of the docker directory that has the Dockerfile
-              For example for ecs-cluster/docker-cluster/Dockerfile
-              you would give cluster
-
-optional arguments:
-  -h, --help  show this help message and exit
-  -i, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline
++ image=-h
++ shift
++ \'[\' -h \']\'
++ docker=
++ shift
 ```
 
 ### `ndt bake-image`
 
 ```bash
-usage: ndt bake-image [-h] component
-
-Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and
-tags the image with the job name and build number.
-
-positional arguments
-  component   the component directory where the ami bake configurations are
-
-optional arguments:
-  -h, --help  show this help message and exit
++ image=-h
++ shift
++ \'[\' -h \']\'
++ source source_infra_properties.sh -h \'\'
+++ \'[\' \'\' \']\'
+++ \'[\' \'\' \']\'
++++ git rev-parse --abbrev-ref HEAD
+++ GIT_BRANCH=master
+++ GIT_BRANCH=master
+++ image=-h
+++ shift
+++ ORIG_STACK_NAME=
+++ ORIG_DOCKER_NAME=
+++ shift
+++ STACK_NAME=master-
+++ DOCKER_NAME=-h/master-
+++ sharedpropfile=infra.properties
+++ imagesharedpropfile=-h/infra.properties
+++ stacksharedpropfile=-h/stack-/infra.properties
+++ dockersharedpropfile=-h/docker-/infra.properties
+++ infrapropfile=infra-master.properties
+++ imagepropfile=-h/infra-master.properties
+++ stackpropfile=-h/stack-/infra-master.properties
+++ dockerpropfile=-h/docker-/infra-master.properties
+++ source_first_existing infra.properties
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e infra.properties \']\'
+++ source_first_existing infra-master.properties
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e infra-master.properties \']\'
+++ source_first_existing -h/infra.properties
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e -h/infra.properties \']\'
+++ source_first_existing -h/infra-master.properties
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e -h/infra-master.properties \']\'
+++ source_first_existing -h/stack-/infra.properties -h/docker-/infra.properties
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e -h/stack-/infra.properties \']\'
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e -h/docker-/infra.properties \']\'
+++ source_first_existing -h/stack-/infra-master.properties -h/docker-/infra-master.properties
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e -h/stack-/infra-master.properties \']\'
+++ for PROPFILE in \'"$@"\'
+++ \'[\' -e -h/docker-/infra-master.properties \']\'
+++ \'[\' \'\' \']\'
++++ ec2-region
+++ REGION=eu-central-1
+++ \'[\' \'\' \']\'
++++ account-id
+Traceback (most recent call last):
+  File "/usr/local/bin/account-id", line 9, in <module>
+    load_entry_point(\'nitor-deploy-tools==0.214\', \'console_scripts\', \'account-id\')()
+  File "/usr/local/lib/python2.7/dist-packages/n_utils/cli.py", line 227, in get_account_id
+    print cf_utils.resolve_account()
+  File "/usr/local/lib/python2.7/dist-packages/n_utils/cf_utils.py", line 389, in resolve_account
+    return sts.get_caller_identity()[\'Account\']
+  File "/usr/local/lib/python2.7/dist-packages/botocore/client.py", line 324, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/botocore/client.py", line 622, in _make_api_call
+    raise error_class(parsed_response, operation_name)
+botocore.exceptions.ClientError: An error occurred (InvalidClientTokenId) when calling the GetCallerIdentity operation: The security token included in the request is invalid.
+++ ACCOUNT_ID=
 ```
 
 ### `ndt cf-delete-stack`
@@ -153,7 +204,7 @@ optional arguments:
 ```bash
 usage: ndt cf-delete-stack [-h] stack_name region
 
-Delete an existing CloudFormation stack
+Create or update existing CloudFormation stack
 
 positional arguments:
   stack_name  Name of the stack to delete
@@ -176,7 +227,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -s START, --start START
-                        Start time in seconds since epoc
+                        Start time in seconds sinceepoc
 ```
 
 ### `ndt cf-get-parameter`
@@ -197,22 +248,14 @@ optional arguments:
 
 ```bash
 usage: ndt cf-logical-id [-h]
-
-Get the logical id that is expecting a signal from this instance
-
-optional arguments:
-  -h, --help  show this help message and exit
+ndt cf-logical-id: error: Only makes sense on an EC2 instance cretated from a CF stack
 ```
 
 ### `ndt cf-region`
 
 ```bash
 usage: ndt cf-region [-h]
-
-Get region of the stack that created this instance
-
-optional arguments:
-  -h, --help  show this help message and exit
+ndt cf-region: error: Only makes sense on an EC2 instance cretated from a CF stack
 ```
 
 ### `ndt cf-signal-status`
@@ -237,118 +280,180 @@ optional arguments:
 
 ```bash
 usage: ndt cf-stack-id [-h]
-
-Get id of the stack the creted this instance
-
-optional arguments:
-  -h, --help  show this help message and exit
+ndt cf-stack-id: error: Only makes sense on an EC2 instance cretated from a CF stack
 ```
 
 ### `ndt cf-stack-name`
 
 ```bash
 usage: ndt cf-stack-name [-h]
-
-Get name of the stack that created this instance
-
-optional arguments:
-  -h, --help  show this help message and exit
+ndt cf-stack-name: error: Only makes sense on an EC2 instance cretated from a CF stack
 ```
 
 ### `ndt create-account`
 
 ```bash
-usage: ndt create-account [-h] [-d] [-o ORGANIZATION_ROLE_NAME]
-                          [-r TRUST_ROLE_NAME]
-                          [-a [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]]]
-                          [-t TOKEN_NAME]
-                          email account_name
-
-Creates a subaccount.
-
-positional arguments:
-  email                 Email for account root
-  account_name          Organization unique account name
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -d, --deny-billing-access
-  -o ORGANIZATION_ROLE_NAME, --organization-role-name ORGANIZATION_ROLE_NAME
-                        Role name for admin access from parent account
-  -r TRUST_ROLE_NAME, --trust-role-name TRUST_ROLE_NAME
-                        Role name for admin access from parent account
-  -a [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]], --trusted-accounts [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]]
-                        Account to trust with user management
-  -t TOKEN_NAME, --mfa-token TOKEN_NAME
-                        Name of MFA token to use
+usage: ndt <command> [args...]
+	command shoud be one of:
+		account-id
+		add-deployer-server
+		associate-eip
+		assume-role
+		bake-docker
+		bake-image
+		cf-delete-stack
+		cf-follow-logs
+		cf-get-parameter
+		cf-logical-id
+		cf-logs-to-cloudwatch
+		cf-region
+		cf-signal-status
+		cf-stack-id
+		cf-stack-name
+		create-shell-archive
+		create-stack
+		deploy-stack
+		detach-volume
+		ec2-associate-eip
+		ec2-clean-snapshots
+		ec2-get-tag
+		ec2-get-userdata
+		ec2-instance-id
+		ec2-region
+		ecr-ensure-repo
+		ecr-repo-uri
+		encrypt-and-mount
+		ensure-letsencrypt-certs
+		get-images
+		hook
+		interpolate-file
+		json-to-yaml
+		lastpass-fetch-notes
+		lastpass-login
+		lastpass-logout
+		letsencrypt
+		list-file-to-json
+		list-jobs
+		logs-to-cloudwatch
+		lpssh
+		mfa-add-token
+		mfa-code
+		mfa-delete-token
+		n-include
+		n-include-all
+		n-utils-init
+		print-create-instructions
+		promote-image
+		pytail
+		register-private-dns
+		s3-role-download
+		setup-cli
+		setup-fetch-secrets
+		share-to-another-region
+		show-stack-params-and-outputs
+		signal-cf-status
+		snapshot-from-volume
+		source_infra_properties
+		ssh-hostkeys-collect
+		undeploy-stack
+		upsert-cloudfront-records
+		volume-from-snapshot
+		yaml-to-json
 ```
 
 ### `ndt create-stack`
 
 ```bash
-usage: ndt create-stack [-h] [-y] [template]
-
-Create a stack from a template
-
-positional arguments:
-  template
-
-optional arguments:
-  -h, --help  show this help message and exit
-  -y, --yes   Answer yes or use default to all questions
+usage: ndt create-stack [-y] [-h] template
+ndt create-stack: error: too few arguments
 ```
 
 ### `ndt deploy-serverless`
 
 ```bash
-usage: ndt deploy-serverless [-d] [-h] component serverless-name
-
-Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the
-serverless project and runs sls deploy -s branch for the same
-
-positional arguments:
-  component   the component directory where the serverless directory is
-  serverless-name the name of the serverless directory that has the template
-                  For example for lambda/serverless-sender/template.yaml
-                  you would give sender
-
-optional arguments:
-  -d, --dryrun  dry-run - do only parameter expansion and template pre-processing and npm i
-  -h, --help    show this help message and exit
+usage: ndt <command> [args...]
+	command shoud be one of:
+		account-id
+		add-deployer-server
+		associate-eip
+		assume-role
+		bake-docker
+		bake-image
+		cf-delete-stack
+		cf-follow-logs
+		cf-get-parameter
+		cf-logical-id
+		cf-logs-to-cloudwatch
+		cf-region
+		cf-signal-status
+		cf-stack-id
+		cf-stack-name
+		create-shell-archive
+		create-stack
+		deploy-stack
+		detach-volume
+		ec2-associate-eip
+		ec2-clean-snapshots
+		ec2-get-tag
+		ec2-get-userdata
+		ec2-instance-id
+		ec2-region
+		ecr-ensure-repo
+		ecr-repo-uri
+		encrypt-and-mount
+		ensure-letsencrypt-certs
+		get-images
+		hook
+		interpolate-file
+		json-to-yaml
+		lastpass-fetch-notes
+		lastpass-login
+		lastpass-logout
+		letsencrypt
+		list-file-to-json
+		list-jobs
+		logs-to-cloudwatch
+		lpssh
+		mfa-add-token
+		mfa-code
+		mfa-delete-token
+		n-include
+		n-include-all
+		n-utils-init
+		print-create-instructions
+		promote-image
+		pytail
+		register-private-dns
+		s3-role-download
+		setup-cli
+		setup-fetch-secrets
+		share-to-another-region
+		show-stack-params-and-outputs
+		signal-cf-status
+		snapshot-from-volume
+		source_infra_properties
+		ssh-hostkeys-collect
+		undeploy-stack
+		upsert-cloudfront-records
+		volume-from-snapshot
+		yaml-to-json
 ```
 
 ### `ndt deploy-stack`
 
 ```bash
-ami that is tagged with the bake-job name
-usage: ndt deploy-stack [-d] [-h] component stack-name ami-id bake-job
-
-Resolves potential ECR urls and AMI Ids and then deploys the given stack either updating or creating it.
-positional arguments:
-  component   the component directory where the stack template is
-  stack-name  the name of the stack directory inside the component directory
-              For example for ecs-cluster/stack-cluster/template.yaml
-              you would give cluster
-  ami-id      If you want to specify a value for the paramAmi variable in the stack,
-              you can do so. Otherwise give an empty string with two quotation marks
-  bake-job    If an ami-id is not given, the ami id is resolved by getting the latest
-
-optional arguments:
-  -h, --help  show this help message and exit
++ \'[\' -h = -d \']\'
++ image=-h
++ shift
++ stackName=
++ shift
 ```
 
 ### `ndt detach-volume`
 
 ```bash
 usage: ndt detach-volume [-h] mount_path
-
-Create a snapshot of a volume identified by it\'s mount path
-
-positional arguments:
-  mount_path  Where to mount the volume
-
-optional arguments:
-  -h, --help  show this help message and exit
+ndt detach-volume: error: Only makes sense on an EC2 instance
 ```
 
 ### `ndt ec2-clean-snapshots`
@@ -403,23 +508,13 @@ optional arguments:
 ### `ndt ec2-instance-id`
 
 ```bash
-usage: ndt ec2-instance-id [-h]
 
-Get id for instance
-
-optional arguments:
-  -h, --help  show this help message and exit
 ```
 
 ### `ndt ec2-region`
 
 ```bash
-usage: ndt ec2-region [-h]
-
-Get default region - the region of the instance if run in an EC2 instance
-
-optional arguments:
-  -h, --help  show this help message and exit
+eu-central-1
 ```
 
 ### `ndt ecr-ensure-repo`
@@ -441,7 +536,7 @@ optional arguments:
 ```bash
 usage: ndt ecr-repo-uri [-h] name
 
-Get the repo uri for a named docker
+Ensure that an ECR repository exists and get the uri and login token for it
 
 positional arguments:
   name        The name of the ecr repository
@@ -508,15 +603,72 @@ optional arguments:
 ### `ndt latest-snapshot`
 
 ```bash
-usage: ndt latest-snapshot [-h] tag
-
-Get the latest snapshot with a given tag
-
-positional arguments:
-  tag         The tag to find snapshots with
-
-optional arguments:
-  -h, --help  show this help message and exit
+usage: ndt <command> [args...]
+	command shoud be one of:
+		account-id
+		add-deployer-server
+		associate-eip
+		assume-role
+		bake-docker
+		bake-image
+		cf-delete-stack
+		cf-follow-logs
+		cf-get-parameter
+		cf-logical-id
+		cf-logs-to-cloudwatch
+		cf-region
+		cf-signal-status
+		cf-stack-id
+		cf-stack-name
+		create-shell-archive
+		create-stack
+		deploy-stack
+		detach-volume
+		ec2-associate-eip
+		ec2-clean-snapshots
+		ec2-get-tag
+		ec2-get-userdata
+		ec2-instance-id
+		ec2-region
+		ecr-ensure-repo
+		ecr-repo-uri
+		encrypt-and-mount
+		ensure-letsencrypt-certs
+		get-images
+		hook
+		interpolate-file
+		json-to-yaml
+		lastpass-fetch-notes
+		lastpass-login
+		lastpass-logout
+		letsencrypt
+		list-file-to-json
+		list-jobs
+		logs-to-cloudwatch
+		lpssh
+		mfa-add-token
+		mfa-code
+		mfa-delete-token
+		n-include
+		n-include-all
+		n-utils-init
+		print-create-instructions
+		promote-image
+		pytail
+		register-private-dns
+		s3-role-download
+		setup-cli
+		setup-fetch-secrets
+		share-to-another-region
+		show-stack-params-and-outputs
+		signal-cf-status
+		snapshot-from-volume
+		source_infra_properties
+		ssh-hostkeys-collect
+		undeploy-stack
+		upsert-cloudfront-records
+		volume-from-snapshot
+		yaml-to-json
 ```
 
 ### `ndt list-file-to-json`
@@ -538,59 +690,78 @@ optional arguments:
 ### `ndt list-jobs`
 
 ```bash
-usage: ndt list-jobs  [-h]
 
-List jobs that should be created in jenkins for the current repository.
-This includes all branches in the current repository.
-
-optional arguments:
-  -h, --help  show this help message and exit exit 1
-fatal: Not a valid object name
 ```
 
 ### `ndt load-parameters`
 
 ```bash
-usage: ndt load-parameters [-h] [--branch BRANCH]
-                           [--stack STACK | --serverless SERVERLESS | --docker DOCKER | --image [IMAGE]]
-                           [--json | --yaml | --properties | --export-statements]
-                           [component]
-
-Load parameters from infra*.properties files in the order: infra.properties,
-infra-[branch].properties, [component]/infra.properties,
-[component]/infra-[branch].properties, [component]/[subcomponent-
-type]-[subcomponent]/infra.properties, [component]/[subcomponent-
-type]-[subcomponent]/infra-[branch].properties Last parameter defined
-overwrites ones defined before in the files. Supports parameter expansion and
-bash -like transformations. Namely: ${PARAM##prefix} # strip prefix greedy
-${PARAM%%suffix} # strip suffix greedy ${PARAM#prefix} # strip prefix not
-greedy ${PARAM%suffix} # strip suffix not greedy ${PARAM:-default} # default
-if empty ${PARAM:4:2} # start:len ${PARAM/substr/replace} ${PARAM^} # upper
-initial ${PARAM,} # lower initial ${PARAM^^} # upper ${PARAM,,} # lower
-Comment lines start with \'#\' Lines can be continued by adding \'\' at the end
-See https://www.tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_03.html (arrays
-not supported)
-
-positional arguments:
-  component             Compenent to descend into
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --branch BRANCH, -b BRANCH
-                        Branch to get active parameters for
-  --stack STACK, -s STACK
-                        CloudFormation subcomponent to descent into
-  --serverless SERVERLESS, -l SERVERLESS
-                        Serverless subcomponent to descent into
-  --docker DOCKER, -d DOCKER
-                        Docker image subcomponent to descent into
-  --image [IMAGE], -i [IMAGE]
-                        AMI image subcomponent to descent into
-  --json, -j            JSON format output (default)
-  --yaml, -y            YAML format output
-  --properties, -p      properties file format output
-  --export-statements, -e
-                        Output as eval-able export statements
+usage: ndt <command> [args...]
+	command shoud be one of:
+		account-id
+		add-deployer-server
+		associate-eip
+		assume-role
+		bake-docker
+		bake-image
+		cf-delete-stack
+		cf-follow-logs
+		cf-get-parameter
+		cf-logical-id
+		cf-logs-to-cloudwatch
+		cf-region
+		cf-signal-status
+		cf-stack-id
+		cf-stack-name
+		create-shell-archive
+		create-stack
+		deploy-stack
+		detach-volume
+		ec2-associate-eip
+		ec2-clean-snapshots
+		ec2-get-tag
+		ec2-get-userdata
+		ec2-instance-id
+		ec2-region
+		ecr-ensure-repo
+		ecr-repo-uri
+		encrypt-and-mount
+		ensure-letsencrypt-certs
+		get-images
+		hook
+		interpolate-file
+		json-to-yaml
+		lastpass-fetch-notes
+		lastpass-login
+		lastpass-logout
+		letsencrypt
+		list-file-to-json
+		list-jobs
+		logs-to-cloudwatch
+		lpssh
+		mfa-add-token
+		mfa-code
+		mfa-delete-token
+		n-include
+		n-include-all
+		n-utils-init
+		print-create-instructions
+		promote-image
+		pytail
+		register-private-dns
+		s3-role-download
+		setup-cli
+		setup-fetch-secrets
+		share-to-another-region
+		show-stack-params-and-outputs
+		signal-cf-status
+		snapshot-from-volume
+		source_infra_properties
+		ssh-hostkeys-collect
+		undeploy-stack
+		upsert-cloudfront-records
+		volume-from-snapshot
+		yaml-to-json
 ```
 
 ### `ndt mfa-add-token`
@@ -649,18 +820,7 @@ optional arguments:
 ### `ndt print-create-instructions`
 
 ```bash
-Prints out the instructions to create and deploy the resources in a stack
-usage: ndt print-create-instructions [-h] component stack-name
-
-
-positional arguments:
-  component   the component directory where the stack template is
-  stack-name  the name of the stack directory inside the component directory
-              For example for ecs-cluster/stack-cluster/template.yaml
-              you would give cluster
-
-optional arguments:
-  -h, --help  show this help message and exit
+You can deploy the stack  by running \'ndt deploy-stack -h \'
 ```
 
 ### `ndt promote-image`
@@ -695,12 +855,72 @@ optional arguments:
 ### `ndt region`
 
 ```bash
-usage: ndt region [-h]
-
-Get default region - the region of the instance if run in an EC2 instance
-
-optional arguments:
-  -h, --help  show this help message and exit
+usage: ndt <command> [args...]
+	command shoud be one of:
+		account-id
+		add-deployer-server
+		associate-eip
+		assume-role
+		bake-docker
+		bake-image
+		cf-delete-stack
+		cf-follow-logs
+		cf-get-parameter
+		cf-logical-id
+		cf-logs-to-cloudwatch
+		cf-region
+		cf-signal-status
+		cf-stack-id
+		cf-stack-name
+		create-shell-archive
+		create-stack
+		deploy-stack
+		detach-volume
+		ec2-associate-eip
+		ec2-clean-snapshots
+		ec2-get-tag
+		ec2-get-userdata
+		ec2-instance-id
+		ec2-region
+		ecr-ensure-repo
+		ecr-repo-uri
+		encrypt-and-mount
+		ensure-letsencrypt-certs
+		get-images
+		hook
+		interpolate-file
+		json-to-yaml
+		lastpass-fetch-notes
+		lastpass-login
+		lastpass-logout
+		letsencrypt
+		list-file-to-json
+		list-jobs
+		logs-to-cloudwatch
+		lpssh
+		mfa-add-token
+		mfa-code
+		mfa-delete-token
+		n-include
+		n-include-all
+		n-utils-init
+		print-create-instructions
+		promote-image
+		pytail
+		register-private-dns
+		s3-role-download
+		setup-cli
+		setup-fetch-secrets
+		share-to-another-region
+		show-stack-params-and-outputs
+		signal-cf-status
+		snapshot-from-volume
+		source_infra_properties
+		ssh-hostkeys-collect
+		undeploy-stack
+		upsert-cloudfront-records
+		volume-from-snapshot
+		yaml-to-json
 ```
 
 ### `ndt register-private-dns`
@@ -721,16 +941,72 @@ optional arguments:
 ### `ndt serverless-deploy`
 
 ```bash
-usage: ndt serverless-deploy [-h] component name
-
-Deploys a Serverless Framework service under [component]/serverless-[name]
-
-positional arguments:
-  component   The component that contains the serverless service
-  name        The name of the serverless service
-
-optional arguments:
-  -h, --help  show this help message and exit
+usage: ndt <command> [args...]
+	command shoud be one of:
+		account-id
+		add-deployer-server
+		associate-eip
+		assume-role
+		bake-docker
+		bake-image
+		cf-delete-stack
+		cf-follow-logs
+		cf-get-parameter
+		cf-logical-id
+		cf-logs-to-cloudwatch
+		cf-region
+		cf-signal-status
+		cf-stack-id
+		cf-stack-name
+		create-shell-archive
+		create-stack
+		deploy-stack
+		detach-volume
+		ec2-associate-eip
+		ec2-clean-snapshots
+		ec2-get-tag
+		ec2-get-userdata
+		ec2-instance-id
+		ec2-region
+		ecr-ensure-repo
+		ecr-repo-uri
+		encrypt-and-mount
+		ensure-letsencrypt-certs
+		get-images
+		hook
+		interpolate-file
+		json-to-yaml
+		lastpass-fetch-notes
+		lastpass-login
+		lastpass-logout
+		letsencrypt
+		list-file-to-json
+		list-jobs
+		logs-to-cloudwatch
+		lpssh
+		mfa-add-token
+		mfa-code
+		mfa-delete-token
+		n-include
+		n-include-all
+		n-utils-init
+		print-create-instructions
+		promote-image
+		pytail
+		register-private-dns
+		s3-role-download
+		setup-cli
+		setup-fetch-secrets
+		share-to-another-region
+		show-stack-params-and-outputs
+		signal-cf-status
+		snapshot-from-volume
+		source_infra_properties
+		ssh-hostkeys-collect
+		undeploy-stack
+		upsert-cloudfront-records
+		volume-from-snapshot
+		yaml-to-json
 ```
 
 ### `ndt setup-cli`
@@ -795,35 +1071,17 @@ optional arguments:
 
 ```bash
 usage: ndt snapshot-from-volume [-h] [-w] tag_key tag_value mount_path
-
-Create a snapshot of a volume identified by it\'s mount path
-
-positional arguments:
-  tag_key     Key of the tag to find volume with
-  tag_value   Value of the tag to find volume with
-  mount_path  Where to mount the volume
-
-optional arguments:
-  -h, --help  show this help message and exit
-  -w, --wait  Wait for the snapshot to finish before returning
+ndt snapshot-from-volume: error: Only makes sense on an EC2 instance
 ```
 
 ### `ndt undeploy-stack`
 
 ```bash
-usage: ndt undeploy-stack [-h] [-f] <component> <stack-name>
-
-Undeploys (deletes) the given stack.
-Found s3 buckets are emptied and deleted only in case the -f argument is given.
-
-positional arguments:
-  component   the component directory where the stack template is
-  stack-name  the name of the stack directory inside the component directory
-              For example for ecs-cluster/stack-cluster/template.yaml
-              you would give cluster
-
-optional arguments:
-  -h, --help  show this help message and exit
++ \'[\' -h == -f \']\'
++ image=-h
++ shift
++ stackName=
++ shift
 ```
 
 ### `ndt upsert-cloudfront-records`
@@ -857,7 +1115,7 @@ ndt volume-from-snapshot: error: Only makes sense on an EC2 instance
 ```bash
 usage: ndt yaml-to-json [-h] [--colorize] file
 
-Convert Nitor CloudFormation yaml to CloudFormation json with some
+"Convert Nitor CloudFormation yaml to CloudFormation json with some
 preprosessing
 
 positional arguments:
@@ -871,16 +1129,72 @@ optional arguments:
 ### `ndt yaml-to-yaml`
 
 ```bash
-usage: ndt yaml-to-yaml [-h] [--colorize] file
-
-Do ndt preprocessing for a yaml file
-
-positional arguments:
-  file            File to parse
-
-optional arguments:
-  -h, --help      show this help message and exit
-  --colorize, -c  Colorize output
+usage: ndt <command> [args...]
+	command shoud be one of:
+		account-id
+		add-deployer-server
+		associate-eip
+		assume-role
+		bake-docker
+		bake-image
+		cf-delete-stack
+		cf-follow-logs
+		cf-get-parameter
+		cf-logical-id
+		cf-logs-to-cloudwatch
+		cf-region
+		cf-signal-status
+		cf-stack-id
+		cf-stack-name
+		create-shell-archive
+		create-stack
+		deploy-stack
+		detach-volume
+		ec2-associate-eip
+		ec2-clean-snapshots
+		ec2-get-tag
+		ec2-get-userdata
+		ec2-instance-id
+		ec2-region
+		ecr-ensure-repo
+		ecr-repo-uri
+		encrypt-and-mount
+		ensure-letsencrypt-certs
+		get-images
+		hook
+		interpolate-file
+		json-to-yaml
+		lastpass-fetch-notes
+		lastpass-login
+		lastpass-logout
+		letsencrypt
+		list-file-to-json
+		list-jobs
+		logs-to-cloudwatch
+		lpssh
+		mfa-add-token
+		mfa-code
+		mfa-delete-token
+		n-include
+		n-include-all
+		n-utils-init
+		print-create-instructions
+		promote-image
+		pytail
+		register-private-dns
+		s3-role-download
+		setup-cli
+		setup-fetch-secrets
+		share-to-another-region
+		show-stack-params-and-outputs
+		signal-cf-status
+		snapshot-from-volume
+		source_infra_properties
+		ssh-hostkeys-collect
+		undeploy-stack
+		upsert-cloudfront-records
+		volume-from-snapshot
+		yaml-to-json
 ```
 
 ### `[ndt ]associate-eip`
@@ -889,14 +1203,15 @@ optional arguments:
 usage: associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
                      [-p ALLOCATIONIDPARAM]
 
+Associate an Elastic IP for the instance
+
 optional arguments:
   -h, --help            show this help message and exit
   -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
-                        from the stack that created this instance
+                        from stack
   -a ALLOCATIONID, --allocationid ALLOCATIONID
                         Elastic IP allocation id to allocate - default is to
-                        get paramEipAllocationId from the stack that created
-                        this instance
+                        get paramEipAllocationId from stack
   -e EIPPARAM, --eipparam EIPPARAM
                         Parameter to look up for Elastic IP in the stack -
                         default is paramEip
@@ -909,6 +1224,9 @@ optional arguments:
 
 ```bash
 usage: cf-logs-to-cloudwatch [-h] file
+
+Read a file and send rows to cloudwatch and keep following the end for new
+data
 
 positional arguments:
   file        File to follow
@@ -923,14 +1241,15 @@ optional arguments:
 usage: ec2-associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
                          [-p ALLOCATIONIDPARAM]
 
+Associate an Elastic IP for the instance
+
 optional arguments:
   -h, --help            show this help message and exit
   -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
-                        from the stack that created this instance
+                        from stack
   -a ALLOCATIONID, --allocationid ALLOCATIONID
                         Elastic IP allocation id to allocate - default is to
-                        get paramEipAllocationId from the stack that created
-                        this instance
+                        get paramEipAllocationId from stack
   -e EIPPARAM, --eipparam EIPPARAM
                         Parameter to look up for Elastic IP in the stack -
                         default is paramEip
@@ -944,6 +1263,9 @@ optional arguments:
 ```bash
 usage: logs-to-cloudwatch [-h] file
 
+Read a file and send rows to cloudwatch and keep following the end for new
+data
+
 positional arguments:
   file        File to follow
 
@@ -955,6 +1277,8 @@ optional arguments:
 
 ```bash
 usage: n-include [-h] file
+
+Find a file from the first of the defined include paths
 
 positional arguments:
   file        The file to find
@@ -968,6 +1292,8 @@ optional arguments:
 ```bash
 usage: n-include-all [-h] pattern
 
+Find a file from the first of the defined include paths
+
 positional arguments:
   pattern     The file pattern to find
 
@@ -979,6 +1305,9 @@ optional arguments:
 
 ```bash
 usage: signal-cf-status [-h] [-r RESOURCE] status
+
+Signal CloudFormation status to a logical resource in CloudFormation that is
+either given on the command line or resolved from CloudFormation tags
 
 positional arguments:
   status                Status to indicate: SUCCESS | FAILURE
@@ -993,109 +1322,17 @@ optional arguments:
 ### `create-shell-archive.sh`
 
 ```bash
-file  one or more files to package into the archive
-usage: create-shell-archive.sh [-h] [<file> ...]
-
+usage: /usr/local/bin/create-shell-archive.sh [<file> ...]
 Creates a self-extracting bash archive, suitable for storing in e.g. Lastpass SecureNotes
-positional arguments:
-
-optional arguments:
-  -h, --help  show this help message and exit
 ```
 
 ### `encrypt-and-mount.sh`
 
 ```bash
-Mounts a local block device as an encrypted volume. Handy for things like local database installs.
-usage: encrypt-and-mount.sh [-h] blk-device mount-path
-
-
-positional arguments
-  blk-device  the block device you want to encrypt and mount
-  mount-path  the mount point for the encrypted volume
-
-optional arguments:
-  -h, --help  show this help message and exit
+\'-h\' not a block device
+Usage: /usr/local/bin/encrypt-and-mount.sh blk-device mount-path
 ```
 
 ### `ensure-letsencrypt-certs.sh`
 
 ```bash
-usage: ensure-letsencrypt-certs.sh [-h] domain-name [domain-name ...]
-
-Fetches a certificate with fetch-secrets.sh, and exits cleanly if certificate is found and valid.
-Otherwise gets a new certificate from letsencrypt via DNS verification using Route53.
-Requires that fetch-secrets.sh and Route53 are set up correctly.
-
-positional arguments
-  domain-name   The domain(s) you want to check certificates for
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
-### `lastpass-fetch-notes.sh`
-
-```bash
---optional  marks that following files will not fail and exit the script in they do not exist
-usage: lasptass-fetch-notes.sh [-h] mode file [file ...] [--optional file ...]
-
-Fetches secure notes from lastpass that match the basename of each listed file.
-Files specified after --optional won\'t fail if the file does not exist.
-
-positional arguments
-  mode   the file mode for the downloaded files
-  file   the file(s) to download. The source will be the note that matches the basename of the file
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
-### `lpssh`
-
-```bash
-usage: lpssh [-h] [-k key-name] user@example.com
-
-Fetches key mappings from lastpass, downloads mapped keys into a local ssh-agent and starts
-an ssh session using those credentials.
-
-positional arguments
-  user@example.com   The user and host to match in "my-ssh-mappings" secure note
-                     and to log into once keys are set up.
-
-optional arguments:
-  -k,         key name in lastpass to use if you don\'t want to use a mapping
-  -h, --help  show this help message and exit
-```
-
-### `setup-fetch-secrets.sh`
-
-```bash
-Please run as root
-usage: setup-fetch-secrets.sh [-h] <lpass|s3|vault>
-
-Sets up a global fetch-secrets.sh that fetches secrets from either LastPass, S3 or nitor-vault
-
-positional arguments
-  lpass|s3|vault   the selected secrets backend.
-
-optional arguments:
-  -h, --help  show this help message and exit exit 1
-```
-
-### `ssh-hostkeys-collect.sh`
-
-```bash
-usage: ssh-hostkeys-collect.sh [-h] hostname
-
-Creates a <hostname>-ssh-hostkeys.sh archive in the current directory containing
-ssh host keys to preserve the identity of a server over image upgrades.
-
-positional arguments
-  hostname   the name of the host used to store the keys. Typically the hostname is what
-             instance userdata scripts will use to look for the keys
-
-optional arguments:
-  -h, --help  show this help message and exit
-```
-
