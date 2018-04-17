@@ -20,7 +20,7 @@ if [ "$_ARGCOMPLETE" ]; then
   source $(n-include autocomplete-helpers.sh)
   case $COMP_CWORD in
     2)
-      compgen -W "-h -d $(get_stack_dirs)" -- $COMP_CUR
+      compgen -W "-h -i $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
       compgen -W "$(get_dockers $COMP_PREV)" -- $COMP_CUR
@@ -33,7 +33,7 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt bake-docker [-h] [-d] component docker-name" >&2
+  echo "usage: ndt bake-docker [-h] [-i] component docker-name" >&2
   echo "" >&2
   echo "Runs a docker build, ensures that an ecr repository with the docker name" >&2
   echo "(by default <component>/<branch>-<docker-name>) exists and pushes the built" >&2
@@ -47,7 +47,7 @@ usage() {
   echo "" >&2
   echo "optional arguments:" >&2
   echo "  -h, --help  show this help message and exit"  >&2
-  echo "  -d, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline"  >&2
+  echo "  -i, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline"  >&2
   if "$@"; then
     echo "" >&2
     echo "$@" >&2
@@ -63,7 +63,7 @@ die () {
 }
 set -xe
 
-if [ "$1" = "--imagedefinitions" -o "$1" = "-d" ]; then
+if [ "$1" = "--imagedefinitions" -o "$1" = "-i" ]; then
   shift
   OUTPUT_DEFINITION=1
 fi
