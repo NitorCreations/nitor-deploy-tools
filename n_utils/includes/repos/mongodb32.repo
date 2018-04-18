@@ -1,6 +1,6 @@
 [mongodb32]
 name=10gen RPM Repository
-baseurl=http://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64
 enabled=1
 failovermethod=priority
 gpgcheck=0
