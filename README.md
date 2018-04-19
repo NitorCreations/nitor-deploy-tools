@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 1.0a21
+## Released version 0.223
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -68,1198 +68,926 @@ eval "$(nitor-dt-register-complete)"
 ### `ndt account-id`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt account-id [-h]
+
+Get current account id. Either from instance metadata or current cli
+configuration.
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt add-deployer-server`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt add-deployer-server [-h] [--id ID] file username
+
+Add a server into a maven configuration file. Password is taken from the
+environment variable \'DEPLOYER_PASSWORD\'
+
+positional arguments:
+  file        The file to modify
+  username    The username to access the server.
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --id ID     Optional id for the server. Default is deploy. One server with
+              this id is added and another with \'-release\' appended
 ```
 
 ### `ndt assume-role`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt assume-role [-h] [-t TOKEN_NAME] role_arn
+
+Assume a defined role. Prints out environment variables to be eval\'d to
+current context for use: eval $(ndt assume-role
+\'arn:aws:iam::43243246645:role/DeployRole\')
+
+positional arguments:
+  role_arn              The ARN of the role to assume
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -t TOKEN_NAME, --mfa-token TOKEN_NAME
+                        Name of MFA token to use
 ```
 
 ### `ndt bake-docker`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt bake-docker [-h] [-i] component docker-name
+
+Runs a docker build, ensures that an ecr repository with the docker name
+(by default <component>/<branch>-<docker-name>) exists and pushes the built
+image to that repository with the tags "latest" and "$BUILD_NUMBER"
+
+positional arguments:
+  component   the component directory where the docker directory is
+  docker-name the name of the docker directory that has the Dockerfile
+              For example for ecs-cluster/docker-cluster/Dockerfile
+              you would give cluster
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -i, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline
 ```
 
 ### `ndt bake-image`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt bake-image [-h] component
+
+Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and
+tags the image with the job name and build number.
+
+positional arguments
+  component   the component directory where the ami bake configurations are
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt cf-delete-stack`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-delete-stack [-h] stack_name region
+
+Delete an existing CloudFormation stack
+
+positional arguments:
+  stack_name  Name of the stack to delete
+  region      The region to delete the stack from
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt cf-follow-logs`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-follow-logs [-h] [-s START] stack_name
+
+Tail logs from the log group of a cloudformation stack
+
+positional arguments:
+  stack_name            Name of the stack to watch logs for
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s START, --start START
+                        Start time in seconds since epoc
 ```
 
 ### `ndt cf-get-parameter`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-get-parameter [-h] parameter
+
+Get a parameter value from the stack
+
+positional arguments:
+  parameter   The name of the parameter to print
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt cf-logical-id`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-logical-id [-h]
+
+Get the logical id that is expecting a signal from this instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt cf-region`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-region [-h]
+
+Get region of the stack that created this instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt cf-signal-status`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-signal-status [-h] [-r RESOURCE] status
+
+Signal CloudFormation status to a logical resource in CloudFormation that is
+either given on the command line or resolved from CloudFormation tags
+
+positional arguments:
+  status                Status to indicate: SUCCESS | FAILURE
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r RESOURCE, --resource RESOURCE
+                        Logical resource name to signal. Looked up from
+                        cloudformation tags by default
 ```
 
 ### `ndt cf-stack-id`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-stack-id [-h]
+
+Get id of the stack the creted this instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt cf-stack-name`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt cf-stack-name [-h]
+
+Get name of the stack that created this instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt create-account`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt create-account [-h] [-d] [-o ORGANIZATION_ROLE_NAME]
+                          [-r TRUST_ROLE_NAME]
+                          [-a [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]]]
+                          [-t TOKEN_NAME]
+                          email account_name
+
+Creates a subaccount.
+
+positional arguments:
+  email                 Email for account root
+  account_name          Organization unique account name
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d, --deny-billing-access
+  -o ORGANIZATION_ROLE_NAME, --organization-role-name ORGANIZATION_ROLE_NAME
+                        Role name for admin access from parent account
+  -r TRUST_ROLE_NAME, --trust-role-name TRUST_ROLE_NAME
+                        Role name for admin access from parent account
+  -a [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]], --trusted-accounts [TRUSTED_ACCOUNTS [TRUSTED_ACCOUNTS ...]]
+                        Account to trust with user management
+  -t TOKEN_NAME, --mfa-token TOKEN_NAME
+                        Name of MFA token to use
 ```
 
 ### `ndt create-stack`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt create-stack [-h] [-y] [template]
+
+Create a stack from a template
+
+positional arguments:
+  template
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -y, --yes   Answer yes or use default to all questions
 ```
 
 ### `ndt deploy-serverless`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt deploy-serverless [-d] [-h] component serverless-name
+
+Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the
+serverless project and runs sls deploy -s branch for the same
+
+positional arguments:
+  component   the component directory where the serverless directory is
+  serverless-name the name of the serverless directory that has the template
+                  For example for lambda/serverless-sender/template.yaml
+                  you would give sender
+
+optional arguments:
+  -d, --dryrun  dry-run - do only parameter expansion and template pre-processing and npm i
+  -h, --help    show this help message and exit
 ```
 
 ### `ndt deploy-stack`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+ami that is tagged with the bake-job name
+usage: ndt deploy-stack [-d] [-h] component stack-name ami-id bake-job
+
+Resolves potential ECR urls and AMI Ids and then deploys the given stack either updating or creating it.
+positional arguments:
+  component   the component directory where the stack template is
+  stack-name  the name of the stack directory inside the component directory
+              For example for ecs-cluster/stack-cluster/template.yaml
+              you would give cluster
+  ami-id      If you want to specify a value for the paramAmi variable in the stack,
+              you can do so. Otherwise give an empty string with two quotation marks
+  bake-job    If an ami-id is not given, the ami id is resolved by getting the latest
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt detach-volume`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt detach-volume [-h] mount_path
+
+Create a snapshot of a volume identified by it\'s mount path
+
+positional arguments:
+  mount_path  Where to mount the volume
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt ec2-clean-snapshots`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt ec2-clean-snapshots [-h] [-r REGION] [-d DAYS] tags [tags ...]
+
+Clean snapshots that are older than a number of days (30 by default) and have
+one of specified tag values
+
+positional arguments:
+  tags                  The tag values to select deleted snapshots
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r REGION, --region REGION
+                        The region to delete snapshots from. Can also be set
+                        with env variable AWS_DEFAULT_REGION or is gotten from
+                        instance metadata as a last resort
+  -d DAYS, --days DAYS  The number of days that is theminimum age for
+                        snapshots to be deleted
 ```
 
 ### `ndt ec2-get-tag`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt ec2-get-tag [-h] name
+
+Get the value of a tag for an ec2 instance
+
+positional arguments:
+  name        The name of the tag to get
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt ec2-get-userdata`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt ec2-get-userdata [-h] file
+
+Get userdata defined for an instance into a file
+
+positional arguments:
+  file        File to write userdata into
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt ec2-instance-id`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt ec2-instance-id [-h]
+
+Get id for instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt ec2-region`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt ec2-region [-h]
+
+Get default region - the region of the instance if run in an EC2 instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt ecr-ensure-repo`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt ecr-ensure-repo [-h] name
+
+Ensure that an ECR repository exists and get the uri and login token for it
+
+positional arguments:
+  name        The name of the ecr repository to verify
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt ecr-repo-uri`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt ecr-repo-uri [-h] name
+
+Get the repo uri for a named docker
+
+positional arguments:
+  name        The name of the ecr repository
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt get-images`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt get-images [-h] job_name
+
+Gets a list of images given a bake job name
+
+positional arguments:
+  job_name    The job name to look for
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt interpolate-file`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt interpolate-file [-h] [-s STACK] [-v] [-o OUTPUT] [-e ENCODING]
+                            file
+
+Replace placeholders in file with parameter values from stack and optionally
+from vault
+
+positional arguments:
+  file                  File to interpolate
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s STACK, --stack STACK
+                        Stack name for values. Automatically resolved on ec2
+                        instances
+  -v, --vault           Use vault values as well.Vault resovled from env
+                        variables or default is used
+  -o OUTPUT, --output OUTPUT
+                        Output file
+  -e ENCODING, --encoding ENCODING
+                        Encoding to use for the file. Defaults to utf-8
 ```
 
 ### `ndt json-to-yaml`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt json-to-yaml [-h] [--colorize] file
+
+Convert CloudFormation json to an approximation of a Nitor CloudFormation yaml
+with for example scripts externalized
+
+positional arguments:
+  file            File to parse
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --colorize, -c  Colorize output
 ```
 
 ### `ndt latest-snapshot`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt latest-snapshot [-h] tag
+
+Get the latest snapshot with a given tag
+
+positional arguments:
+  tag         The tag to find snapshots with
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt list-file-to-json`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt list-file-to-json [-h] arrayname file
+
+Convert a file with an entry on each line to a json document with a single
+element (name as argument) containg file rows as list.
+
+positional arguments:
+  arrayname   The name in the json object givento the array
+  file        The file to parse
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt list-jobs`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt list-jobs  [-h]
+
+List jobs that should be created in jenkins for the current repository.
+This includes all branches in the current repository.
+
+optional arguments:
+  -h, --help  show this help message and exit exit 1
+fatal: Not a valid object name
 ```
 
 ### `ndt load-parameters`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt load-parameters [-h] [--branch BRANCH]
+                           [--stack STACK | --serverless SERVERLESS | --docker DOCKER | --image [IMAGE]]
+                           [--json | --yaml | --properties | --export-statements]
+                           [component]
+
+Load parameters from infra*.properties files in the order: infra.properties,
+infra-[branch].properties, [component]/infra.properties,
+[component]/infra-[branch].properties, [component]/[subcomponent-
+type]-[subcomponent]/infra.properties, [component]/[subcomponent-
+type]-[subcomponent]/infra-[branch].properties Last parameter defined
+overwrites ones defined before in the files. Supports parameter expansion and
+bash -like transformations. Namely: ${PARAM##prefix} # strip prefix greedy
+${PARAM%%suffix} # strip suffix greedy ${PARAM#prefix} # strip prefix not
+greedy ${PARAM%suffix} # strip suffix not greedy ${PARAM:-default} # default
+if empty ${PARAM:4:2} # start:len ${PARAM/substr/replace} ${PARAM^} # upper
+initial ${PARAM,} # lower initial ${PARAM^^} # upper ${PARAM,,} # lower
+Comment lines start with \'#\' Lines can be continued by adding \'\' at the end
+See https://www.tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_03.html (arrays
+not supported)
+
+positional arguments:
+  component             Compenent to descend into
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --branch BRANCH, -b BRANCH
+                        Branch to get active parameters for
+  --stack STACK, -s STACK
+                        CloudFormation subcomponent to descent into
+  --serverless SERVERLESS, -l SERVERLESS
+                        Serverless subcomponent to descent into
+  --docker DOCKER, -d DOCKER
+                        Docker image subcomponent to descent into
+  --image [IMAGE], -i [IMAGE]
+                        AMI image subcomponent to descent into
+  --json, -j            JSON format output (default)
+  --yaml, -y            YAML format output
+  --properties, -p      properties file format output
+  --export-statements, -e
+                        Output as eval-able export statements
 ```
 
 ### `ndt mfa-add-token`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt mfa-add-token [-h] [-i] [-a TOKEN_ARN] [-s TOKEN_SECRET] [-f]
+                         token_name
+
+Adds an MFA token to be used with role assumption. Tokens will be saved in a
+.ndt subdirectory in the user\'s home directory. If a token with the same name
+already exists, it will not be overwritten.
+
+positional arguments:
+  token_name            Name for the token. Use this to refer to the token
+                        later with the assume-role command.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i, --interactive     Ask for token details interactively.
+  -a TOKEN_ARN, --token_arn TOKEN_ARN
+                        ARN identifier for the token.
+  -s TOKEN_SECRET, --token_secret TOKEN_SECRET
+                        Token secret.
+  -f, --force           Force an overwrite if the token already exists.
 ```
 
 ### `ndt mfa-code`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt mfa-code [-h] token_name
+
+Generates a TOTP code using an MFA token.
+
+positional arguments:
+  token_name  Name of the token to use.
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt mfa-delete-token`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt mfa-delete-token [-h] token_name
+
+Deletes an MFA token file from the .ndt subdirectory in the user\'s home
+directory
+
+positional arguments:
+  token_name  Name of the token to delete.
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt print-create-instructions`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+Prints out the instructions to create and deploy the resources in a stack
+usage: ndt print-create-instructions [-h] component stack-name
+
+
+positional arguments:
+  component   the component directory where the stack template is
+  stack-name  the name of the stack directory inside the component directory
+              For example for ecs-cluster/stack-cluster/template.yaml
+              you would give cluster
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt promote-image`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt promote-image [-h] image_id target_job
+
+Promotes an image for use in another branch
+
+positional arguments:
+  image_id    The image to promote
+  target_job  The job name to promote the image to
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt pytail`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt pytail [-h] file
+
+Read and print a file and keep following the end for new data
+
+positional arguments:
+  file        File to follow
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt region`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt region [-h]
+
+Get default region - the region of the instance if run in an EC2 instance
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt register-private-dns`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt register-private-dns [-h] dns_name hosted_zone
+
+Register local private IP in route53 hosted zone usually for internal use.
+
+positional arguments:
+  dns_name     The name to update in route 53
+  hosted_zone  The name of the hosted zone to update
+
+optional arguments:
+  -h, --help   show this help message and exit
 ```
 
 ### `ndt serverless-deploy`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt serverless-deploy [-h] component name
+
+Deploys a Serverless Framework service under [component]/serverless-[name]
+
+positional arguments:
+  component   The component that contains the serverless service
+  name        The name of the serverless service
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt setup-cli`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt setup-cli [-h] [-n NAME] [-k KEY_ID] [-s SECRET] [-r REGION]
+
+Setup the command line environment to define an aws cli profile with the given
+name and credentials. If an identically named profile exists, it will not be
+overwritten.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n NAME, --name NAME  Name for the profile to create
+  -k KEY_ID, --key-id KEY_ID
+                        Key id for the profile
+  -s SECRET, --secret SECRET
+                        Secret to set for the profile
+  -r REGION, --region REGION
+                        Default region for the profile
 ```
 
 ### `ndt share-to-another-region`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt share-to-another-region [-h]
+                                   ami_id to_region ami_name account_id
+                                   [account_id ...]
+
+Shares an image to another region for potentially another account
+
+positional arguments:
+  ami_id      The ami to share
+  to_region   The region to share to
+  ami_name    The name for the ami
+  account_id  The account ids to share ami to
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt show-stack-params-and-outputs`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt show-stack-params-and-outputs [-h] [-r REGION] [-p PARAMETER]
+                                         stack_name
+
+Show stack parameters and outputs as a single json documents
+
+positional arguments:
+  stack_name            The stack name to show
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r REGION, --region REGION
+                        Region for the stack to show
+  -p PARAMETER, --parameter PARAMETER
+                        Name of paremeter if only one parameter required
 ```
 
 ### `ndt snapshot-from-volume`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt snapshot-from-volume [-h] [-w] tag_key tag_value mount_path
+
+Create a snapshot of a volume identified by it\'s mount path
+
+positional arguments:
+  tag_key     Key of the tag to find volume with
+  tag_value   Value of the tag to find volume with
+  mount_path  Where to mount the volume
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -w, --wait  Wait for the snapshot to finish before returning
 ```
 
 ### `ndt undeploy-stack`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt undeploy-stack [-h] [-f] <component> <stack-name>
+
+Undeploys (deletes) the given stack.
+Found s3 buckets are emptied and deleted only in case the -f argument is given.
+
+positional arguments:
+  component   the component directory where the stack template is
+  stack-name  the name of the stack directory inside the component directory
+              For example for ecs-cluster/stack-cluster/template.yaml
+              you would give cluster
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `ndt upsert-cloudfront-records`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt upsert-cloudfront-records [-h]
+                                     (-i DISTRIBUTION_ID | -c DISTRIBUTION_COMMENT)
+                                     [-w]
+
+Upsert Route53 records for all aliases of a CloudFront distribution
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i DISTRIBUTION_ID, --distribution_id DISTRIBUTION_ID
+                        Id for the distribution to upsert
+  -c DISTRIBUTION_COMMENT, --distribution_comment DISTRIBUTION_COMMENT
+                        Comment for the distribution to upsert
+  -w, --wait            Wait for request to sync
 ```
 
 ### `ndt volume-from-snapshot`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt volume-from-snapshot [-h] [-n]
+                                tag_key tag_value mount_path [size_gb]
+ndt volume-from-snapshot: error: Only makes sense on an EC2 instance
 ```
 
 ### `ndt yaml-to-json`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt yaml-to-json [-h] [--colorize] file
+
+Convert Nitor CloudFormation yaml to CloudFormation json with some
+preprosessing
+
+positional arguments:
+  file            File to parse
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --colorize, -c  Colorize output
 ```
 
 ### `ndt yaml-to-yaml`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ndt", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ndt yaml-to-yaml [-h] [--colorize] file
+
+Do ndt preprocessing for a yaml file
+
+positional arguments:
+  file            File to parse
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --colorize, -c  Colorize output
 ```
 
 ### `[ndt ]associate-eip`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/associate-eip", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
+                     [-p ALLOCATIONIDPARAM]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
+                        from the stack that created this instance
+  -a ALLOCATIONID, --allocationid ALLOCATIONID
+                        Elastic IP allocation id to allocate - default is to
+                        get paramEipAllocationId from the stack that created
+                        this instance
+  -e EIPPARAM, --eipparam EIPPARAM
+                        Parameter to look up for Elastic IP in the stack -
+                        default is paramEip
+  -p ALLOCATIONIDPARAM, --allocationidparam ALLOCATIONIDPARAM
+                        Parameter to look up for Elastic IP Allocation ID in
+                        the stack - default is paramEipAllocationId
 ```
 
 ### `[ndt ]cf-logs-to-cloudwatch`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/cf-logs-to-cloudwatch", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: cf-logs-to-cloudwatch [-h] file
+
+positional arguments:
+  file        File to follow
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `[ndt ]ec2-associate-eip`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/ec2-associate-eip", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: ec2-associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
+                         [-p ALLOCATIONIDPARAM]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
+                        from the stack that created this instance
+  -a ALLOCATIONID, --allocationid ALLOCATIONID
+                        Elastic IP allocation id to allocate - default is to
+                        get paramEipAllocationId from the stack that created
+                        this instance
+  -e EIPPARAM, --eipparam EIPPARAM
+                        Parameter to look up for Elastic IP in the stack -
+                        default is paramEip
+  -p ALLOCATIONIDPARAM, --allocationidparam ALLOCATIONIDPARAM
+                        Parameter to look up for Elastic IP Allocation ID in
+                        the stack - default is paramEipAllocationId
 ```
 
 ### `[ndt ]logs-to-cloudwatch`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/logs-to-cloudwatch", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: logs-to-cloudwatch [-h] file
+
+positional arguments:
+  file        File to follow
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `[ndt ]n-include`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/n-include", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: n-include [-h] file
+
+positional arguments:
+  file        The file to find
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `[ndt ]n-include-all`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/n-include-all", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: n-include-all [-h] pattern
+
+positional arguments:
+  pattern     The file pattern to find
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ### `[ndt ]signal-cf-status`
 
 ```bash
-Traceback (most recent call last):
-  File "/usr/local/bin/signal-cf-status", line 6, in <module>
-    from pkg_resources import load_entry_point
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3038, in <module>
-    @_call_aside
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3022, in _call_aside
-    f(*args, **kwargs)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 3051, in _initialize_master_working_set
-    working_set = WorkingSet._build_master()
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 657, in _build_master
-    ws.require(__requires__)
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 971, in require
-    needed = self.resolve(parse_requirements(requirements))
-  File "/usr/local/lib/python2.7/dist-packages/pkg_resources/__init__.py", line 857, in resolve
-    raise DistributionNotFound(req, requirers)
-pkg_resources.DistributionNotFound: The \'nitor-deploy-tools\' distribution was not found and is required by the application
+usage: signal-cf-status [-h] [-r RESOURCE] status
+
+positional arguments:
+  status                Status to indicate: SUCCESS | FAILURE
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r RESOURCE, --resource RESOURCE
+                        Logical resource name to signal. Looked up from
+                        cloudformation tags by default
 ```
 
 ### `create-shell-archive.sh`
