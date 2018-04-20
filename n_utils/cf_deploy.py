@@ -229,7 +229,7 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     global REDIRECTED
     if not REDIRECTED:
         # Disable buffering, from http://stackoverflow.com/questions/107705/disable-output-buffering
-        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        sys.stdout = Unbuffered(sys.__stdout__)
         REDIRECTED = True
     template_doc = aws_infra_util.yaml_to_dict(yaml_template)
     ami_id, ami_name, ami_created = resolve_ami(template_doc, session=session)
@@ -284,3 +284,15 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     elif get_stack_operation(stack_name).__name__ == "update_stack":
         update_stack(stack_name, json_small, params_doc, dry_run=True, session=session)
     log("Done!")
+
+class Unbuffered(object):
+    def __init__(self, stream):
+       self.stream = stream
+    def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+    def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+    def __getattr__(self, attr):
+       return getattr(self.stream, attr)
