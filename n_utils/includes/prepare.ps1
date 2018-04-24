@@ -3,4 +3,4 @@ $output = "C:\nitor\VCForPython27.msi"
 (New-Object System.Net.WebClient).DownloadFile($url, $output)
 Start-Process msiexec -ArgumentList @("/i", "C:\nitor\VCForPython27.msi", "/passive", "/quiet") -NoNewWindow -Wait
 
-pip install -U pip setuptools awscli boto3 nitor-deploy-tools
+C:\Python27\python.exe -m pip -U pip setuptools awscli boto3 nitor-deploy-tools
