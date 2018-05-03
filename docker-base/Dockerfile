@@ -10,12 +10,12 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ENV DOCKER_BUCKET="download.docker.com" \
-    DOCKER_VERSION="18.03.0-ce" \
+    DOCKER_VERSION="18.03.1-ce" \
     DOCKER_CHANNEL="stable" \
-    DOCKER_SHA256="e5dff6245172081dbf14285dafe4dede761f8bc1750310156b89928dbf56a9ee" \
+    DOCKER_SHA256="0e245c42de8a21799ab11179a4fce43b494ce173a8a2d6567ea6825d6c5265aa" \
     DIND_COMMIT="52379fa76dee07ca038624d639d9e14f4fb719ff" \
     DOCKER_COMPOSE_VERSION="1.16.1"
 
@@ -31,7 +31,7 @@ RUN apt-get update && apt-get upgrade -y \
        libevent-dev libffi-dev libgeoip-dev libglib2.0-dev \
        libjpeg-dev libkrb5-dev liblzma-dev \
        libmagickcore-dev libmagickwand-dev libmysqlclient-dev \
-       libncurses5-dev libpng12-dev libpq-dev libreadline-dev \
+       libncurses5-dev libpng-dev libpq-dev libreadline-dev \
        libsqlite3-dev libssl-dev libtool libwebp-dev \
        libxml2-dev libxslt1-dev libyaml-dev make \
        patch xz-utils zlib1g-dev unzip curl \

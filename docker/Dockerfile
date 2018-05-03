@@ -7,7 +7,7 @@ ENV NODE_VERSION=8.11.1 \
  MAVEN_VERSION=3.5.3 \
  PHANTOMJS_VERSION=2.1.1
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git openssh-client unzip chromium-bsu jq
+RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git openssh-client unzip chromium-bsu jq gpg
 RUN set -ex \
   && groupadd --gid 1010 node \
   && useradd --uid 1010 --gid node --shell /bin/bash --create-home node \
