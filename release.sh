@@ -43,11 +43,11 @@ python setup.py register -r pypi
 python setup.py sdist upload -r pypi --sign
 docker build -t ndt docker
 set +x
-docker login -u "$(git config docker.username)" -p "$(lpass show --password docker.com)"
+sudo docker login -u "$(git config docker.username)" -p "$(lpass show --password docker.com)"
 set -x
-docker tag ndt:latest nitor/ndt:$NEW_VERSION
-docker push nitor/ndt:$NEW_VERSION
+sudo docker tag ndt:latest nitor/ndt:$NEW_VERSION
+sudo docker push nitor/ndt:$NEW_VERSION
 if ! echo "$NEW_VERSION" | grep "a" > /dev/null; then
-  docker tag ndt:latest nitor/ndt:latest
-  docker push nitor/ndt:latest
+  sudo docker tag ndt:latest nitor/ndt:latest
+  sudo docker push nitor/ndt:latest
 fi
