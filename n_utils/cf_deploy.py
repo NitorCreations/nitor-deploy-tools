@@ -23,7 +23,7 @@ import re
 import sys
 import time
 from datetime import datetime
-
+from types import StringType
 import boto3
 
 from botocore.exceptions import ClientError
@@ -287,12 +287,15 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
 
 class Unbuffered(object):
     def __init__(self, stream):
-       self.stream = stream
+        self.stream = stream
     def write(self, data):
-       self.stream.write(data)
-       self.stream.flush()
+        if not isinstance(data, StringType):
+            self.stream.write(data.decode(sys.stdout.encoding))
+        else:
+            self.stream.write(data)
+        self.stream.flush()
     def writelines(self, datas):
-       self.stream.writelines(datas)
-       self.stream.flush()
+        self.stream.writelines(datas)
+        self.stream.flush()
     def __getattr__(self, attr):
-       return getattr(self.stream, attr)
+        return getattr(self.stream, attr)
