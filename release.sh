@@ -41,7 +41,7 @@ git push --tags origin master
 
 python setup.py register -r pypi
 python setup.py sdist upload -r pypi --sign
-docker build -t ndt docker
+sudo docker build -t ndt docker
 set +x
 sudo docker login -u "$(git config docker.username)" -p "$(lpass show --password docker.com)"
 set -x
