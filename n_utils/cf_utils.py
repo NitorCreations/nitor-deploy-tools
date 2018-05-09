@@ -252,7 +252,9 @@ class LogSender(object):
     def send(self, line):
         try:
             self._lock.acquire()
-            self._messages.append(line.decode('utf-8', 'replace').rstrip())
+            if isinstance(line, bytes):
+                line = line.decode('utf-8', 'replace')
+            self._messages.append(line.rstrip())
             if 'CLOUDWATCH_LOG_DEBUG' in os.environ:
                 print("Queued message")
         finally:
