@@ -255,7 +255,7 @@ def yaml_save(data):
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             list(data.items()))
     OrderedDumper.add_representer(collections.OrderedDict, _dict_representer)
-    return yaml.dump(data, None, OrderedDumper)
+    return yaml.dump(data, None, OrderedDumper, default_flow_style=False)
 
 def json_load(stream):
     return json.loads(stream, object_pairs_hook=collections.OrderedDict)
