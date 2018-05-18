@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 1.0a27
+## Released version 1.0a28
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -1032,7 +1032,7 @@ positional arguments
 
 optional arguments:
   -h, --help  show this help message and exit
-/usr/local/bin/ensure-letsencrypt-certs.sh: line 23: fetch-secrets.sh: command not found
+/home/pasi/.pyenv/versions/3.6.5/bin/ensure-letsencrypt-certs.sh: line 23: fetch-secrets.sh: command not found
 ```
 
 ### `lastpass-fetch-notes.sh`
