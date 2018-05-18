@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from builtins import object
 from builtins import str
 import collections
 import hashlib
@@ -23,7 +24,6 @@ import re
 import sys
 import time
 from datetime import datetime
-from types import StringType
 import boto3
 
 from botocore.exceptions import ClientError
@@ -44,8 +44,9 @@ def log_data(data, output_format="yaml"):
     lexer = lexers.get_lexer_by_name(output_format)
     formatter = formatters.get_formatter_by_name("256")
     formatter.__init__(style=get_style_by_name('emacs'))
-    colored_yaml = os.linesep + highlight(str(formatted, 'UTF-8'),
-                                          lexer, formatter)
+    if not type(formatted) is str:
+        formatted = str(formatted, 'UTF-8')
+    colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
 
 def log(message):
@@ -289,7 +290,7 @@ class Unbuffered(object):
     def __init__(self, stream):
         self.stream = stream
     def write(self, data):
-        if not isinstance(data, StringType):
+        if not type(data) is str:
             self.stream.write(data.decode(sys.stdout.encoding))
         else:
             self.stream.write(data)
