@@ -25,6 +25,8 @@ import locale
 import os
 import sys
 import time
+import re
+from botocore.config import Config
 
 
 def millis2iso(millis):
@@ -43,11 +45,13 @@ def uprint(message):
 
 class LogEventThread(Thread):
 
-    def __init__(self, log_group_name, start_time=None):
+    def __init__(self, log_group_name, start_time=None, end_time=None, filter_pattern=None):
         Thread.__init__(self)
         self.log_group_name = log_group_name
         self.start_time = int(start_time) * 1000 if start_time else \
                           int((time.time() - 60) * 1000)
+        self.end_time = int(end_time) * 1000 if end_time else None
+        self.filter_pattern = filter_pattern
         self._stopped = Event()
 
     def list_logs(self):
@@ -59,10 +63,67 @@ class LogEventThread(Thread):
     def run(self):
         self.list_logs()
 
-class CloudWatchLogs(LogEventThread):
-    def __init__(self, log_group_name, start_time=None):
-        LogEventThread.__init__(self, log_group_name, start_time=start_time)
+class CloudWatchLogsGroups():
+    def __init__(self, log_filter='', log_group_filter='', start_time=None, end_time=None):
         self.client = boto3.client('logs')
+        self.log_filter = log_filter
+        self.log_group_filter = log_group_filter
+        self.start_time = start_time
+        self.end_time = end_time
+
+    def filter_groups(self, log_group_filter, groups):
+        filtered = []
+        for group in groups:
+            if re.search(log_group_filter, group['logGroupName']):
+                filtered.append(group['logGroupName'])
+        return filtered
+
+    def get_filtered_groups(self, log_group_filter):
+        resp = self.client.describe_log_groups()
+        filtered_group_names = []
+        filtered_group_names.extend(self.filter_groups(self.log_group_filter, resp['logGroups']))
+        while resp.get('nextToken'):
+            resp = self.client.describe_log_groups(nextToken=resp['nextToken'])
+            filtered_group_names.extend(self.filter_groups(self.log_group_filter, resp['logGroups']))
+        return filtered_group_names
+
+    def get_logs(self):
+        groups = self.get_filtered_groups(self.log_group_filter)
+        print("Found log groups: %s" % (groups))
+        log_threads = []
+        for group_name in groups:
+            cwlogs = CloudWatchLogs(
+                group_name,
+                start_time=self.start_time,
+                end_time=self.end_time,
+                filter_pattern=self.log_filter
+            )
+            cwlogs.start()
+            log_threads.append(cwlogs)
+        while True:
+            try:
+                time.sleep(1)
+            except KeyboardInterrupt:
+                print('Closing...')
+                for thread in log_threads:
+                    thread.stop()
+                return
+
+class CloudWatchLogs(LogEventThread):
+    def __init__(self, log_group_name, start_time=None, end_time=None, filter_pattern=None):
+        LogEventThread.__init__(
+            self,
+            log_group_name,
+            start_time=start_time,
+            end_time=end_time,
+            filter_pattern=filter_pattern
+        )
+        config = Config(
+            retries = {
+                'max_attempts': 10
+            }
+        )     
+        self.client = boto3.client('logs', config=config)
 
     def list_logs(self):
         do_wait = object()
@@ -73,8 +134,11 @@ class CloudWatchLogs(LogEventThread):
             while True:
                 if len(streams) > 0:
                     kwargs = {'logGroupName': self.log_group_name,
-                              'interleaved': True, 'logStreamNames': streams,
-                              'startTime': self.start_time}
+                              'interleaved': True,
+                              'logStreamNames': streams,
+                              'startTime': self.start_time,
+                              'filterPattern': self.filter_pattern if self.filter_pattern else ""}
+                    if self.end_time: kwargs['endTime'] = self.end_time
                     response = self.client.filter_log_events(**kwargs)
                     for event in response.get('events', []):
                         if event['eventId'] not in interleaving_sanity:
@@ -101,6 +165,7 @@ class CloudWatchLogs(LogEventThread):
 
             output = []
             output.append(colored(millis2iso(event['timestamp']), 'yellow'))
+            output.append(colored(self.log_group_name, 'green'))
             output.append(colored(event['logStreamName'], 'cyan'))
             output.append(event['message'])
             uprint(' '.join(output))
@@ -155,7 +220,7 @@ class CloudFormationEvents(LogEventThread):
                     for event in reversed(unseen_events):
                         yield event
 
-                # If we've seen the start, we don't want to interate with
+                # If we've seen the start, we don't want to iterate with
                 # NextToken anymore
                 if event_timestamp < self.start_time or \
                    'NextToken' not in response:
