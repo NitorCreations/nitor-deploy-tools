@@ -536,8 +536,8 @@ def get_logs():
     cwlogs_groups = CloudWatchLogsGroups(
         log_group_filter=args.log_group_pattern,
         log_filter=args.filter,
-        start_time=' '.join(args.start),
-        end_time=' '.join(args.end),
+        start_time=' '.join(args.start) if args.start else None,
+        end_time=' '.join(args.end) if args.end else None,
         sort=args.order
     )
     cwlogs_groups.get_logs()
