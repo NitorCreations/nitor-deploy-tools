@@ -204,14 +204,20 @@ class CloudWatchLogsGroups():
                     all_initial_queries_done = loop_queries_done
                 elif self.sort:
                     time.sleep(5.0) #allow time to sort while tailing
-                while not output_queue.empty():
-                    uprint(' '.join(output_queue.get()[1]))
+                self.print_output_if_any(output_queue)
                 if all_initial_queries_done and not tailing: raise KeyboardInterrupt
             except KeyboardInterrupt:
                 for thread in log_threads:
                     thread.stop()
                 speed_limiter.stop()
                 return
+
+    def print_output_if_any(self, output_queue):
+        while True:
+            try:
+                uprint(' '.join(output_queue.get(timeout=1.0)[1]))
+            except queue.Empty:
+                break
 
 class SpeedLimitThread(Thread):
     def __init__(self, semaphore):
