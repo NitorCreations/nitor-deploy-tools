@@ -899,15 +899,6 @@ def cli_create_account():
                     trust_role=args.trust_role_name, access_to_billing=not args.deny_billing_access,
                     trusted_accounts=args.trusted_accounts, mfa_token=args.mfa_token)
 
-def cli_serverless_deploy():
-    """ Deploys a Serverless Framework service under [component]/serverless-[name] """
-    parser = get_parser()
-    parser.add_argument("component", help="The component that contains the serverless service")
-    parser.add_argument("name", help="The name of the serverless service")
-    argcomplete.autocomplete(parser)
-    args = parser.parse_args()
-    serverless_deploy(args.component, args.name)
-
 def cli_load_parameters():
     """ Load parameters from infra*.properties files in the order:
     infra.properties,

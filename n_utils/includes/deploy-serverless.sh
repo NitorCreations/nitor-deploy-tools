@@ -36,7 +36,7 @@ usage() {
   echo "usage: ndt deploy-serverless [-d] [-h] component serverless-name" >&2
   echo "" >&2
   echo "Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the" >&2
-  echo "serverless project and runs sls deploy -s branch for the same" >&2
+  echo "serverless project and runs sls deploy -s \$paramEnvId for the same" >&2
   echo "" >&2
   echo "positional arguments:" >&2
   echo "  component   the component directory where the serverless directory is" >&2

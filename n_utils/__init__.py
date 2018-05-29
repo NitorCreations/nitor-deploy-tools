@@ -76,7 +76,6 @@ NDT_ONLY = [
     'create-stack=n_utils.cf_bootstrap:create_stack',
     'latest-snapshot=n_utils.volumes:latest_snapshot',
     'create-account=n_utils.cli:cli_create_account',
-    'serverless-deploy=n_utils.cli:cli_serverless_deploy',
     'load-parameters=n_utils.cli:cli_load_parameters'
 ]
 NDT_ONLY_SCRIPT = [
