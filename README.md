@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 1.0a29
+## Released version 1.0a30
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -610,9 +610,10 @@ optional arguments:
   -f FILTER, --filter FILTER
                         CloudWatch filter pattern
   -s START [START ...], --start START [START ...]
-                        Start time in seconds since epoc
+                        Start time (x m|h|d|w ago | now | <seconds since
+                        epoc>)
   -e END [END ...], --end END [END ...]
-                        End time in seconds since epoc
+                        End time (x m|h|d|w ago | now | <seconds since epoc>)
   -o, --order           Best effort ordering of log entries
 ```
 
