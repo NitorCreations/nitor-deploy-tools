@@ -68,8 +68,6 @@ import time
 import re
 from botocore.compat import total_seconds
 import queue
-import logging
-import exceptions
 
 
 def millis2iso(millis):
@@ -83,7 +81,10 @@ def fmttime(tstamp):
     return tstamp.replace(tzinfo=tz.tzlocal()).isoformat()[:23]
 
 def uprint(message):
-    sys.stdout.write((message + os.linesep)\
+    if sys.version_info[0] > 2:
+        sys.stdout.write((message + os.linesep))
+    else:
+        sys.stdout.write((message + os.linesep)\
                         .encode(locale.getpreferredencoding()))
 
 def validatestarttime(start_time):
