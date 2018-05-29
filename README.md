@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 1.0a28
+## Released version 1.0a29
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -304,7 +304,7 @@ optional arguments:
 usage: ndt deploy-serverless [-d] [-h] component serverless-name
 
 Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the
-serverless project and runs sls deploy -s branch for the same
+serverless project and runs sls deploy -s $paramEnvId for the same
 
 positional arguments:
   component   the component directory where the serverless directory is
@@ -593,6 +593,29 @@ optional arguments:
                         Output as eval-able export statements
 ```
 
+### `ndt logs`
+
+```bash
+usage: ndt logs [-h] [-f FILTER] [-s START [START ...]] [-e END [END ...]]
+                [-o]
+                log_group_pattern
+
+Get logs from multiple CloudWatch log groups and possibly filter them.
+
+positional arguments:
+  log_group_pattern     Regular expression to filter log groups with
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FILTER, --filter FILTER
+                        CloudWatch filter pattern
+  -s START [START ...], --start START [START ...]
+                        Start time in seconds since epoc
+  -e END [END ...], --end END [END ...]
+                        End time in seconds since epoc
+  -o, --order           Best effort ordering of log entries
+```
+
 ### `ndt mfa-add-token`
 
 ```bash
@@ -716,21 +739,6 @@ positional arguments:
 
 optional arguments:
   -h, --help   show this help message and exit
-```
-
-### `ndt serverless-deploy`
-
-```bash
-usage: ndt serverless-deploy [-h] component name
-
-Deploys a Serverless Framework service under [component]/serverless-[name]
-
-positional arguments:
-  component   The component that contains the serverless service
-  name        The name of the serverless service
-
-optional arguments:
-  -h, --help  show this help message and exit
 ```
 
 ### `ndt setup-cli`
@@ -1032,7 +1040,7 @@ positional arguments
 
 optional arguments:
   -h, --help  show this help message and exit
-/home/pasi/.pyenv/versions/3.6.5/bin/ensure-letsencrypt-certs.sh: line 23: fetch-secrets.sh: command not found
+/usr/local/bin/ensure-letsencrypt-certs.sh: line 23: fetch-secrets.sh: command not found
 ```
 
 ### `lastpass-fetch-notes.sh`
