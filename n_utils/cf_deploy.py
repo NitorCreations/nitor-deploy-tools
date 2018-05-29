@@ -33,7 +33,7 @@ from termcolor import colored
 
 from . import aws_infra_util
 from .cf_utils import get_images
-from .log_events import CloudWatchLogs, CloudFormationEvents, fmttime
+from .log_events import CloudWatchLogsThread, CloudFormationEvents, fmttime
 
 REDIRECTED = False
 def log_data(data, output_format="yaml"):
@@ -115,7 +115,7 @@ def get_stack_operation(stack_name, session=None):
     return globals()[stack_oper]
 
 def get_end_status(stack_name, session=None):
-    logs = CloudWatchLogs(log_group_name=stack_name)
+    logs = CloudWatchLogsThread(log_group_name=stack_name)
     logs.start()
     cf_events = CloudFormationEvents(log_group_name=stack_name)
     cf_events.start()

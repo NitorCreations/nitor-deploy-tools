@@ -43,6 +43,7 @@ NDT_ONLY = [
     'pytail=n_utils.cli:read_and_follow',
     'account-id=n_utils.cli:get_account_id',
     'cf-follow-logs=n_utils.cli:tail_stack_logs',
+    'logs=n_utils.cli:get_logs',
     'cf-logical-id=n_utils.cli:logical_id',
     'cf-region=n_utils.cli:cf_region',
     'cf-get-parameter=n_utils.cli:get_parameter',

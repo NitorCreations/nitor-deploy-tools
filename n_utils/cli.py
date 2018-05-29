@@ -45,7 +45,7 @@ from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
 from .cloudfront_utils import distributions, distribution_comments, \
     get_distribution_by_comment, get_distribution_by_id, upsert_cloudfront_records
 from .ecr_utils import ensure_repo, repo_uri
-from .log_events import CloudWatchLogs, CloudFormationEvents
+from .log_events import CloudWatchLogsGroups, CloudFormationEvents, CloudWatchLogsThread
 from .maven_utils import add_server
 from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
     mfa_generate_code_with_secret, list_mfa_tokens
@@ -509,7 +509,7 @@ def tail_stack_logs():
                                               "epoc")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    cwlogs = CloudWatchLogs(args.stack_name, start_time=args.start)
+    cwlogs = CloudWatchLogsThread(args.stack_name, start_time=args.start)
     cwlogs.start()
     cfevents = CloudFormationEvents(args.stack_name, start_time=args.start)
     cfevents.start()
@@ -521,6 +521,26 @@ def tail_stack_logs():
             cwlogs.stop()
             cfevents.stop()
             return
+
+def get_logs():
+    """Get logs from multiple CloudWatch log groups and possibly filter them.
+    """
+    parser = get_parser()
+    parser.add_argument("log_group_pattern", help="Regular expression to filter log groups with")
+    parser.add_argument("-f", "--filter", help="CloudWatch filter pattern")
+    parser.add_argument("-s", "--start", help="Start time in seconds since epoc", nargs="+")
+    parser.add_argument("-e", "--end", help="End time in seconds since epoc", nargs="+")
+    parser.add_argument("-o", "--order", help="Best effort ordering of log entries", action="store_true")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    cwlogs_groups = CloudWatchLogsGroups(
+        log_group_filter=args.log_group_pattern,
+        log_filter=args.filter,
+        start_time=' '.join(args.start) if args.start else None,
+        end_time=' '.join(args.end) if args.end else None,
+        sort=args.order
+    )
+    cwlogs_groups.get_logs()
 
 def resolve_include():
     """Find a file from the first of the defined include paths
