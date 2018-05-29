@@ -43,13 +43,13 @@ def I11i ( ) :
  hash = SHA256 . new ( )
  O0oOO0o0 = i1ii1iIII ( )
  Oo0oO0oo0oO00 = getuser ( )
- hash . update ( O0oOO0o0 )
- hash . update ( Oo0oO0oo0oO00 )
+ hash . update ( O0oOO0o0.encode('utf-8') )
+ hash . update ( Oo0oO0oo0oO00.encode('utf-8') )
  for i111I in range ( 0 , ord ( hash . digest ( ) [ 2 ] ) ) :
   jjjjjjj33934__23 = bytes ( str ( i111I + 1337 ), "utf-8" )
   hash . update ( jjjjjjj33934__23 )
-  hash . update ( O0oOO0o0 )
-  hash . update ( Oo0oO0oo0oO00 )
+  hash . update ( O0oOO0o0.encode('utf-8') )
+  hash . update ( Oo0oO0oo0oO00.encode('utf-8') )
  return hash . digest ( )
  if 16 - 16: Oo0oO0ooo % IiIiI11iIi - O0OOo . O0Oooo00 . oo00 * ii1IiI1i
 def i1ii1iIII ( ) :

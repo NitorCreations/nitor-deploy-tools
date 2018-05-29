@@ -528,16 +528,16 @@ def get_logs():
     parser = get_parser()
     parser.add_argument("log_group_pattern", help="Regular expression to filter log groups with")
     parser.add_argument("-f", "--filter", help="CloudWatch filter pattern")
-    parser.add_argument("-s", "--start", help="Start time in seconds since epoc")
-    parser.add_argument("-e", "--end", help="End time in seconds since epoc")
+    parser.add_argument("-s", "--start", help="Start time in seconds since epoc", nargs="+")
+    parser.add_argument("-e", "--end", help="End time in seconds since epoc", nargs="+")
     parser.add_argument("-o", "--order", help="Best effort ordering of log entries", action="store_true")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     cwlogs_groups = CloudWatchLogsGroups(
         log_group_filter=args.log_group_pattern,
         log_filter=args.filter,
-        start_time=args.start,
-        end_time=args.end,
+        start_time=' '.join(args.start),
+        end_time=' '.join(args.end),
         sort=args.order
     )
     cwlogs_groups.get_logs()

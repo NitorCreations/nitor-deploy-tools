@@ -1,5 +1,5 @@
 from __future__ import division
-# Copyright 2017 Nitor Creations Oy
+# Copyright 2017-2018 Nitor Creations Oy
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,52 @@ from __future__ import division
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Code used under license:
+#
+# parse_datetime from https://github.com/jorgebastida/awslogs:
+#
+# Copyright (c) 2015 Benito Jorge Bastida
+# All rights reserved.
+#
+# Revised BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#
+#  2. Redistributions in binary form must reproduce the above
+#     copyright notice, this list of conditions and the following
+#     disclaimer in the documentation and/or other materials provided
+#     with the distribution.
+#
+#  3. Neither the name of the author nor the names of other
+#     contributors may be used to endorse or promote products derived
+#     from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 
 from past.utils import old_div
 from botocore.exceptions import ClientError
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import tz
+from dateutil.parser import parse
+from dateutil.tz import tzutc
 from termcolor import colored
 from threading import Event, Thread, BoundedSemaphore
 import boto3
@@ -26,9 +66,10 @@ import os
 import sys
 import time
 import re
-from botocore.config import Config
+from botocore.compat import total_seconds
 import queue
 import logging
+import exceptions
 
 
 def millis2iso(millis):
@@ -45,6 +86,41 @@ def uprint(message):
     sys.stdout.write((message + os.linesep)\
                         .encode(locale.getpreferredencoding()))
 
+def validatestarttime(start_time):
+    return int(start_time) * 1000 if start_time else int((time.time() - 60) * 1000)
+
+def parse_datetime(datetime_text):
+    """Parse ``datetime_text`` into a ``datetime``."""
+
+    if not datetime_text:
+        return None
+
+    ago_regexp = r'(\d+)\s?(m|minute|minutes|h|hour|hours|d|day|days|w|weeks|weeks)(?: ago)?'
+    ago_match = re.match(ago_regexp, datetime_text)
+
+    if ago_match:
+        amount, unit = ago_match.groups()
+        amount = int(amount)
+        unit = {'m': 60, 'h': 3600, 'd': 86400, 'w': 604800}[unit[0]]
+        date = datetime.utcnow() + timedelta(seconds=unit * amount * -1)
+    elif datetime_text == "now":
+        date = datetime.utcnow()
+    else:
+        try:
+            date = parse(datetime_text)
+        except ValueError:
+            if int(datetime_text):
+                return int(datetime_text)
+            else:
+                raise ValueError("Unknown date: %s" % datetime_text)
+
+    if date.tzinfo:
+        if date.utcoffset != 0:
+            date = date.astimezone(tzutc())
+        date = date.replace(tzinfo=None)
+
+    return int(total_seconds(date - datetime(1970, 1, 1)))
+
 
 class CloudWatchLogsThread(Thread):
     def __init__(self, log_group_name, start_time=None):
@@ -57,10 +133,6 @@ class CloudWatchLogsThread(Thread):
     def stop(self):
         self.cwlogs._stopped.set()
 
-    def log_group_worker(self):
-        cwlogs = CloudWatchLogsGroups(log_group_filter=self.log_group_name, start_time=self.start_time)
-        cwlogs.get_logs()
-
     def run(self):
         self.cwlogs.get_logs()
 
@@ -70,9 +142,8 @@ class CloudWatchLogsGroups():
         self.client = boto3.client('logs')
         self.log_filter = log_filter
         self.log_group_filter = log_group_filter
-        self.start_time = int(start_time) * 1000 if start_time else \
-                          int((time.time() - 60) * 1000)
-        self.end_time = int(end_time) * 1000 if end_time else None
+        self.start_time = validatestarttime(parse_datetime(start_time))
+        self.end_time = parse_datetime(end_time) * 1000 if end_time else None
         self.sort = sort
         self._stopped = Event()
 
@@ -94,12 +165,12 @@ class CloudWatchLogsGroups():
 
     def get_logs(self):
         groups = self.get_filtered_groups(self.log_group_filter)
-        print("Found log groups: %s" % (groups))
         log_threads = []
         work_queue = queue.Queue()
         semaphore = BoundedSemaphore(5)
         output_queue = queue.PriorityQueue()
         work_items = []
+
         for group_name in groups:
             work_item = {'item': {'logGroupName': group_name,
                                   'interleaved': True,
@@ -111,6 +182,7 @@ class CloudWatchLogsGroups():
             if self.end_time: work_item['item']['endTime'] = self.end_time
             work_queue.put(work_item)
             work_items.append(work_item)
+
         for _ in range(10):
             cwlogs_worker = CloudWatchLogsWorker(work_queue, semaphore, output_queue)
             log_threads.append(cwlogs_worker)
@@ -121,6 +193,7 @@ class CloudWatchLogsGroups():
         all_initial_queries_done = False
         tailing = True if not self.end_time else False
         wait_time = None if self.sort else 0.0
+
         while not self._stopped.isSet():
             try:
                 if not all_initial_queries_done:
@@ -129,7 +202,8 @@ class CloudWatchLogsGroups():
                         if not work_item['meta']['initialQueriesDone'].wait(wait_time):
                             loop_queries_done = False
                     all_initial_queries_done = loop_queries_done
-                elif self.sort: time.sleep(5.0) #allow time to sort while tailing
+                elif self.sort:
+                    time.sleep(5.0) #allow time to sort while tailing
                 while not output_queue.empty():
                     uprint(' '.join(output_queue.get()[1]))
                 if all_initial_queries_done and not tailing: raise KeyboardInterrupt
@@ -215,7 +289,7 @@ class CloudWatchLogsWorker(LogWorkerThread):
                     yield do_wait
 
         for event in generator():
-            if event is do_wait and not self._stopped.wait(1.0):
+            if event is do_wait and not self._stopped.wait(0.0):
                 continue
             elif self._stopped.is_set():
                 return
@@ -228,30 +302,11 @@ class CloudWatchLogsWorker(LogWorkerThread):
             self.output_queue.put((event['timestamp'], output)) #sort by timestamp (first value in tuple)
 
 
-class LogEventThread(Thread):
-
-    def __init__(self, log_group_name, start_time=None, end_time=None, filter_pattern=None):
-        Thread.__init__(self)
-        self.log_group_name = log_group_name
-        self.start_time = int(start_time) * 1000 if start_time else \
-                          int((time.time() - 60) * 1000)
-        self.end_time = int(end_time) * 1000 if end_time else None
-        self.filter_pattern = filter_pattern
-        self._stopped = Event()
-
-    def list_logs(self):
-        return
-
-    def stop(self):
-        self._stopped.set()
-
-    def run(self):
-        self.list_logs()
-
-
-class CloudFormationEvents(LogEventThread):
+class CloudFormationEvents(LogWorkerThread):
     def __init__(self, log_group_name, start_time=None):
-        LogEventThread.__init__(self, log_group_name, start_time=start_time)
+        LogWorkerThread.__init__(self)
+        self.log_group_name = log_group_name
+        self.start_time = validatestarttime(start_time)
         self.client = boto3.client('cloudformation')
 
     def list_logs(self):
