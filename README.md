@@ -1,6 +1,6 @@
 # Nitor Deploy Tools
 
-## Released version 1.0a30
+## Released version 1.0a31
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -639,6 +639,24 @@ optional arguments:
   -s TOKEN_SECRET, --token_secret TOKEN_SECRET
                         Token secret.
   -f, --force           Force an overwrite if the token already exists.
+```
+
+### `ndt mfa-backup`
+
+```bash
+usage: ndt mfa-backup [-h] [-d FILE] backup_secret
+
+Encrypt or decrypt a backup JSON structure of tokens. To output an encrypted
+backup, provide an encryption secret. To decrypt an existing backup, use
+--decrypt <file>.
+
+positional arguments:
+  backup_secret         Secret to use for encrypting or decrypts the backup.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d FILE, --decrypt FILE
+                        Outputs a decrypted token backup read from given file.
 ```
 
 ### `ndt mfa-code`
