@@ -48,7 +48,7 @@ from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogsGroups, CloudFormationEvents, CloudWatchLogsThread
 from .maven_utils import add_server
 from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
-    mfa_generate_code_with_secret, list_mfa_tokens
+    mfa_generate_code_with_secret, list_mfa_tokens, mfa_backup_tokens, mfa_decrypt_backup_tokens
 from .account_utils import list_created_accounts, create_account
 SYS_ENCODING = locale.getpreferredencoding()
 from .serverless_utils import serverless_deploy
@@ -853,7 +853,7 @@ def cli_mfa_add_token():
     try:
         mfa_add_token(args)
     except ValueError as error:
-        parser.error(error.message)
+        parser.error(error)
 
 def cli_mfa_delete_token():
     """ Deletes an MFA token file from the .ndt subdirectory in the user's
@@ -875,6 +875,28 @@ def cli_mfa_code():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     print(mfa_generate_code(args.token_name))
+
+def cli_mfa_backup_tokens():
+    """ Encrypt or decrypt a backup JSON structure of tokens.
+
+        To output an encrypted backup, provide an encryption secret.
+
+        To decrypt an existing backup, use --decrypt <file>.
+    """
+    parser = get_parser()
+    parser.add_argument("backup_secret",
+                        help="Secret to use for encrypting or decrypts the backup.")
+    parser.add_argument("-d",
+                        "--decrypt",
+                        help="Outputs a decrypted token backup read from given file.",
+                        nargs=1,
+                        metavar="FILE")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    if args.decrypt:
+        print(mfa_decrypt_backup_tokens(args.backup_secret, args.decrypt[0]))
+    else:
+        print(mfa_backup_tokens(args.backup_secret))
 
 def cli_create_account():
     """ Creates a subaccount. """

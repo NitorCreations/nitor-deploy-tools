@@ -21,6 +21,11 @@ import pyotp
 import sys
 from os import walk
 from .yuuuu3332111i1l1i import IiII1IiiIiI1, I11iIi1I
+import json
+import base64
+from Crypto . Cipher import AES
+from Crypto . Util import Counter
+from Crypto . Hash import SHA256
 
 def mfa_add_token(args):
     """ Adds or overwrites an MFA token to be used with role assumption.
@@ -31,7 +36,7 @@ def mfa_add_token(args):
     data = {
         'token_name': args.token_name,
         'token_arn': args.token_arn,
-        'token_secret': "enc--" + IiII1IiiIiI1(args.token_secret)
+        'token_secret': "enc--" + str(IiII1IiiIiI1(args.token_secret))
     }
     token_file = ndt_dir + '/mfa_' + args.token_name
     if os.path.isfile(token_file) and not args.force:
@@ -83,6 +88,24 @@ def mfa_delete_token(token_name):
     """ Deletes an MFA token file from the .ndt subdirectory in the user's
         home directory """
     os.remove(get_ndt_dir() + '/mfa_' + token_name)
+
+def mfa_backup_tokens(backup_secret):
+    """ Writes MFA secrets encrypted with backup_secret and base64 encoded to stdout. """
+    tokens = []
+    for token in list_mfa_tokens():
+        tokens.append(mfa_read_token(token))
+    counter = Counter.new(128, initial_value=1337)
+    cipher = AES.new(get_backup_key_digest(backup_secret), AES.MODE_CTR, counter=counter)
+    return base64.b64encode(cipher.encrypt(json.dumps(tokens)))
+
+def mfa_decrypt_backup_tokens(backup_secret, file):
+    """ Decrypts backed up MFA secrets from file, prints to stdout. """
+    with open(os.path.expanduser(file), 'r') as infile:
+        data = infile.read()
+    counter = Counter.new(128, initial_value=1337)
+    cipher = AES.new(get_backup_key_digest(backup_secret), AES.MODE_CTR, counter=counter)
+    return cipher.decrypt(base64.b64decode(data)).decode()
+
 class Struct ( object ) :
     def __init__ ( self , ** entries ) :
         self . __dict__ . update ( entries )
@@ -93,3 +116,8 @@ def list_mfa_tokens():
         tokens.extend([fn[4:] for fn in filenames if fn.startswith("mfa_")])
         break
     return tokens
+
+def get_backup_key_digest(backup_secret):
+    key = SHA256.new()
+    key.update(backup_secret.encode('utf-8'))
+    return key.digest()

