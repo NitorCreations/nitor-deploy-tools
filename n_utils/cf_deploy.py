@@ -53,7 +53,7 @@ def log(message):
     sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " " \
         + message + os.linesep).encode(locale.getpreferredencoding()))
 
-def update_stack(stack_name, template, params, dry_run=False, session=None):
+def update_stack(stack_name, template, params, dry_run=False, session=None, tags=None):
     if session:
         clf = session.client('cloudformation')
     else:
@@ -62,6 +62,8 @@ def update_stack(stack_name, template, params, dry_run=False, session=None):
                                                   time.gmtime())
     params = get_template_arguments(stack_name, template, params)
     params['ChangeSetName'] = chset_name
+    if tags:
+        params["Tags"] = tags
     chset_id = clf.create_change_set(**params)['Id']
     chset_data = clf.describe_change_set(ChangeSetName=chset_id)
     status = chset_data['Status']
@@ -85,12 +87,14 @@ def update_stack(stack_name, template, params, dry_run=False, session=None):
             clf.delete_change_set(ChangeSetName=chset_id)
     return
 
-def create_stack(stack_name, template, params, session=None):
+def create_stack(stack_name, template, params, session=None, tags=None):
     if session:
         clf = session.client('cloudformation')
     else:
         clf = boto3.client('cloudformation')
     params = get_template_arguments(stack_name, template, params)
+    if tags:
+        params["Tags"] = tags
     clf.create_stack(**params)
     return
 
@@ -140,9 +144,9 @@ def get_end_status(stack_name, session=None):
         time.sleep(5)
     return status
 
-def create_or_update_stack(stack_name, json_small, params_doc, session=None):
+def create_or_update_stack(stack_name, json_small, params_doc, session=None, tags=None):
     stack_func = get_stack_operation(stack_name, session=session)
-    stack_func(stack_name, json_small, params_doc, session=session)
+    stack_func(stack_name, json_small, params_doc, session=session, tags=tags)
     return get_end_status(stack_name, session=session)
 
 
@@ -242,7 +246,10 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
         template_doc['Parameters'] = []
 
     template_parameters = template_doc['Parameters']
-
+    tags = collections.OrderedDict()
+    if "Tags" in template_doc:
+        tags = template_doc["Tags"]
+        del template_doc["Tags"]
     if ami_id:
         with open("ami.properties", 'w') as ami_props:
             ami_props.write("AMI_ID=" + ami_id + "\nNAME=" + ami_name + "\n")
@@ -260,7 +267,6 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     else:
         with open("ami.properties", 'w') as ami_props:
             ami_props.write("AMI_ID=\nNAME=\n")
-
     json_small = aws_infra_util.json_save_small(template_doc)
 
     log("**** Final template ****")
@@ -279,11 +285,11 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
             log("Parameter " + key + ": using default value " + str(val))
 
     if not dry_run:
-        status = create_or_update_stack(stack_name, json_small, params_doc, session=session)
+        status = create_or_update_stack(stack_name, json_small, params_doc, session=session, tags=tags)
         if not (status == "CREATE_COMPLETE" or status == "UPDATE_COMPLETE"):
             sys.exit("Stack operation failed: end state " + status)
     elif get_stack_operation(stack_name).__name__ == "update_stack":
-        update_stack(stack_name, json_small, params_doc, dry_run=True, session=session)
+        update_stack(stack_name, json_small, params_doc, dry_run=True, session=session, tags=tags)
     log("Done!")
 
 class Unbuffered(object):
