@@ -243,7 +243,7 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
           yaml_template + "' and ami_id '" + str(ami_id) + "'")
 
     if "Parameters" not in template_doc:
-        template_doc['Parameters'] = []
+        template_doc['Parameters'] = {}
 
     template_parameters = template_doc['Parameters']
     tags = collections.OrderedDict()
