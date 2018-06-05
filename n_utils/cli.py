@@ -51,7 +51,6 @@ from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
     mfa_generate_code_with_secret, list_mfa_tokens, mfa_backup_tokens, mfa_decrypt_backup_tokens
 from .account_utils import list_created_accounts, create_account
 SYS_ENCODING = locale.getpreferredencoding()
-from .serverless_utils import serverless_deploy
 from .aws_infra_util import load_parameters
 
 NoneType = type(None)
