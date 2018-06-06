@@ -246,7 +246,7 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
         template_doc['Parameters'] = {}
 
     template_parameters = template_doc['Parameters']
-    tags = collections.OrderedDict()
+    tags = []
     if "Tags" in template_doc:
         tags = template_doc["Tags"]
         del template_doc["Tags"]
