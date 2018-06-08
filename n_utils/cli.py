@@ -55,16 +55,18 @@ from .aws_infra_util import load_parameters
 
 NoneType = type(None)
 
+
 def get_parser(formatter=None):
     caller = currentframe().f_back
     func_name = getframeinfo(caller)[2]
     caller = caller.f_back
     func = caller.f_locals.get(
-            func_name, caller.f_globals.get(
-                func_name
+        func_name, caller.f_globals.get(
+            func_name
         )
     )
     return argparse.ArgumentParser(description=func.__doc__)
+
 
 def ndt_register_complete():
     """Print out shell function and command to register ndt command completion
@@ -96,6 +98,7 @@ def ndt_register_complete():
 }
 complete -o nospace -F _ndt_complete "ndt"
 """)
+
 
 def do_command_completion():
     """ ndt command completion function
@@ -146,12 +149,13 @@ def do_command_completion():
                 sys.exit(1)
         else:
             line = comp_line[3:].lstrip()
-            os.environ['COMP_POINT'] = str(comp_point - (len(comp_line) - \
-                                           len(line)))
+            os.environ['COMP_POINT'] = str(comp_point - (len(comp_line) -
+                                                         len(line)))
             os.environ['COMP_LINE'] = line
             parts = command_type.split(":")
             getattr(__import__(parts[0], fromlist=[parts[1]]), parts[1])()
         sys.exit(0)
+
 
 def ndt():
     """ The main nitor deploy tools command that provides bash command
@@ -185,22 +189,24 @@ def ndt():
             sys.argv[0] = "ndt " + sys.argv[0]
             my_func()
 
+
 def list_file_to_json():
     """ Convert a file with an entry on each line to a json document with
     a single element (name as argument) containg file rows as  list.
     """
     parser = get_parser()
-    parser.add_argument("arrayname", help="The name in the json object given" +\
+    parser.add_argument("arrayname", help="The name in the json object given" +
                                           "to the array").completer = \
-                                                            ChoicesCompleter(())
+        ChoicesCompleter(())
     parser.add_argument("file", help="The file to parse").completer = \
-                                                            FilesCompleter()
+        FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
     content = [line.rstrip('\n') for line in open(args.file)]
-    json.dump({args.arrayname : content}, sys.stdout)
+    json.dump({args.arrayname: content}, sys.stdout)
+
 
 def add_deployer_server():
     """Add a server into a maven configuration file. Password is taken from the
@@ -208,15 +214,15 @@ def add_deployer_server():
     """
     parser = get_parser()
     parser.add_argument("file", help="The file to modify").completer = \
-                                                                FilesCompleter()
+        FilesCompleter()
     parser.add_argument("username",
                         help="The username to access the server.").completer = \
-                                                            ChoicesCompleter(())
-    parser.add_argument("--id", help="Optional id for the server. Default is" +\
-                                     " deploy. One server with this id is " +\
-                                     "added and another with '-release' " +\
+        ChoicesCompleter(())
+    parser.add_argument("--id", help="Optional id for the server. Default is" +
+                                     " deploy. One server with this id is " +
+                                     "added and another with '-release' " +
                                      "appended", default="deploy").completer = \
-                                                            ChoicesCompleter(())
+        ChoicesCompleter(())
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
@@ -224,12 +230,13 @@ def add_deployer_server():
     add_server(args.file, args.id, args.username)
     add_server(args.file, args.id + "-release", args.username)
 
+
 def get_userdata():
     """Get userdata defined for an instance into a file
     """
     parser = get_parser()
     parser.add_argument("file", help="File to write userdata into").completer =\
-                                                                FilesCompleter()
+        FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     dirname = os.path.dirname(args.file)
@@ -241,6 +248,7 @@ def get_userdata():
     cf_utils.get_userdata(args.file)
     return
 
+
 def get_account_id():
     """Get current account id. Either from instance metadata or current cli
     configuration.
@@ -248,6 +256,7 @@ def get_account_id():
     parser = get_parser()
     args = parser.parse_args()
     print(cf_utils.resolve_account())
+
 
 def colorprint(data, output_format="yaml"):
     """ Colorized print for either a yaml or a json document given as argument
@@ -257,6 +266,7 @@ def colorprint(data, output_format="yaml"):
     formatter.__init__(style=get_style_by_name('emacs'))
     colored = highlight(str(data, 'UTF-8'), lexer, formatter)
     sys.stdout.write(colored)
+
 
 def yaml_to_json():
     """Convert Nitor CloudFormation yaml to CloudFormation json with some
@@ -275,6 +285,7 @@ def yaml_to_json():
     else:
         print(doc)
 
+
 def yaml_to_yaml():
     """ Do ndt preprocessing for a yaml file
     """
@@ -290,6 +301,7 @@ def yaml_to_yaml():
         colorprint(doc)
     else:
         print(doc)
+
 
 def json_to_yaml():
     """Convert CloudFormation json to an approximation of a Nitor CloudFormation
@@ -309,6 +321,7 @@ def json_to_yaml():
     else:
         print(doc)
 
+
 def read_and_follow():
     """Read and print a file and keep following the end for new data
     """
@@ -319,6 +332,7 @@ def read_and_follow():
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
     cf_utils.read_and_follow(args.file, sys.stdout.write)
+
 
 def logs_to_cloudwatch():
     """Read a file and send rows to cloudwatch and keep following the end for new data.
@@ -333,6 +347,7 @@ def logs_to_cloudwatch():
         parser.error(args.file + " not found")
     cf_utils.send_logs_to_cloudwatch(args.file)
 
+
 def signal_cf_status():
     """Signal CloudFormation status to a logical resource in CloudFormation
     that is either given on the command line or resolved from CloudFormation
@@ -341,10 +356,10 @@ def signal_cf_status():
     parser = get_parser()
     parser.add_argument("status",
                         help="Status to indicate: SUCCESS | FAILURE").completer\
-                                      = ChoicesCompleter(("SUCCESS", "FAILURE"))
-    parser.add_argument("-r", "--resource", help="Logical resource name to " +\
-                                                 "signal. Looked up from " +\
-                                                 "cloudformation tags by " +\
+        = ChoicesCompleter(("SUCCESS", "FAILURE"))
+    parser.add_argument("-r", "--resource", help="Logical resource name to " +
+                                                 "signal. Looked up from " +
+                                                 "cloudformation tags by " +
                                                  "default")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -352,29 +367,30 @@ def signal_cf_status():
         parser.error("Status needs to be SUCCESS or FAILURE")
     cf_utils.signal_status(args.status, resource_name=args.resource)
 
+
 def associate_eip():
     """Associate an Elastic IP for the instance that this script runs on
     """
     parser = get_parser()
-    parser.add_argument("-i", "--ip", help="Elastic IP to allocate - default" +\
-                                           " is to get paramEip from the stack" +\
+    parser.add_argument("-i", "--ip", help="Elastic IP to allocate - default" +
+                                           " is to get paramEip from the stack" +
                                            " that created this instance")
-    parser.add_argument("-a", "--allocationid", help="Elastic IP allocation " +\
-                                                     "id to allocate - " +\
-                                                     "default is to get " +\
-                                                     "paramEipAllocationId " +\
-                                                     "from the stack " +\
+    parser.add_argument("-a", "--allocationid", help="Elastic IP allocation " +
+                                                     "id to allocate - " +
+                                                     "default is to get " +
+                                                     "paramEipAllocationId " +
+                                                     "from the stack " +
                                                      "that created this instance")
-    parser.add_argument("-e", "--eipparam", help="Parameter to look up for " +\
-                                                 "Elastic IP in the stack - " +\
+    parser.add_argument("-e", "--eipparam", help="Parameter to look up for " +
+                                                 "Elastic IP in the stack - " +
                                                  "default is paramEip",
                         default="paramEip")
-    parser.add_argument("-p", "--allocationidparam", help="Parameter to look" +\
-                                                          " up for Elastic " +\
-                                                          "IP Allocation ID " +\
-                                                          "in the stack - " +\
-                                                          "default is " +\
-                                                          "paramEipAllocatio" +\
+    parser.add_argument("-p", "--allocationidparam", help="Parameter to look" +
+                                                          " up for Elastic " +
+                                                          "IP Allocation ID " +
+                                                          "in the stack - " +
+                                                          "default is " +
+                                                          "paramEipAllocatio" +
                                                           "nId",
                         default="paramEipAllocationId")
     argcomplete.autocomplete(parser)
@@ -382,6 +398,7 @@ def associate_eip():
     cf_utils.associate_eip(eip=args.ip, allocation_id=args.allocationid,
                            eip_param=args.eipparam,
                            allocation_id_param=args.allocationidparam)
+
 
 def instance_id():
     """ Get id for instance
@@ -395,6 +412,7 @@ def instance_id():
     else:
         sys.exit(1)
 
+
 def ec2_region():
     """ Get default region - the region of the instance if run in an EC2 instance
     """
@@ -402,6 +420,7 @@ def ec2_region():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     print(region())
+
 
 def tag():
     """ Get the value of a tag for an ec2 instance
@@ -420,6 +439,7 @@ def tag():
     else:
         parser.error("Only makes sense on an EC2 instance")
 
+
 def stack_name():
     """ Get name of the stack that created this instance
     """
@@ -431,6 +451,7 @@ def stack_name():
         print(info.stack_name())
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
+
 
 def stack_id():
     """ Get id of the stack the creted this instance
@@ -444,6 +465,7 @@ def stack_id():
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
+
 def logical_id():
     """ Get the logical id that is expecting a signal from this instance
     """
@@ -455,6 +477,7 @@ def logical_id():
         print(info.logical_id())
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
+
 
 def cf_region():
     """ Get region of the stack that created this instance
@@ -468,18 +491,19 @@ def cf_region():
     else:
         parser.error("Only makes sense on an EC2 instance cretated from a CF stack")
 
+
 def update_stack():
     """ Create or update existing CloudFormation stack
     """
-    parser = argparse.ArgumentParser(description="Create or update existing " +\
+    parser = argparse.ArgumentParser(description="Create or update existing " +
                                                  "CloudFormation stack")
-    parser.add_argument("stack_name", help="Name of the stack to create or " +\
-                                            "update")
-    parser.add_argument("yaml_template", help="Yaml template to pre-process " +\
+    parser.add_argument("stack_name", help="Name of the stack to create or " +
+                        "update")
+    parser.add_argument("yaml_template", help="Yaml template to pre-process " +
                                               "and use for creation")
     parser.add_argument("region", help="The region to deploy the stack to")
     parser.add_argument("-d", "--dry-run", action="store_true",
-                        help="Do not actually deploy anything, but just " +\
+                        help="Do not actually deploy anything, but just " +
                              "assemble the json and associated parameters")
     args = parser.parse_args()
     if not os.path.isfile(args.yaml_template):
@@ -487,6 +511,7 @@ def update_stack():
     cf_deploy.deploy(args.stack_name, args.yaml_template, args.region,
                      args.dry_run)
     return
+
 
 def delete_stack():
     """Delete an existing CloudFormation stack
@@ -498,13 +523,14 @@ def delete_stack():
     cf_deploy.delete(args.stack_name, args.region)
     return
 
+
 def tail_stack_logs():
     """Tail logs from the log group of a cloudformation stack
     """
     parser = get_parser()
-    parser.add_argument("stack_name", help="Name of the stack to watch logs " +\
+    parser.add_argument("stack_name", help="Name of the stack to watch logs " +
                                            "for")
-    parser.add_argument("-s", "--start", help="Start time in seconds since " +\
+    parser.add_argument("-s", "--start", help="Start time in seconds since " +
                                               "epoc")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -520,6 +546,7 @@ def tail_stack_logs():
             cwlogs.stop()
             cfevents.stop()
             return
+
 
 def get_logs():
     """Get logs from multiple CloudWatch log groups and possibly filter them.
@@ -541,6 +568,7 @@ def get_logs():
     )
     cwlogs_groups.get_logs()
 
+
 def resolve_include():
     """Find a file from the first of the defined include paths
     """
@@ -550,9 +578,10 @@ def resolve_include():
     args = parser.parse_args()
     inc_file = aws_infra_util.find_include(args.file)
     if not inc_file:
-        parser.error("Include " + args.file + " not found on include paths " +\
+        parser.error("Include " + args.file + " not found on include paths " +
                      str(aws_infra_util.include_dirs))
     print(inc_file)
+
 
 def resolve_all_includes():
     """Find a file from the first of the defined include paths
@@ -563,10 +592,11 @@ def resolve_all_includes():
     args = parser.parse_args()
     inc_file = aws_infra_util.find_all_includes(args.pattern)
     if not inc_file:
-        parser.error("Include " + args.pattern + " not found on include paths " +\
+        parser.error("Include " + args.pattern + " not found on include paths " +
                      str(aws_infra_util.include_dirs))
     for next_file in inc_file:
         print(next_file)
+
 
 def assume_role():
     """Assume a defined role. Prints out environment variables
@@ -585,6 +615,7 @@ def assume_role():
     print("AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\"")
     print("export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN")
 
+
 def get_parameter():
     """Get a parameter value from the stack
     """
@@ -595,6 +626,7 @@ def get_parameter():
     info = InstanceInfo()
     print(info.stack_data(args.parameter))
 
+
 def volume_from_snapshot():
     """ Create a volume from an existing snapshot and mount it on the given
     path. The snapshot is identified by a tag key and value. If no tag is
@@ -604,13 +636,13 @@ def volume_from_snapshot():
     parser.add_argument("tag_key", help="Key of the tag to find volume with")
     parser.add_argument("tag_value", help="Value of the tag to find volume with")
     parser.add_argument("mount_path", help="Where to mount the volume")
-    parser.add_argument("size_gb", nargs="?", help="Size in GB for the volum" +\
-                                                   "e. If different from sna" +\
-                                                   "pshot size, volume and " +\
+    parser.add_argument("size_gb", nargs="?", help="Size in GB for the volum" +
+                                                   "e. If different from sna" +
+                                                   "pshot size, volume and " +
                                                    "filesystem are resized",
                         default=None, type=int)
     parser.add_argument("-n", "--no_delete_on_termination",
-                        help="Whether to skip deleting the volume on termi" +\
+                        help="Whether to skip deleting the volume on termi" +
                              "nation, defaults to false", action="store_true")
     argcomplete.autocomplete(parser)
     if is_ec2():
@@ -621,12 +653,13 @@ def volume_from_snapshot():
     else:
         parser.error("Only makes sense on an EC2 instance")
 
+
 def snapshot_from_volume():
     """ Create a snapshot of a volume identified by it's mount path
     """
     parser = get_parser()
-    parser.add_argument("-w", "--wait", help="Wait for the snapshot to finish" +\
-                                              " before returning",
+    parser.add_argument("-w", "--wait", help="Wait for the snapshot to finish" +
+                        " before returning",
                         action="store_true")
     parser.add_argument("tag_key", help="Key of the tag to find volume with")
     parser.add_argument("tag_value", help="Value of the tag to find volume with")
@@ -638,6 +671,7 @@ def snapshot_from_volume():
                                       args.mount_path, wait=args.wait))
     else:
         parser.error("Only makes sense on an EC2 instance")
+
 
 def detach_volume():
     """ Create a snapshot of a volume identified by it's mount path
@@ -657,22 +691,23 @@ def clean_snapshots():
     have one of specified tag values
     """
     parser = get_parser()
-    parser.add_argument("-r", "--region", help="The region to delete " +\
-                                               "snapshots from. Can also be " +\
-                                               "set with env variable " +\
-                                               "AWS_DEFAULT_REGION or is " +\
-                                               "gotten from instance " +\
+    parser.add_argument("-r", "--region", help="The region to delete " +
+                                               "snapshots from. Can also be " +
+                                               "set with env variable " +
+                                               "AWS_DEFAULT_REGION or is " +
+                                               "gotten from instance " +
                                                "metadata as a last resort")
-    parser.add_argument("-d", "--days", help="The number of days that is the" +\
-                                             "minimum age for snapshots to " +\
+    parser.add_argument("-d", "--days", help="The number of days that is the" +
+                                             "minimum age for snapshots to " +
                                              "be deleted", type=int, default=30)
-    parser.add_argument("tags", help="The tag values to select deleted " +\
+    parser.add_argument("tags", help="The tag values to select deleted " +
                                      "snapshots", nargs="+")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if args.region:
         os.environ['AWS_DEFAULT_REGION'] = args.region
     volumes.clean_snapshots(args.days, args.tags)
+
 
 def setup_cli():
     """Setup the command line environment to define an aws cli profile with
@@ -688,13 +723,14 @@ def setup_cli():
     args = parser.parse_args()
     cf_bootstrap.setup_cli(**vars(args))
 
+
 def show_stack_params_and_outputs():
     """ Show stack parameters and outputs as a single json documents
     """
     parser = get_parser()
     parser.add_argument("-r", "--region", help="Region for the stack to show",
                         default=region()).completer = ChoicesCompleter(regions())
-    parser.add_argument("-p", "--parameter", help="Name of paremeter if only" +\
+    parser.add_argument("-p", "--parameter", help="Name of paremeter if only" +
                                                   " one parameter required")
     parser.add_argument("stack_name", help="The stack name to show").completer = \
         ChoicesCompleter(stacks())
@@ -709,6 +745,7 @@ def show_stack_params_and_outputs():
     else:
         print(json.dumps(resp, indent=2))
 
+
 def cli_get_images():
     """ Gets a list of images given a bake job name
     """
@@ -720,6 +757,7 @@ def cli_get_images():
     images = get_images(args.job_name)
     for image in images:
         print(image['ImageId'] + ":" + image['Name'])
+
 
 def cli_promote_image():
     """  Promotes an image for use in another branch
@@ -733,6 +771,7 @@ def cli_promote_image():
         args.image_id = args.image_id.split(":")[0]
     promote_image(args.image_id, args.target_job)
 
+
 def cli_share_to_another_region():
     """ Shares an image to another region for potentially another account
     """
@@ -741,12 +780,13 @@ def cli_share_to_another_region():
     parser.add_argument("to_region", help="The region to share to").completer =\
         ChoicesCompleter(regions())
     parser.add_argument("ami_name", help="The name for the ami")
-    parser.add_argument("account_id", nargs="+", help="The account ids to sh" +\
+    parser.add_argument("account_id", nargs="+", help="The account ids to sh" +
                                                       "are ami to")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     share_to_another_region(args.ami_id, args.to_region, args.ami_name,
                             args.account_id)
+
 
 def cli_register_private_dns():
     """ Register local private IP in route53 hosted zone usually for internal
@@ -759,28 +799,30 @@ def cli_register_private_dns():
     args = parser.parse_args()
     register_private_dns(args.dns_name, args.hosted_zone)
 
+
 def cli_interpolate_file():
     """ Replace placeholders in file with parameter values from stack and
     optionally from vault
     """
     parser = get_parser()
-    parser.add_argument("-s", "--stack", help="Stack name for values. " +\
-                                              "Automatically resolved on ec2" +\
+    parser.add_argument("-s", "--stack", help="Stack name for values. " +
+                                              "Automatically resolved on ec2" +
                                               " instances")
-    parser.add_argument("-v", "--vault", help="Use vault values as well." +\
-                                              "Vault resovled from env " +\
+    parser.add_argument("-v", "--vault", help="Use vault values as well." +
+                                              "Vault resovled from env " +
                                               "variables or default is used",
                         action="store_true")
     parser.add_argument("-o", "--output", help="Output file")
-    parser.add_argument("-e", "--encoding", help="Encoding to use for the " +\
-                                                  "file. Defaults to utf-8",
+    parser.add_argument("-e", "--encoding", help="Encoding to use for the " +
+                        "file. Defaults to utf-8",
                         default='utf-8')
     parser.add_argument("file", help="File to interpolate").completer = \
-                                                            FilesCompleter()
+        FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     interpolate_file(args.file, stack_name=args.stack, use_vault=args.vault,
                      destination=args.output, encoding=args.encoding)
+
 
 def cli_ecr_ensure_repo():
     """ Ensure that an ECR repository exists and get the uri and login token for
@@ -790,6 +832,7 @@ def cli_ecr_ensure_repo():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     ensure_repo(args.name)
+
 
 def cli_ecr_repo_uri():
     """ Get the repo uri for a named docker """
@@ -803,22 +846,24 @@ def cli_ecr_repo_uri():
     else:
         print(uri)
 
+
 def cli_upsert_cloudfront_records():
     """ Upsert Route53 records for all aliases of a CloudFront distribution """
     parser = get_parser()
     stack_select = parser.add_mutually_exclusive_group(required=True)
-    stack_select.add_argument("-i", "--distribution_id", help="Id for the " +\
-                                                              "distribution to " +\
+    stack_select.add_argument("-i", "--distribution_id", help="Id for the " +
+                                                              "distribution to " +
                                                               "upsert").completer = \
-                                                              ChoicesCompleter(distributions())
-    stack_select.add_argument("-c", "--distribution_comment", help="Comment for the" +\
-                                                                   " distribution " +\
+        ChoicesCompleter(distributions())
+    stack_select.add_argument("-c", "--distribution_comment", help="Comment for the" +
+                                                                   " distribution " +
                                                                    "to upsert").completer = \
-                                                                   ChoicesCompleter(distribution_comments())
+        ChoicesCompleter(distribution_comments())
     parser.add_argument("-w", "--wait", help="Wait for request to sync", action="store_true")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     upsert_cloudfront_records(args)
+
 
 def cli_mfa_add_token():
     """ Adds an MFA token to be used with role assumption.
@@ -826,7 +871,7 @@ def cli_mfa_add_token():
         If a token with the same name already exists, it will not be overwritten."""
     parser = get_parser()
     parser.add_argument("token_name",
-                        help="Name for the token. Use this to refer to the token later with " +\
+                        help="Name for the token. Use this to refer to the token later with " +
                         "the assume-role command.")
     parser.add_argument("-i", "--interactive", help="Ask for token details interactively.",
                         action="store_true")
@@ -854,26 +899,29 @@ def cli_mfa_add_token():
     except ValueError as error:
         parser.error(error)
 
+
 def cli_mfa_delete_token():
     """ Deletes an MFA token file from the .ndt subdirectory in the user's
         home directory """
     parser = get_parser()
     parser.add_argument("token_name",
                         help="Name of the token to delete.").completer = \
-                            ChoicesCompleter(list_mfa_tokens())
+        ChoicesCompleter(list_mfa_tokens())
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     mfa_delete_token(args.token_name)
+
 
 def cli_mfa_code():
     """ Generates a TOTP code using an MFA token. """
     parser = get_parser()
     parser.add_argument("token_name",
                         help="Name of the token to use.").completer = \
-                            ChoicesCompleter(list_mfa_tokens())
+        ChoicesCompleter(list_mfa_tokens())
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     print(mfa_generate_code(args.token_name))
+
 
 def cli_mfa_backup_tokens():
     """ Encrypt or decrypt a backup JSON structure of tokens.
@@ -897,18 +945,19 @@ def cli_mfa_backup_tokens():
     else:
         print(mfa_backup_tokens(args.backup_secret))
 
+
 def cli_create_account():
     """ Creates a subaccount. """
     parser = get_parser()
     parser.add_argument("email", help="Email for account root")
     parser.add_argument("account_name", help="Organization unique account name")
     parser.add_argument("-d", "--deny-billing-access", action="store_true")
-    parser.add_argument("-o", "--organization-role-name", help="Role name for " +\
-                                                               "admin access from" +\
+    parser.add_argument("-o", "--organization-role-name", help="Role name for " +
+                                                               "admin access from" +
                                                                " parent account",
                         default="OrganizationAccountAccessRole")
-    parser.add_argument("-r", "--trust-role-name", help="Role name for admin " +\
-                                                          "access from parent account",
+    parser.add_argument("-r", "--trust-role-name", help="Role name for admin " +
+                        "access from parent account",
                         default="TrustedAccountAccessRole")
     parser.add_argument("-a", "--trusted-accounts", nargs="*",
                         help="Account to trust with user management").completer = ChoicesCompleter(list_created_accounts())
@@ -917,8 +966,9 @@ def cli_create_account():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     create_account(args.email, args.account_name, role_name=args.organization_role_name,
-                    trust_role=args.trust_role_name, access_to_billing=not args.deny_billing_access,
-                    trusted_accounts=args.trusted_accounts, mfa_token=args.mfa_token)
+                   trust_role=args.trust_role_name, access_to_billing=not args.deny_billing_access,
+                   trusted_accounts=args.trusted_accounts, mfa_token=args.mfa_token)
+
 
 def cli_load_parameters():
     """ Load parameters from infra*.properties files in the order:
@@ -962,23 +1012,26 @@ def cli_load_parameters():
     format_group.add_argument("--json", "-j", action="store_true", help="JSON format output (default)")
     format_group.add_argument("--yaml", "-y", action="store_true", help="YAML format output")
     format_group.add_argument("--properties", "-p", action="store_true", help="properties file format output")
-    format_group.add_argument("--export-statements", "-e", action="store_true", help="Output as eval-able export statements")
+    format_group.add_argument("--export-statements", "-e", action="store_true",
+                              help="Output as eval-able export statements")
     args = parser.parse_args()
-    printer = lambda params: print(json.dumps(params))
+
+    def printer(params): return print(json.dumps(params))
     if args.export_statements:
-        printer = lambda params: print(map_to_exports(params))
+        def printer(params): return print(map_to_exports(params))
     if args.properties:
-        printer = lambda params: print(map_to_properties(params))
+        def printer(params): return print(map_to_properties(params))
     if args.yaml:
-        printer = lambda params: print(yaml.dump(params))
+        def printer(params): return print(yaml.dump(params))
     del args.export_statements
     del args.yaml
     del args.json
     del args.properties
     if (args.stack or args.serverless or args.docker or not isinstance(args.image, NoneType)) \
        and not args.component:
-       parser.error("image, stack, doker or serverless do not make sense without component")
+        parser.error("image, stack, doker or serverless do not make sense without component")
     printer(load_parameters(**vars(args)))
+
 
 def map_to_exports(map):
     """ Prints the map as eval-able set of environment variables. Keys
@@ -992,6 +1045,7 @@ def map_to_exports(map):
         keys.append(key)
     ret += "export " + " ".join(keys) + os.linesep
     return ret
+
 
 def map_to_properties(map):
     """ Prints the map as loadable set of java properties. Keys

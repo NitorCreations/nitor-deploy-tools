@@ -71,24 +71,29 @@ import queue
 
 
 def millis2iso(millis):
-    return fmttime(datetime.utcfromtimestamp(old_div(millis,1000.0)))
+    return fmttime(datetime.utcfromtimestamp(old_div(millis, 1000.0)))
+
 
 def timestamp(tstamp):
     return (tstamp.replace(tzinfo=None) - datetime(1970, 1, 1, tzinfo=None))\
-                                                 .total_seconds() * 1000
+        .total_seconds() * 1000
+
 
 def fmttime(tstamp):
     return tstamp.replace(tzinfo=tz.tzlocal()).isoformat()[:23]
+
 
 def uprint(message):
     if sys.version_info[0] > 2:
         sys.stdout.write((message + os.linesep))
     else:
-        sys.stdout.write((message + os.linesep)\
-                        .encode(locale.getpreferredencoding()))
+        sys.stdout.write((message + os.linesep)
+                         .encode(locale.getpreferredencoding()))
+
 
 def validatestarttime(start_time):
     return int(start_time) * 1000 if start_time else int((time.time() - 60) * 1000)
+
 
 def parse_datetime(datetime_text):
     """Parse ``datetime_text`` into a ``datetime``."""
@@ -177,10 +182,11 @@ class CloudWatchLogsGroups():
                                   'interleaved': True,
                                   'startTime': self.start_time,
                                   'filterPattern': self.log_filter if self.log_filter else ""
-                                 },
+                                  },
                          'meta': {'initialQueriesDone': Event()}
-                        }
-            if self.end_time: work_item['item']['endTime'] = self.end_time
+                         }
+            if self.end_time:
+                work_item['item']['endTime'] = self.end_time
             work_queue.put(work_item)
             work_items.append(work_item)
 
@@ -204,9 +210,10 @@ class CloudWatchLogsGroups():
                             loop_queries_done = False
                     all_initial_queries_done = loop_queries_done
                 elif self.sort:
-                    time.sleep(5.0) #allow time to sort while tailing
+                    time.sleep(5.0)  # allow time to sort while tailing
                 self.print_output_if_any(output_queue)
-                if all_initial_queries_done and not tailing: raise KeyboardInterrupt
+                if all_initial_queries_done and not tailing:
+                    raise KeyboardInterrupt
             except KeyboardInterrupt:
                 for thread in log_threads:
                     thread.stop()
@@ -220,6 +227,7 @@ class CloudWatchLogsGroups():
             except queue.Empty:
                 break
 
+
 class SpeedLimitThread(Thread):
     def __init__(self, semaphore):
         Thread.__init__(self)
@@ -230,7 +238,8 @@ class SpeedLimitThread(Thread):
     def tick(self):
         while not self._stopped.wait(1.1):
             try:
-                for _ in range(5): self.semaphore.release()
+                for _ in range(5):
+                    self.semaphore.release()
             except ValueError:
                 pass
         return
@@ -306,7 +315,7 @@ class CloudWatchLogsWorker(LogWorkerThread):
             output.append(colored(event['logGroupName'], 'green'))
             output.append(colored(event['logStreamName'], 'cyan'))
             output.append(event['message'])
-            self.output_queue.put((event['timestamp'], output)) #sort by timestamp (first value in tuple)
+            self.output_queue.put((event['timestamp'], output))  # sort by timestamp (first value in tuple)
 
 
 class CloudFormationEvents(LogWorkerThread):
@@ -320,6 +329,7 @@ class CloudFormationEvents(LogWorkerThread):
         do_wait = object()
         dedup_queue = deque(maxlen=10000)
         kwargs = {'StackName': self.log_group_name}
+
         def generator():
             start_seen = False
             seen_events_up_to = 0
@@ -334,8 +344,8 @@ class CloudFormationEvents(LogWorkerThread):
                     pass
                 for event in response.get('StackEvents', []):
                     event_timestamp = timestamp(event['Timestamp'])
-                    if  event_timestamp < max(self.start_time,
-                                              seen_events_up_to):
+                    if event_timestamp < max(self.start_time,
+                                             seen_events_up_to):
                         break
                     if not event['EventId'] in dedup_queue:
                         dedup_queue.append(event['EventId'])

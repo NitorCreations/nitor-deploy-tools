@@ -36,6 +36,8 @@ from .cf_utils import get_images
 from .log_events import CloudWatchLogsThread, CloudFormationEvents, fmttime
 
 REDIRECTED = False
+
+
 def log_data(data, output_format="yaml"):
     if output_format == "yaml":
         formatted = aws_infra_util.yaml_save(data)
@@ -49,9 +51,11 @@ def log_data(data, output_format="yaml"):
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
 
+
 def log(message):
-    sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " " \
-        + message + os.linesep).encode(locale.getpreferredencoding()))
+    sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " "
+                      + message + os.linesep).encode(locale.getpreferredencoding()))
+
 
 def update_stack(stack_name, template, params, dry_run=False, session=None, tags=None):
     if session:
@@ -87,6 +91,7 @@ def update_stack(stack_name, template, params, dry_run=False, session=None, tags
             clf.delete_change_set(ChangeSetName=chset_id)
     return
 
+
 def create_stack(stack_name, template, params, session=None, tags=None):
     if session:
         clf = session.client('cloudformation')
@@ -97,6 +102,7 @@ def create_stack(stack_name, template, params, session=None, tags=None):
         params["Tags"] = tags
     clf.create_stack(**params)
     return
+
 
 def get_stack_operation(stack_name, session=None):
     if session:
@@ -117,6 +123,7 @@ def get_stack_operation(stack_name, session=None):
         else:
             raise
     return globals()[stack_oper]
+
 
 def get_end_status(stack_name, session=None):
     logs = CloudWatchLogsThread(log_group_name=stack_name)
@@ -144,6 +151,7 @@ def get_end_status(stack_name, session=None):
         time.sleep(5)
     return status
 
+
 def create_or_update_stack(stack_name, json_small, params_doc, session=None, tags=None):
     stack_func = get_stack_operation(stack_name, session=session)
     stack_func(stack_name, json_small, params_doc, session=session, tags=tags)
@@ -151,8 +159,8 @@ def create_or_update_stack(stack_name, json_small, params_doc, session=None, tag
 
 
 def get_template_arguments(stack_name, template, params, session=None):
-    params = { "StackName": stack_name,
-        "Parameters": params, "Capabilities": ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]}
+    params = {"StackName": stack_name,
+              "Parameters": params, "Capabilities": ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]}
     if 'CF_BUCKET' in os.environ and os.environ['CF_BUCKET']:
         bucket = os.environ['CF_BUCKET']
         if session:
@@ -168,6 +176,7 @@ def get_template_arguments(stack_name, template, params, session=None):
     else:
         params["TemplateBody"] = template
     return params
+
 
 def delete(stack_name, regn, session=None):
     os.environ['AWS_DEFAULT_REGION'] = regn
@@ -185,7 +194,7 @@ def delete(stack_name, regn, session=None):
             status = stack_info['Stacks'][0]['StackStatus']
             if not status.endswith("_IN_PROGRESS") and not status.endswith("_COMPLETE"):
                 raise Exception("Delete stack failed: end state " + status)
-            log("Status: \033[32;1m"+ status + "\033[m")
+            log("Status: \033[32;1m" + status + "\033[m")
             time.sleep(5)
         except ClientError as err:
             cf_events.stop()
@@ -196,6 +205,7 @@ def delete(stack_name, regn, session=None):
             else:
                 raise
 
+
 def resolve_ami(template_doc, session=None):
     ami_id = ""
     ami_name = ""
@@ -204,8 +214,8 @@ def resolve_ami(template_doc, session=None):
         ami_id = os.environ['AMI_ID']
 
     if not ami_id and 'Parameters' in template_doc and \
-      'paramAmi' in template_doc['Parameters'] and \
-      'IMAGE_JOB' in os.environ:
+        'paramAmi' in template_doc['Parameters'] and \
+            'IMAGE_JOB' in os.environ:
         image_job = re.sub(r'\W', '_', os.environ['IMAGE_JOB'].lower())
         log("Looking for ami with name prefix " + image_job)
         sorted_images = get_images(image_job)
@@ -215,7 +225,7 @@ def resolve_ami(template_doc, session=None):
             ami_name = image['Name']
             ami_created = image['CreationDate']
     elif ami_id and 'Parameters' in template_doc and \
-        'paramAmi'in template_doc['Parameters']:
+            'paramAmi'in template_doc['Parameters']:
         log("Looking for ami metadata with id " + ami_id)
         if session:
             ec2 = session.client('ec2')
@@ -228,6 +238,7 @@ def resolve_ami(template_doc, session=None):
         ami_created = image['CreationDate']
     return ami_id, ami_name, ami_created
 
+
 def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     os.environ['AWS_DEFAULT_REGION'] = regn
     os.environ['REGION'] = regn
@@ -239,8 +250,8 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     template_doc = aws_infra_util.yaml_to_dict(yaml_template)
     ami_id, ami_name, ami_created = resolve_ami(template_doc, session=session)
 
-    log("**** Deploying stack '" + stack_name + "' with template '" + \
-          yaml_template + "' and ami_id '" + str(ami_id) + "'")
+    log("**** Deploying stack '" + stack_name + "' with template '" +
+        yaml_template + "' and ami_id '" + str(ami_id) + "'")
 
     if "Parameters" not in template_doc:
         template_doc['Parameters'] = {}
@@ -277,8 +288,8 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     for key in list(template_parameters.keys()):
         if key in os.environ:
             val = os.environ[key]
-            log("Parameter " + key + ": using \033[32;1mCUSTOM value " + \
-                  val + "\033[m")
+            log("Parameter " + key + ": using \033[32;1mCUSTOM value " +
+                val + "\033[m")
             params_doc.append({'ParameterKey': key, 'ParameterValue': val})
         else:
             val = template_parameters[key]['Default']
@@ -292,17 +303,21 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
         update_stack(stack_name, json_small, params_doc, dry_run=True, session=session, tags=tags)
     log("Done!")
 
+
 class Unbuffered(object):
     def __init__(self, stream):
         self.stream = stream
+
     def write(self, data):
         if not type(data) is str:
             self.stream.write(data.decode(sys.stdout.encoding))
         else:
             self.stream.write(data)
         self.stream.flush()
+
     def writelines(self, datas):
         self.stream.writelines(datas)
         self.stream.flush()
+
     def __getattr__(self, attr):
         return getattr(self.stream, attr)
