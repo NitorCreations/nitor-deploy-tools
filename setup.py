@@ -29,6 +29,9 @@ setup(name='nitor_deploy_tools',
       entry_points={
           'console_scripts': CONSOLESCRIPTS,
       },
+      setup_requires=[
+          'pytest-runner'
+      ],
       install_requires=[
           'pyaml',
           'boto3',
@@ -47,4 +50,8 @@ setup(name='nitor_deploy_tools',
           'wmi',
           'pypiwin32'
           ] if sys.platform.startswith('win') else []),
+      tests_require=[
+          'pytest',
+          'pytest-mock'
+      ],
       zip_safe=False)
