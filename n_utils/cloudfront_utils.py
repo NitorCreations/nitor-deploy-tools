@@ -15,10 +15,8 @@
 # limitations under the License
 from __future__ import print_function
 from builtins import str
-import json
 import time
 import boto3
-from botocore.exceptions import ClientError
 
 
 def distributions():

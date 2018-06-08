@@ -18,7 +18,6 @@ from builtins import object
 import os
 import yaml
 import pyotp
-import sys
 from os import walk
 from .yuuuu3332111i1l1i import IiII1IiiIiI1, I11iIi1I
 import json

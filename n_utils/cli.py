@@ -43,15 +43,16 @@ from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
     share_to_another_region, set_region, register_private_dns, interpolate_file
 from .cloudfront_utils import distributions, distribution_comments, \
-    get_distribution_by_comment, get_distribution_by_id, upsert_cloudfront_records
+    upsert_cloudfront_records
 from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogsGroups, CloudFormationEvents, CloudWatchLogsThread
 from .maven_utils import add_server
 from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
     mfa_generate_code_with_secret, list_mfa_tokens, mfa_backup_tokens, mfa_decrypt_backup_tokens
 from .account_utils import list_created_accounts, create_account
-SYS_ENCODING = locale.getpreferredencoding()
 from .aws_infra_util import load_parameters
+
+SYS_ENCODING = locale.getpreferredencoding()
 
 NoneType = type(None)
 
@@ -254,7 +255,7 @@ def get_account_id():
     configuration.
     """
     parser = get_parser()
-    args = parser.parse_args()
+    parser.parse_args()
     print(cf_utils.resolve_account())
 
 
@@ -405,7 +406,7 @@ def instance_id():
     """
     parser = get_parser()
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print(info.instance_id())
@@ -418,7 +419,7 @@ def ec2_region():
     """
     parser = get_parser()
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    parser.parse_args()
     print(region())
 
 
@@ -445,7 +446,7 @@ def stack_name():
     """
     parser = get_parser()
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print(info.stack_name())
@@ -458,7 +459,7 @@ def stack_id():
     """
     parser = get_parser()
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print(info.stack_id())
@@ -471,7 +472,7 @@ def logical_id():
     """
     parser = get_parser()
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print(info.logical_id())
@@ -484,7 +485,7 @@ def cf_region():
     """
     parser = get_parser()
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    parser.parse_args()
     if is_ec2():
         info = InstanceInfo()
         print(info.stack_id().split(":")[3])

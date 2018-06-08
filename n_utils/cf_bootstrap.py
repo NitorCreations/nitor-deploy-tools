@@ -31,7 +31,7 @@ import stat
 import sys
 from copy import deepcopy
 from collections import OrderedDict
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 
 import argparse
 import argcomplete
@@ -40,7 +40,6 @@ from argcomplete.completers import ChoicesCompleter
 import boto3
 import ipaddr
 from awscli.customizations.configure.writer import ConfigFileWriter
-from n_vault import Vault
 from .aws_infra_util import find_include, find_all_includes, yaml_load, yaml_save
 from .cf_utils import has_output_selector, select_stacks
 
@@ -74,7 +73,7 @@ def create_stack():
                 context = load_class(template_yaml["ContextClass"])()
                 context.add_context_arguments(parser)
     argcomplete.autocomplete(parser)
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_known_args()
     if args.template:
         template_yaml = load_template(args.template)
         if "ContextClass" in template_yaml:
