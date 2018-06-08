@@ -21,20 +21,26 @@ import psutil
 from .cf_utils import set_region, resolve_account, InstanceInfo
 from .aws_infra_util import find_include
 
+
 def letter_to_target_id(letter):
     return ord(letter)-ord("f")+5
+
 
 def target_id_to_letter(target_id):
     return str(chr(target_id-5+ord("f")))
 
+
 def wmic_partition_get():
     return wmic_get("partition")
+
 
 def wmic_diskdrive_get():
     return wmic_get("diskdrive")
 
+
 def wmic_volume_get():
     return wmic_get("volume")
+
 
 def wmic_get(command):
     ret = []
@@ -55,12 +61,15 @@ def wmic_get(command):
             ret.append(disk)
     return ret
 
+
 def wmic_disk_with_target_id(target_id):
     return [x for x in wmic_diskdrive_get() if x['SCSITargetId'] == target_id][0]
+
 
 def wmic_max_target_id():
     return sorted([x['SCSITargetId'] for x in wmic_diskdrive_get()],
                   reverse=True)[0]
+
 
 def disk_by_drive_letter(drive_letter):
     ret = {}
@@ -78,6 +87,7 @@ def disk_by_drive_letter(drive_letter):
                 continue
     return ret
 
+
 def latest_snapshot():
     """Get the latest snapshot with a given tag
     """
@@ -91,6 +101,7 @@ def latest_snapshot():
         print(snapshot.id)
     else:
         sys.exit(1)
+
 
 def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                          size_gb=None, del_on_termination=True):
@@ -112,9 +123,9 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
     if del_on_termination:
         delete_on_termination(device)
     if not snapshot:
-        #empty device
+        # empty device
         if sys.platform.startswith('win'):
-            #Windows format
+            # Windows format
             disk = wmic_disk_with_target_id(letter_to_target_id(device[-1:]))
             drive_letter = mount_path[0].upper()
             disk_number = str(disk['Index'])
@@ -131,7 +142,7 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                    "-DriveLetter", drive_letter, "-FileSystem",
                                    "NTFS", "-Force", "-Confirm:$False"])
         else:
-            #linux format
+            # linux format
             print("Formatting " + device)
             subprocess.check_call(["mkfs.ext4", device])
     else:
@@ -153,11 +164,11 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                        "|", "Set-Partition", "-NewDriveLetter",
                                        drive_letter], stdout=devnull,
                                       stderr=devnull)
-            #resize win partition if necessary
+            # resize win partition if necessary
             if size_gb and not size_gb == snapshot.volume_size:
                 proc = subprocess.Popen(["powershell.exe",
-                                         "$((Get-PartitionSupportedSize -Dri" +\
-                                         "veLetter " + drive_letter + \
+                                         "$((Get-PartitionSupportedSize -Dri" +
+                                         "veLetter " + drive_letter +
                                          ").SizeMax)"],
                                         stdout=subprocess.PIPE)
                 max_size = proc.communicate()[0]
@@ -166,8 +177,8 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                        max_size])
         else:
             if size_gb and not size_gb == snapshot.volume_size:
-                print("Resizing " + device + " from " + \
-                       str(snapshot.volume_size) + "GB to " + str(size_gb))
+                print("Resizing " + device + " from " +
+                      str(snapshot.volume_size) + "GB to " + str(size_gb))
                 try:
                     subprocess.check_call(["e2fsck", "-f", "-p", device])
                 except CalledProcessError as e:
@@ -197,6 +208,7 @@ def first_free_device():
                 return device
     return None
 
+
 def get_latest_snapshot(tag_name, tag_value):
     """Get the latest snapshot with a given tag
     """
@@ -205,13 +217,15 @@ def get_latest_snapshot(tag_name, tag_value):
     snapshots = sorted(ec2res.snapshots.filter(
         Filters=[{'Name': 'tag:' + tag_name,
                   'Values': [tag_value]}]),
-                       key=lambda k: k.start_time, reverse=True)
+        key=lambda k: k.start_time, reverse=True)
     if snapshots:
         return snapshots[0]
     else:
         return None
 
 # Usage: create_volume snapshot-id [size_gb]
+
+
 def create_volume(snapshot_id, availability_zone=None, size_gb=None):
     set_region()
     ec2 = boto3.client("ec2")
@@ -227,6 +241,8 @@ def create_volume(snapshot_id, availability_zone=None, size_gb=None):
     return resp['VolumeId']
 
 # Usage: create_empty_volume size_gb
+
+
 def create_empty_volume(size_gb, availability_zone=None):
     set_region()
     ec2 = boto3.client("ec2")
@@ -239,6 +255,7 @@ def create_empty_volume(size_gb, availability_zone=None):
     wait_for_volume_status(resp['VolumeId'], "available")
     return resp['VolumeId']
 
+
 def wait_for_volume_status(volume_id, status, timeout_sec=300):
     set_region()
     start = time.time()
@@ -247,11 +264,12 @@ def wait_for_volume_status(volume_id, status, timeout_sec=300):
     while not match_volume_state(volume, status):
         time.sleep(2)
         if time.time() - start > timeout_sec:
-            raise Exception("Failed waiting for status '" + status + "' for " +\
+            raise Exception("Failed waiting for status '" + status + "' for " +
                             volume_id + " (timeout: " + str(timeout_sec) + ")")
         resp = ec2.describe_volumes(VolumeIds=[volume_id])
         if "Volumes" in resp:
             volume = resp['Volumes'][0]
+
 
 def match_volume_state(volume, status):
     if not volume:
@@ -262,6 +280,7 @@ def match_volume_state(volume, status):
     else:
         return volume['State'] == status
 
+
 def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
     set_region()
     start = time.time()
@@ -270,17 +289,20 @@ def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
     while not is_snapshot_complete(snapshot):
         time.sleep(2)
         if time.time() - start > timeout_sec:
-            raise Exception("Failed waiting for status 'completed' for " +\
+            raise Exception("Failed waiting for status 'completed' for " +
                             snapshot_id + " (timeout: " + str(timeout_sec) + ")")
         resp = ec2.describe_snapshots(SnapshotIds=[snapshot_id])
         if "Snapshots" in resp:
             snapshot = resp['Snapshots'][0]
 
+
 def is_snapshot_complete(snapshot):
     return snapshot is not None and 'State' in snapshot and \
-           snapshot['State'] == 'completed'
+        snapshot['State'] == 'completed'
 
 # Usage: attach_volume volume-id device-path
+
+
 def attach_volume(volume_id, device_path):
     set_region()
     ec2 = boto3.client("ec2")
@@ -290,6 +312,8 @@ def attach_volume(volume_id, device_path):
     wait_for_volume_status(volume_id, "attached")
 
 # Usage: delete_on_termination device-path
+
+
 def delete_on_termination(device_path):
     set_region()
     ec2 = boto3.client("ec2")
@@ -297,7 +321,8 @@ def delete_on_termination(device_path):
     ec2.modify_instance_attribute(InstanceId=instance_id,
                                   BlockDeviceMappings=[{
                                       "DeviceName": device_path,
-                                      "Ebs":{"DeleteOnTermination": True}}])
+                                      "Ebs": {"DeleteOnTermination": True}}])
+
 
 def detach_volume(mount_path):
     set_region()
@@ -312,6 +337,8 @@ def detach_volume(mount_path):
     ec2.detach_volume(VolumeId=volume_id, InstanceId=instance_id)
 
 # Usage: create_snapshot volume_id tag_key tag_value
+
+
 def create_snapshot(tag_key, tag_value, mount_path, wait=False):
     set_region()
     device = device_from_mount_path(mount_path)
@@ -333,14 +360,16 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False):
         wait_for_snapshot_complete(snap['SnapshotId'])
     return snap['SnapshotId']
 
+
 def device_from_mount_path(mount_path):
     if sys.platform.startswith('win'):
         return "/dev/xvd" + \
-                 target_id_to_letter(disk_by_drive_letter(
-                     mount_path[0])['TargetId'])
+            target_id_to_letter(disk_by_drive_letter(
+                mount_path[0])['TargetId'])
     else:
-        return [x for x in psutil.disk_partitions() \
-                      if x.mountpoint == mount_path][0].device
+        return [x for x in psutil.disk_partitions()
+                if x.mountpoint == mount_path][0].device
+
 
 def clean_snapshots(days, tags):
     set_region()
@@ -357,24 +386,23 @@ def clean_snapshots(days, tags):
             tags = {}
             for tag in snapshot['Tags']:
                 tags[tag['Key']] = tag['Value']
-            print_time = snapshot['StartTime'].replace(tzinfo=\
-                                                       tz.tzlocal()).timetuple()
+            print_time = snapshot['StartTime'].replace(tzinfo=tz.tzlocal()).timetuple()
             compare_time = snapshot['StartTime'].replace(tzinfo=None)
             if compare_time < newest_timestamp:
-                print(colored("Deleting " + snapshot['SnapshotId'], "yellow") +\
-                              " || " +\
-                              time.strftime("%a, %d %b %Y %H:%M:%S",
-                                            print_time) + \
-                              " || " + json.dumps(tags))
+                print(colored("Deleting " + snapshot['SnapshotId'], "yellow") +
+                      " || " +
+                      time.strftime("%a, %d %b %Y %H:%M:%S",
+                                    print_time) +
+                      " || " + json.dumps(tags))
                 try:
                     ec2.delete_snapshot(SnapshotId=snapshot['SnapshotId'])
                     time.sleep(0.2)
                 except ClientError as err:
-                    print(colored("Delete failed: " + \
+                    print(colored("Delete failed: " +
                                   err.response['Error']['Message'], "red"))
             else:
-                print(colored("Skipping " + snapshot['SnapshotId'], "cyan") +\
-                              " || " + \
-                              time.strftime("%a, %d %b %Y %H:%M:%S",
-                                            print_time) +\
-                              " || " + json.dumps(tags))
+                print(colored("Skipping " + snapshot['SnapshotId'], "cyan") +
+                      " || " +
+                      time.strftime("%a, %d %b %Y %H:%M:%S",
+                                    print_time) +
+                      " || " + json.dumps(tags))

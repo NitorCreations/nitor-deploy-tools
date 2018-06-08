@@ -24,6 +24,7 @@ from botocore.exceptions import ClientError
 
 from .cf_utils import region
 
+
 def ensure_repo(name):
     ecr = boto3.client("ecr", region_name=region())
     repo = None
@@ -51,8 +52,9 @@ def ensure_repo(name):
                 sudo = "sudo "
         except:
             pass
-        print(sudo + "docker login -u " + user + " -p " + token + " " + \
+        print(sudo + "docker login -u " + user + " -p " + token + " " +
               auth_data['proxyEndpoint'])
+
 
 def repo_uri(name):
     ecr = boto3.client("ecr", region_name=region())

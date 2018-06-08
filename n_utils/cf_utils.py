@@ -45,6 +45,8 @@ from .mfa_utils import mfa_read_token, mfa_generate_code
 
 NoneType = type(None)
 ACCOUNT_ID = None
+
+
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
         firstly from the metadata service and then from EC2 tags and then
@@ -54,51 +56,61 @@ class InstanceInfo(object):
         in  C:\\nitor\\instance-data.json on windows.
     """
     _info = {}
+
     def stack_name(self):
         if 'stack_name' in self._info:
             return self._info['stack_name']
         else:
             return None
+
     def stack_id(self):
         if 'stack_id' in self._info:
             return self._info['stack_id']
         else:
             return None
+
     def instance_id(self):
         if 'instanceId' in self._info:
             return self._info['instanceId']
         else:
             return None
+
     def region(self):
         if 'region' in self._info:
             return self._info['region']
         else:
             return None
+
     def initial_status(self):
         if 'initial_status' in self._info:
             return self._info['initial_status']
         else:
             return None
+
     def logical_id(self):
         if 'logical_id' in self._info:
             return self._info['logical_id']
         else:
             return None
+
     def availability_zone(self):
         if 'availabilityZone' in self._info:
             return self._info['availabilityZone']
         else:
             return None
+
     def private_ip(self):
         if 'privateIp' in self._info:
             return self._info['privateIp']
         else:
             return None
+
     def tag(self, name):
         if 'Tags' in self._info and name in self._info['Tags']:
             return self._info['Tags'][name]
         else:
             return None
+
     def __init__(self):
         if os.path.isfile('/opt/nitor/instance-data.json'):
             try:
@@ -115,7 +127,7 @@ class InstanceInfo(object):
                 retry = 0
                 while not (self._info and self.instance_id) and retry < 5:
                     retry += 1
-                    response = requests.get('http://169.254.169.254/latest/d' +\
+                    response = requests.get('http://169.254.169.254/latest/d' +
                                             'ynamic/instance-identity/document')
                     if not response.text:
                         time.sleep(1)
@@ -127,9 +139,8 @@ class InstanceInfo(object):
                 os.environ['AWS_DEFAULT_REGION'] = self.region()
                 ec2 = boto3.client('ec2')
                 tags = {}
-                tag_response = ec2.describe_tags(Filters=
-                                                 [{'Name': 'resource-id',
-                                                   'Values': [self.instance_id()]}])
+                tag_response = ec2.describe_tags(Filters=[{'Name': 'resource-id',
+                                                           'Values': [self.instance_id()]}])
                 for tag in tag_response['Tags']:
                     tags[tag['Key']] = tag['Value']
                 self._info['Tags'] = tags
@@ -180,17 +191,17 @@ class InstanceInfo(object):
                     outf.write(json.dumps(self._info, skipkeys=True, indent=2))
                 try:
                     os.chmod(info_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP |
-                            stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+                             stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
                     os.chmod(info_file_dir, stat.S_IRUSR | stat.S_IWUSR |
-                            stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP |
-                            stat.S_IXGRP | stat.S_IROTH | stat.S_IWOTH |
-                            stat.S_IXOTH)
+                             stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP |
+                             stat.S_IXGRP | stat.S_IROTH | stat.S_IWOTH |
+                             stat.S_IXOTH)
                 except:
                     pass
         if self.region():
             os.environ['AWS_DEFAULT_REGION'] = self.region()
         if 'FullStackData' in self._info and 'StackStatus' in self._info['FullStackData']:
-            self._info['initial_status']= self._info['FullStackData']['StackStatus']
+            self._info['initial_status'] = self._info['FullStackData']['StackStatus']
         if 'Tags' in self._info:
             tags = self._info['Tags']
             if 'aws:cloudformation:stack-name' in tags:
@@ -209,8 +220,10 @@ class InstanceInfo(object):
             if name in self._info['StackData']:
                 return self._info['StackData'][name]
         return ''
+
     def __str__(self):
         return json.dumps(self._info, skipkeys=True)
+
 
 class IntervalThread(Thread):
     def __init__(self, event, interval, call_function):
@@ -223,6 +236,7 @@ class IntervalThread(Thread):
         while not self._stopped.wait(self._interval):
             self._call_function()
 
+
 class LogSender(object):
     def __init__(self, file_name):
         info = InstanceInfo()
@@ -232,7 +246,7 @@ class LogSender(object):
         self.group_name = info.stack_name()
         self._messages = deque()
         self.stream_name = info.instance_id() + "|" + \
-                           file_name.replace(':', '_').replace('*', '_')
+            file_name.replace(':', '_').replace('*', '_')
         try:
             self._logs.create_log_group(logGroupName=self.group_name)
         except:
@@ -268,7 +282,7 @@ class LogSender(object):
                 return
             counter = 0
             while len(self._messages) > 0 and counter < 1048576 and \
-                  len(events) < 10000:
+                    len(events) < 10000:
                 message = self._messages.popleft()
                 counter = counter + len(message.encode('utf-8', 'replace')) + 26
                 if counter > 1048576:
@@ -308,9 +322,11 @@ class LogSender(object):
         finally:
             self._send_lock.release()
 
+
 def send_logs_to_cloudwatch(file_name):
     log_sender = LogSender(file_name)
     read_and_follow(file_name, log_sender.send)
+
 
 def read_and_follow(file_name, line_function, wait=1):
     while not (os.path.isfile(file_name) and os.path.exists(file_name)):
@@ -329,24 +345,26 @@ def read_and_follow(file_name, line_function, wait=1):
             if end_seen:
                 time.sleep(wait)
 
+
 def signal_status(status, resource_name=None):
     info = InstanceInfo()
     clf = boto3.client('cloudformation')
     if not resource_name:
         resource_name = info.logical_id()
-    print("Signalling " + status + " for " + info.stack_name() + "." +\
+    print("Signalling " + status + " for " + info.stack_name() + "." +
           resource_name)
     clf.signal_resource(StackName=info.stack_name(),
                         LogicalResourceId=resource_name,
                         UniqueId=info.instance_id(),
                         Status=status)
 
+
 def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
                   allocation_id_param="paramEipAllocationId"):
     if not eip_param:
         eip_param = "paramEip"
     if not allocation_id_param:
-        allocation_id_param="paramEipAllocationId"
+        allocation_id_param = "paramEipAllocationId"
     info = InstanceInfo()
     if not allocation_id:
         if eip:
@@ -371,9 +389,11 @@ def associate_eip(eip=None, allocation_id=None, eip_param="paramEip",
                           AllocationId=allocation_id,
                           AllowReassociation=True)
 
+
 def init():
     info = InstanceInfo()
     return str(info)
+
 
 def get_userdata(outfile):
     response = requests.get('http://169.254.169.254/latest/user-data')
@@ -382,9 +402,12 @@ def get_userdata(outfile):
     else:
         with open(outfile, 'w') as outf:
             outf.write(response.text)
-def id_generator(size=10, chars=string.ascii_uppercase + string.digits + \
+
+
+def id_generator(size=10, chars=string.ascii_uppercase + string.digits +
                  string.ascii_lowercase):
     return ''.join(random.choice(chars) for _ in range(size))
+
 
 def assume_role(role_arn, mfa_token_name=None):
     sts = boto3.client("sts")
@@ -392,13 +415,14 @@ def assume_role(role_arn, mfa_token_name=None):
         token = mfa_read_token(mfa_token_name)
         code = mfa_generate_code(mfa_token_name)
         response = sts.assume_role(RoleArn=role_arn,
-                                RoleSessionName="n-sess-" + id_generator(),
-                                SerialNumber=token['token_arn'],
-                                TokenCode=code)
+                                   RoleSessionName="n-sess-" + id_generator(),
+                                   SerialNumber=token['token_arn'],
+                                   TokenCode=code)
     else:
-        response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" + \
-                               id_generator())
+        response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" +
+                                   id_generator())
     return response['Credentials']
+
 
 def resolve_account():
     global ACCOUNT_ID
@@ -409,6 +433,7 @@ def resolve_account():
         except:
             pass
     return ACCOUNT_ID
+
 
 def is_ec2():
     if sys.platform.startswith("win"):
@@ -422,6 +447,7 @@ def is_ec2():
                 return uuid_str.startswith("ec2")
         else:
             return False
+
 
 def region():
     """ Get default region - the region of the instance if run in an EC2 instance
@@ -443,12 +469,14 @@ def region():
         else:
             return 'eu-west-1'
 
+
 def regions():
     """Get all region names as a list"""
     ec2 = boto3.client("ec2")
     response = ec2.describe_regions()
     for regn in response['Regions']:
         yield regn['RegionName']
+
 
 def stacks():
     """Get list of stack names for the currently default region"""
@@ -457,6 +485,7 @@ def stacks():
     for page in pages.paginate():
         for stack in page.get('Stacks', []):
             yield stack['StackName']
+
 
 def stack_params_and_outputs(regn, stack_name):
     """ Get parameters and outputs from a stack as a single dict
@@ -472,12 +501,14 @@ def stack_params_and_outputs(regn, stack_name):
             resp[output['OutputKey']] = output['OutputValue']
     return resp
 
+
 def set_region():
     """ Sets the environment variable AWS_DEFAULT_REGION if not already set
         to a sensible default
     """
     if 'AWS_DEFAULT_REGION' not in os.environ:
         os.environ['AWS_DEFAULT_REGION'] = region()
+
 
 def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=600):
     ec2 = boto3.client('ec2', region_name=regn)
@@ -490,7 +521,7 @@ def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=600
     while status != 'available':
         time.sleep(2)
         if time.time() - start > timeout_sec:
-            raise Exception("Failed waiting for status 'available' for " +\
+            raise Exception("Failed waiting for status 'available' for " +
                             ami_id + " (timeout: " + str(timeout_sec) + ")")
         images_resp = ec2.describe_images(ImageIds=[ami_id])
         status = images_resp['Images'][0]['State']
@@ -502,6 +533,7 @@ def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=600
     if len(perms['Add']) > 0:
         ec2.modify_image_attribute(ImageId=ami_id, LaunchPermission=perms)
 
+
 def get_images(image_name_prefix):
     image_name_prefix = re.sub(r'\W', '_', image_name_prefix)
     ec2 = boto3.client('ec2')
@@ -510,16 +542,18 @@ def get_images(image_name_prefix):
     if len(ami_data['Images']) > 0:
         return [image for image in sorted(ami_data['Images'],
                                           key=itemgetter('CreationDate'),
-                                          reverse=True) \
-                         if _has_job_tag(image, image_name_prefix)]
+                                          reverse=True)
+                if _has_job_tag(image, image_name_prefix)]
     else:
         return []
+
 
 def _has_job_tag(image, image_name_prefix):
     for tag in image['Tags']:
         if re.match('^' + image_name_prefix + '_\\d{4,14}', tag['Value']):
             return True
     return False
+
 
 def promote_image(ami_id, job_name):
     image_name_prefix = re.sub(r'\W', '_', job_name)
@@ -533,8 +567,9 @@ def promote_image(ami_id, job_name):
     with open("ami.properties", 'w') as ami_props:
         ami_props.write("AMI_ID=" + ami_id + "\nNAME=" + ami_name + "\n")
     ec2.create_tags(Resources=[ami_id], Tags=[{'Key': image_name_prefix,
-                                               'Value': image_name_prefix + \
+                                               'Value': image_name_prefix +
                                                "_" + build_number}])
+
 
 def register_private_dns(dns_name, hosted_zone):
     set_region()
@@ -568,6 +603,7 @@ def register_private_dns(dns_name, hosted_zone):
             }
         ]})
 
+
 def interpolate_file(file_name, destination=None, stack_name=None,
                      use_vault=False, encoding='utf-8'):
     if not destination:
@@ -597,9 +633,12 @@ def interpolate_file(file_name, destination=None, stack_name=None,
     shutil.copy(dstfile.name, destination)
     os.unlink(dstfile.name)
 
+
 PARAM_RE = re.compile(r"\$\{([^\$\{\}]*)\}")
 SIMPLE_PARAM_RE = re.compile(r"\$([a-zA-Z0-9_]*)")
 PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
+
+
 def _apply_simple_regex(RE, line, params, vault, vault_keys):
     ret = line
     next_start = 0
@@ -621,6 +660,7 @@ def _apply_simple_regex(RE, line, params, vault, vault_keys):
         match = RE.search(ret, next_start)
     return ret
 
+
 def expand_vars(line, params, vault, vault_keys):
     ret = _apply_simple_regex(SIMPLE_PARAM_RE, line, params, vault, vault_keys)
     if isinstance(ret, OrderedDict):
@@ -629,6 +669,7 @@ def expand_vars(line, params, vault, vault_keys):
     if isinstance(ret, OrderedDict):
         return ret
     return _process_line(ret, params, vault, vault_keys)
+
 
 def _process_line(line, params, vault, vault_keys):
     ret = line
@@ -658,40 +699,48 @@ def _process_line(line, params, vault, vault_keys):
         match = PARAM_RE.search(ret, next_start)
     return ret
 
+
 def _var_default(value, arg):
     if value:
         return value
     return arg
+
 
 def _var_suffix(value, arg):
     if value:
         return re.sub("^" + re.escape(arg[::-1]).replace("\\*", ".*?"), "", value[::-1])[::-1]
     return value
 
+
 def _var_prefix(value, arg):
     if value:
         return re.sub("^" + re.escape(arg).replace("\\*", ".*?"), "", value)
     return value
+
 
 def _var_suffix_greedy(value, arg):
     if value:
         return re.sub("^" + re.escape(arg[::-1]).replace("\\*", ".*"), "", value[::-1])[::-1]
     return value
 
+
 def _var_prefix_greedy(value, arg):
     if value and arg:
         return re.sub("^" + re.escape(arg).replace("\\*", ".*"), "", value)
     return value
+
 
 def _var_upper(value, arg):
     if value:
         return value.upper()
     return value
 
+
 def _var_lower(value, arg):
     if value:
         return value.lower()
     return value
+
 
 def _var_upper_initial(value, arg):
     if value:
@@ -700,12 +749,14 @@ def _var_upper_initial(value, arg):
         return value[0].upper()
     return value
 
+
 def _var_lower_initial(value, arg):
     if value:
         if len(value) > 1:
             return value[0].lower() + value[1:]
         return value[0].lower()
     return value
+
 
 def _var_offset(value, arg):
     if value and arg:
@@ -716,12 +767,14 @@ def _var_offset(value, arg):
             return value[start:end]
     return value
 
+
 def _var_subst(value, arg):
     if value and arg:
         subst_repl = arg.split("/")
         if len(subst_repl) == 2:
             return value.replace(subst_repl[0], subst_repl[1])
     return value
+
 
 VAR_OPERATIONS = OrderedDict()
 VAR_OPERATIONS[":-"] = _var_default
@@ -736,13 +789,15 @@ VAR_OPERATIONS[","] = _var_lower_initial
 VAR_OPERATIONS[":"] = _var_offset
 VAR_OPERATIONS["/"] = _var_subst
 
+
 def has_output_selector(stack, outputname, mapper):
-    if not 'Outputs' in stack:
+    if 'Outputs' not in stack:
         return False
     for output in stack['Outputs']:
         if output['OutputKey'] == outputname:
             return mapper(stack)
     return False
+
 
 def select_stacks(selector):
     ret = []

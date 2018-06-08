@@ -18,7 +18,6 @@ from builtins import object
 import os
 import yaml
 import pyotp
-import sys
 from os import walk
 from .yuuuu3332111i1l1i import IiII1IiiIiI1, I11iIi1I
 import json
@@ -26,6 +25,7 @@ import base64
 from Crypto . Cipher import AES
 from Crypto . Util import Counter
 from Crypto . Hash import SHA256
+
 
 def mfa_add_token(args):
     """ Adds or overwrites an MFA token to be used with role assumption.
@@ -45,6 +45,7 @@ def mfa_add_token(args):
         os.chmod(token_file, 0o600)
         yaml.dump(data, outfile, default_flow_style=False)
 
+
 def mfa_read_token(token_name):
     """ Reads a previously added MFA token file and returns its data. """
     data = None
@@ -60,12 +61,14 @@ def mfa_read_token(token_name):
             return mfa_read_token(token_name)
     return data
 
+
 def get_ndt_dir():
     """ Gets cross platform ndt directory path. Makes sure it exists. """
     ndt_dir = os.path.expanduser("~/.ndt")
     if not os.path.exists(ndt_dir):
         os.makedirs(ndt_dir)
     return ndt_dir
+
 
 def mfa_generate_code(token_name):
     """ Generates an MFA code with the specified token. """
@@ -77,6 +80,7 @@ def mfa_generate_code(token_name):
     totp = pyotp.TOTP(secret)
     return totp.now()
 
+
 def mfa_generate_code_with_secret(secret):
     """ Generates an MFA code using the secret passed in. """
     if secret.startswith("enc--"):
@@ -84,10 +88,12 @@ def mfa_generate_code_with_secret(secret):
     totp = pyotp.TOTP(secret)
     return totp.now()
 
+
 def mfa_delete_token(token_name):
     """ Deletes an MFA token file from the .ndt subdirectory in the user's
         home directory """
     os.remove(get_ndt_dir() + '/mfa_' + token_name)
+
 
 def mfa_backup_tokens(backup_secret):
     """ Writes MFA secrets encrypted with backup_secret and base64 encoded to stdout. """
@@ -98,6 +104,7 @@ def mfa_backup_tokens(backup_secret):
     cipher = AES.new(get_backup_key_digest(backup_secret), AES.MODE_CTR, counter=counter)
     return base64.b64encode(cipher.encrypt(json.dumps(tokens)))
 
+
 def mfa_decrypt_backup_tokens(backup_secret, file):
     """ Decrypts backed up MFA secrets from file, prints to stdout. """
     with open(os.path.expanduser(file), 'r') as infile:
@@ -106,9 +113,11 @@ def mfa_decrypt_backup_tokens(backup_secret, file):
     cipher = AES.new(get_backup_key_digest(backup_secret), AES.MODE_CTR, counter=counter)
     return cipher.decrypt(base64.b64decode(data)).decode()
 
-class Struct ( object ) :
-    def __init__ ( self , ** entries ) :
-        self . __dict__ . update ( entries )
+
+class Struct (object):
+    def __init__(self, ** entries):
+        self . __dict__ . update(entries)
+
 
 def list_mfa_tokens():
     tokens = []
@@ -116,6 +125,7 @@ def list_mfa_tokens():
         tokens.extend([fn[4:] for fn in filenames if fn.startswith("mfa_")])
         break
     return tokens
+
 
 def get_backup_key_digest(backup_secret):
     key = SHA256.new()

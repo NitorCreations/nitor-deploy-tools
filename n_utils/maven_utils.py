@@ -33,6 +33,7 @@ def indent(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+
 def add_server(pomfile, server_id, username):
     tree = ET.parse(pomfile)
     settings = tree.getroot()
