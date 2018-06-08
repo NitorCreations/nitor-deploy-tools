@@ -52,6 +52,7 @@ setup(name='nitor_deploy_tools',
           ] if sys.platform.startswith('win') else []),
       tests_require=[
           'pytest',
-          'pytest-mock'
+          'pytest-mock',
+          'pytest-cov'
       ],
       zip_safe=False)

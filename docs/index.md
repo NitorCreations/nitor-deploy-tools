@@ -1,5 +1,6 @@
 # Nitor Deploy Tools
 [![Build Status](https://travis-ci.org/NitorCreations/nitor-deploy-tools.svg?branch=master)](https://travis-ci.org/NitorCreations/nitor-deploy-tools)
+[![Coverage Status](https://coveralls.io/repos/github/NitorCreations/nitor-deploy-tools/badge.svg?branch=master)](https://coveralls.io/github/NitorCreations/nitor-deploy-tools?branch=master)
 
 ## Released version 0.223
 
