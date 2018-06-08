@@ -1,4 +1,5 @@
 # Nitor Deploy Tools
+[![Build Status](https://travis-ci.org/NitorCreations/nitor-deploy-tools.svg?branch=master)](https://travis-ci.org/NitorCreations/nitor-deploy-tools)
 
 ## Released version 1.0a31
 
