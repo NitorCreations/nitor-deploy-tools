@@ -129,7 +129,7 @@ def do_command_completion():
         command = prev
         if len(comp_words) > 1:
             command = comp_words[1]
-        if not command in COMMAND_MAPPINGS:
+        if command not in COMMAND_MAPPINGS:
             sys.exit(1)
         command_type = COMMAND_MAPPINGS[command]
         if command_type == "shell":

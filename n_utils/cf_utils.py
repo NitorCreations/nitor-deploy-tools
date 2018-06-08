@@ -791,7 +791,7 @@ VAR_OPERATIONS["/"] = _var_subst
 
 
 def has_output_selector(stack, outputname, mapper):
-    if not 'Outputs' in stack:
+    if 'Outputs' not in stack:
         return False
     for output in stack['Outputs']:
         if output['OutputKey'] == outputname:

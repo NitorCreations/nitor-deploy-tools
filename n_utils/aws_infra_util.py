@@ -419,11 +419,11 @@ def _get_params(data, template):
 
     params['STACK_NAME'] = PARAM_NOT_AVAILABLE
 
-    if not 'REGION' in os.environ:
+    if 'REGION' not in os.environ:
         os.environ['REGION'] = region()
     params['REGION'] = os.environ['REGION']
 
-    if not 'ACCOUNT_ID' in os.environ:
+    if 'ACCOUNT_ID' not in os.environ:
         os.environ['ACCOUNT_ID'] = resolve_account()
     params['ACCOUNT_ID'] = os.environ['ACCOUNT_ID']
 
@@ -598,7 +598,7 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                 del data['__source']
             else:
                 filename = "unknown"
-            if not var_name in templateParams:
+            if var_name not in templateParams:
                 if '__optional' in data:
                     data = data['__default']
                 else:
@@ -634,7 +634,7 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
             else:
                 stack_params = stack_params_and_outputs(region, stack_name)
                 stacks[stack_key] = stack_params
-            if not stack_param in stack_params:
+            if stack_param not in stack_params:
                 sys.exit("Did not find value for: " + stack_param +
                          " in stack " + stack_name)
             data = stack_params[stack_param]
@@ -688,7 +688,7 @@ def extract_script(prefix, path, join_args):
     code_idx = 0
     for element in join_args:
         if isinstance(element, collections.OrderedDict):
-            if not 'Ref' in element:
+            if 'Ref' not in element:
                 print("Dict with no ref")
                 json_save(element)
             else:

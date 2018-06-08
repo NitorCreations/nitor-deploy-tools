@@ -267,11 +267,11 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
         os.environ["paramAmi"] = ami_id
         os.environ["paramAmiName"] = ami_name
         os.environ["paramAmiCreated"] = ami_created
-        if not "paramAmiName" in template_parameters:
+        if "paramAmiName" not in template_parameters:
             template_parameters['paramAmiName'] = \
                 collections.OrderedDict([("Description", "AMI Name"),
                                          ("Type", "String"), ("Default", "")])
-        if not "paramAmiCreated" in template_parameters:
+        if "paramAmiCreated" not in template_parameters:
             template_parameters['paramAmiCreated'] = \
                 collections.OrderedDict([("Description", "AMI Creation Date"),
                                          ("Type", "String"), ("Default", "")])

@@ -119,7 +119,7 @@ def list_templates():
     files = find_all_includes("creatable-templates/*.yaml")
     for next_file in files:
         next_name = os.path.basename(next_file)[:-5]
-        if not next_name in ret:
+        if next_name not in ret:
             ret.append(next_name)
     return ret
 
@@ -371,7 +371,7 @@ class ContextClassBase(object):
     def __init__(self, ask_fields):
         if not ask_fields:
             ask_fields = ["stack_name"]
-        elif not "stack_name" in ask_fields:
+        elif "stack_name" not in ask_fields:
             if ask_fields[0] == "component_name":
                 ask_fields.insert(1, "stack_name")
             else:
@@ -410,7 +410,7 @@ class ContextClassBase(object):
                     shorts.append(attempt[1])
                 else:
                     attempt = param[1]
-                    if not attempt in shorts:
+                    if attempt not in shorts:
                         shorts.append(attempt)
                     else:
                         shorts.append("")
@@ -441,7 +441,7 @@ class ContextClassBase(object):
         self.ssh_key = "Ssh key ({0}):\n1: create new\n"
         self.ssh_keys = []
         self.ssh_key_default = lambda: "1"
-        if not "ssh_key" in self.ask_fields:
+        if "ssh_key" not in self.ask_fields:
             self.ask_fields.append("ssh_key")
         index = 2
         ec2 = boto3.client("ec2")
@@ -461,14 +461,14 @@ class ContextClassBase(object):
         self.elastic_ip = "Elastic ip ({0}):\n1: allocate new\n"
         self.elastic_ips = []
         self.elastic_ip_default = lambda: "1"
-        if not "elastic_ip" in self.ask_fields:
+        if "elastic_ip" not in self.ask_fields:
             self.ask_fields.append("elastic_ip")
         index = 2
         ec2 = boto3.client("ec2")
         eips = ec2.describe_addresses()
         if eips and "Addresses" in eips:
             for address in eips["Addresses"]:
-                if not "InstanceId" in address:
+                if "InstanceId" not in address:
                     self.elastic_ips.append(address['PublicIp'])
                     self.elastic_ip = self.elastic_ip + str(index) \
                         + ": " + address['PublicIp'] + "\n"
