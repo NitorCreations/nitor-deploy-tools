@@ -961,7 +961,8 @@ def cli_create_account():
                         "access from parent account",
                         default="TrustedAccountAccessRole")
     parser.add_argument("-a", "--trusted-accounts", nargs="*",
-                        help="Account to trust with user management").completer = ChoicesCompleter(list_created_accounts())
+                        help="Account to trust with user management").completer = \
+        ChoicesCompleter(list_created_accounts())
     parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
                         help="Name of MFA token to use", required=False)
     argcomplete.autocomplete(parser)
@@ -1019,11 +1020,11 @@ def cli_load_parameters():
 
     def printer(params): return print(json.dumps(params))
     if args.export_statements:
-        def printer(params): return print(map_to_exports(params))
+        def printer(params): return print(map_to_exports(params)) # noqa
     if args.properties:
-        def printer(params): return print(map_to_properties(params))
+        def printer(params): return print(map_to_properties(params)) # noqa
     if args.yaml:
-        def printer(params): return print(yaml.dump(params))
+        def printer(params): return print(yaml.dump(params)) # noqa
     del args.export_statements
     del args.yaml
     del args.json
