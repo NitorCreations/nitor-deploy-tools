@@ -73,7 +73,7 @@ def create_stack():
                 context = load_class(template_yaml["ContextClass"])()
                 context.add_context_arguments(parser)
     argcomplete.autocomplete(parser)
-    args = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     if args.template:
         template_yaml = load_template(args.template)
         if "ContextClass" in template_yaml:
