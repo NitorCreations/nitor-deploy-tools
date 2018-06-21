@@ -305,12 +305,13 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
 
 
 class Unbuffered(object):
+    SYS_ENCODING = locale.getpreferredencoding()
     def __init__(self, stream):
         self.stream = stream
 
     def write(self, data):
         if not type(data) is str:
-            self.stream.write(data.decode(sys.stdout.encoding))
+            self.stream.write(data.decode(self.SYS_ENCODING))
         else:
             self.stream.write(data)
         self.stream.flush()
