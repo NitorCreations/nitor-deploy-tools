@@ -245,7 +245,9 @@ Gets either a input or output parameter or logical resource of another stack as 
 function. Neither parameter nor resources need to be exported to be available, which makes this somewhat
 more flexible that CloudFormation native Export/Import. The substitution is completely client-side so
 referencing stacks will not be modified in any way if referenced staks change. Later there will be tooling to
-manage changes across several stacks in the same repository that refer to eachother.
+manage changes across several stacks in the same repository that refer to eachother. You can run
+`ndt show-stack-params-and-outputs [stack-name]` to see the parameters and resources that are available
+in each stack.
 
 ## Commands
 
