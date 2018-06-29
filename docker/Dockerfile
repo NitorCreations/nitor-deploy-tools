@@ -84,6 +84,6 @@ RUN set -ex \
   && wget -O /usr/bin/lein "https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein" \
   && chmod 755 /usr/bin/lein \
   && lein version
-RUN pip install nitor-deploy-tools==1.0a34
+RUN pip install nitor-deploy-tools==1.0a35
 
 ENTRYPOINT ["dockerd-entrypoint.sh"]

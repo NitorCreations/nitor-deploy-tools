@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/NitorCreations/nitor-deploy-tools.svg?branch=master)](https://travis-ci.org/NitorCreations/nitor-deploy-tools)
 [![Coverage Status](https://coveralls.io/repos/github/NitorCreations/nitor-deploy-tools/badge.svg?branch=master)](https://coveralls.io/github/NitorCreations/nitor-deploy-tools?branch=master)
 
-## Released version 1.0a34
+## Released version 1.0a35
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -557,20 +557,35 @@ usage: ndt load-parameters [-h] [--branch BRANCH]
                            [--json | --yaml | --properties | --export-statements]
                            [component]
 
-Load parameters from infra*.properties files in the order: infra.properties,
-infra-[branch].properties, [component]/infra.properties,
-[component]/infra-[branch].properties, [component]/[subcomponent-
-type]-[subcomponent]/infra.properties, [component]/[subcomponent-
-type]-[subcomponent]/infra-[branch].properties Last parameter defined
-overwrites ones defined before in the files. Supports parameter expansion and
-bash -like transformations. Namely: ${PARAM##prefix} # strip prefix greedy
-${PARAM%%suffix} # strip suffix greedy ${PARAM#prefix} # strip prefix not
-greedy ${PARAM%suffix} # strip suffix not greedy ${PARAM:-default} # default
-if empty ${PARAM:4:2} # start:len ${PARAM/substr/replace} ${PARAM^} # upper
-initial ${PARAM,} # lower initial ${PARAM^^} # upper ${PARAM,,} # lower
-Comment lines start with \'#\' Lines can be continued by adding \'\' at the end
-See https://www.tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_03.html (arrays
-not supported)
+ Load parameters from infra*.properties files in the order:
+    infra.properties,
+    infra-[branch].properties,
+    [component]/infra.properties,
+    [component]/infra-[branch].properties,
+    [component]/[subcomponent-type]-[subcomponent]/infra.properties,
+    [component]/[subcomponent-type]-[subcomponent]/infra-[branch].properties
+
+    Last parameter defined overwrites ones defined before in the files. Supports parameter expansion
+    and bash -like transformations. Namely:
+
+    ${PARAM##prefix} # strip prefix greedy
+    ${PARAM%%suffix} # strip suffix greedy
+    ${PARAM#prefix} # strip prefix not greedy
+    ${PARAM%suffix} # strip suffix not greedy
+    ${PARAM:-default} # default if empty
+    ${PARAM:4:2} # start:len
+    ${PARAM/substr/replace}
+    ${PARAM^} # upper initial
+    ${PARAM,} # lower initial
+    ${PARAM^^} # upper
+    ${PARAM,,} # lower
+
+    Comment lines start with \'#\'
+    Lines can be continued by adding \'\' at the end
+
+    See https://www.tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_03.html
+    (arrays not supported)
+    
 
 positional arguments:
   component             Compenent to descend into
