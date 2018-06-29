@@ -492,7 +492,11 @@ def stack_params_and_outputs(regn, stack_name):
     """
     cloudformation = boto3.client("cloudformation", region_name=regn)
     stack = cloudformation.describe_stacks(StackName=stack_name)['Stacks'][0]
+    resources = cloudformation.describe_stack_resources(StackName=stack_name)
     resp = {}
+    if "StackResources" in resources:
+        for resource in resources["StackResources"]:
+            resp[resource['LogicalResourceId']] = resource['PhysicalResourceId']
     if 'Parameters' in stack:
         for param in stack['Parameters']:
             resp[param['ParameterKey']] = param['ParameterValue']
