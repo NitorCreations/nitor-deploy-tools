@@ -66,7 +66,10 @@ def get_parser(formatter=None):
             func_name
         )
     )
-    return argparse.ArgumentParser(description=func.__doc__)
+    if formatter:
+        return argparse.ArgumentParser(formatter_class=formatter, description=func.__doc__)
+    else:
+        return argparse.ArgumentParser(description=func.__doc__)
 
 
 def ndt_register_complete():
