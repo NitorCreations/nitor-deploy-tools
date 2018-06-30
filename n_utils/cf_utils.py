@@ -37,7 +37,7 @@ from threading import Event, Lock, Thread
 from operator import itemgetter
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, EndpointConnectionError
 import requests
 from requests.exceptions import ConnectionError
 from requests.adapters import HTTPAdapter
@@ -49,6 +49,8 @@ NoneType = type(None)
 ACCOUNT_ID = None
 INSTANCE_IDENTITY_URL = 'http://169.254.169.254/latest/dynamic/instance-identity/document'
 USER_DATA_URL = 'http://169.254.169.254/latest/user-data'
+INSTANCE_DATA_LINUX = '/opt/nitor/instance-data.json'
+INSTANCE_DATA_WIN = 'C:/nitor/instance-data.json'
 
 def get_retry(url, retries=5, backoff_factor=0.3,
     status_forcelist=(500, 502, 504), session=None, timeout=5):
@@ -65,6 +67,40 @@ def get_retry(url, retries=5, backoff_factor=0.3,
     session.mount('https://', adapter)
     return session.get(url, timeout=5)
 
+def wait_net_service(server, port, timeout=None):
+    """ Wait for network service to appear
+        @param timeout: in seconds, if None or 0 wait forever
+        @return: True of False, if timeout is None may return only True or
+                 throw unhandled network exception
+    """
+    import socket
+    import errno
+    s = socket.socket()
+    if timeout:
+        from time import time as now
+        # time module is needed to calc timeout shared between two exceptions
+        end = now() + timeout
+    while True:
+        try:
+            if timeout:
+                next_timeout = end - now()
+                if next_timeout < 0:
+                    return False
+                else:
+                    s.settimeout(next_timeout)
+            s.connect((server, port))
+        except socket.timeout, err:
+            # this exception occurs only if timeout is set
+            if timeout:
+                return False
+        except socket.error, err:
+            # catch timeout exception from underlying network library
+            # this one is different from socket.timeout
+            if type(err.args) != tuple or err[0] != errno.ETIMEDOUT:
+                raise
+        else:
+            s.close()
+            return True
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -131,34 +167,37 @@ class InstanceInfo(object):
             return None
 
     def __init__(self):
-        if os.path.isfile('/opt/nitor/instance-data.json'):
+        if os.path.isfile(INSTANCE_DATA_LINUX) and \
+           time.time() - os.path.getmtime(INSTANCE_DATA_LINUX) < 900:
             try:
-                self._info = json.load(open('/opt/nitor/instance-data.json'))
+                self._info = json.load(open(INSTANCE_DATA_LINUX))
             except:
                 pass
-        if os.path.isfile('C:/nitor/instance-data.json'):
+        if os.path.isfile(INSTANCE_DATA_WIN) and \
+           time.time() - os.path.getmtime(INSTANCE_DATA_WIN) < 900:
             try:
-                self._info = json.load(open('C:/nitor/instance-data.json'))
+                self._info = json.load(open(INSTANCE_DATA_WIN))
             except:
                 pass
         if not self._info and is_ec2():
             try:
-                retry = 0
-                while not (self._info and self.instance_id) and retry < 5:
-                    retry += 1
-                    response = get_retry(INSTANCE_IDENTITY_URL)
-                    if not response.text:
-                        time.sleep(1)
-                        continue
-                    self._info = json.loads(response.text)
-                    if not self._info or not self._info['instanceId']:
-                        time.sleep(1)
-                        continue
+                if not wait_net_service("169.254.169.254", 80, 120):
+                    raise Exception("Failed to connect to instance identity service")
+                response = get_retry(INSTANCE_IDENTITY_URL)
+                self._info = json.loads(response.text)
                 os.environ['AWS_DEFAULT_REGION'] = self.region()
                 ec2 = boto3.client('ec2')
                 tags = {}
-                tag_response = ec2.describe_tags(Filters=[{'Name': 'resource-id',
-                                                           'Values': [self.instance_id()]}])
+                tag_response = None
+                retry = 0
+                while not tag_response and retry < 20:
+                    try:
+                        tag_response = ec2.describe_tags(Filters=[{'Name': 'resource-id',
+                                                                   'Values': [self.instance_id()]}])
+                    except ConnectionError:
+                        retry = retry + 1
+                        time.sleep(1)
+                        continue
                 for tag in tag_response['Tags']:
                     tags[tag['Key']] = tag['Value']
                 self._info['Tags'] = tags
@@ -167,24 +206,9 @@ class InstanceInfo(object):
                 if 'aws:cloudformation:stack-id' in self._info['Tags']:
                     self._info['stack_id'] = tags['aws:cloudformation:stack-id']
                 if self.stack_name():
-                    clf = boto3.client('cloudformation')
-                    stacks = clf.describe_stacks(StackName=self.stack_name())
-                    stack = stacks['Stacks'][0]
-                    if 'CreationTime' in stack:
-                        stack['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
-                                                              stack['CreationTime'].timetuple())
-                    if 'LastUpdatedTime' in stack:
-                        stack['LastUpdatedTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
-                                                                 stack['LastUpdatedTime'].timetuple())
-                    stack_parameters = {}
-                    if 'Parameters' in stack:
-                        for parameter in stack['Parameters']:
-                            stack_parameters[parameter['ParameterKey']] = parameter['ParameterValue']
-                    if 'Outputs' in stack:
-                        for output in stack['Outputs']:
-                            stack_parameters[output['OutputKey']] = output['OutputValue']
+                    stack_parameters, stack = stack_params_and_outputs_and_stack(region(), self.stack_name())
                     self._info['StackData'] = stack_parameters
-                    self._info['FullStackData'] = stacks['Stacks'][0]
+                    self._info['FullStackData'] = stack
             except ConnectionError:
                 self._info = {}
             info_file = None
@@ -502,14 +526,29 @@ def stacks():
         for stack in page.get('Stacks', []):
             yield stack['StackName']
 
-
 def stack_params_and_outputs(regn, stack_name):
     """ Get parameters and outputs from a stack as a single dict
     """
+    params, stack = stack_params_and_outputs_and_stack(regn, stack_name)
+    return params
+
+def stack_params_and_outputs_and_stack(regn, stack_name):
+    """ Get parameters and outputs from a stack as a single dict and the full stack
+    """
     cloudformation = boto3.client("cloudformation", region_name=regn)
     stack = cloudformation.describe_stacks(StackName=stack_name)['Stacks'][0]
-    resources = cloudformation.describe_stack_resources(StackName=stack_name)
+    resources = {}
+    try:
+        resources = cloudformation.describe_stack_resources(StackName=stack_name)
+    except ClientError:
+        pass
     resp = {}
+    if 'CreationTime' in stack:
+        stack['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                                                stack['CreationTime'].timetuple())
+    if 'LastUpdatedTime' in stack:
+        stack['LastUpdatedTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                                                    stack['LastUpdatedTime'].timetuple())
     if "StackResources" in resources:
         for resource in resources["StackResources"]:
             resp[resource['LogicalResourceId']] = resource['PhysicalResourceId']
@@ -519,7 +558,7 @@ def stack_params_and_outputs(regn, stack_name):
     if 'Outputs' in stack:
         for output in stack['Outputs']:
             resp[output['OutputKey']] = output['OutputValue']
-    return resp
+    return resp, stack
 
 
 def set_region():
