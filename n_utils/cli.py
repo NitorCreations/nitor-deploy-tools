@@ -1021,13 +1021,13 @@ def cli_load_parameters():
                               help="Output as eval-able export statements")
     args = parser.parse_args()
 
-    def printer(params): return print(json.dumps(params))
+    transform = json.dumps
     if args.export_statements:
-        def printer(params): return print(map_to_exports(params)) # noqa
+        transform = map_to_exports # noqa
     if args.properties:
-        def printer(params): return print(map_to_properties(params)) # noqa
+        transform = map_to_properties # noqa
     if args.yaml:
-        def printer(params): return print(yaml.dump(params)) # noqa
+        transform = yaml.dump # noqa
     del args.export_statements
     del args.yaml
     del args.json
@@ -1035,7 +1035,7 @@ def cli_load_parameters():
     if (args.stack or args.serverless or args.docker or not isinstance(args.image, NoneType)) \
        and not args.component:
         parser.error("image, stack, doker or serverless do not make sense without component")
-    printer(load_parameters(**vars(args)))
+    print(transform(load_parameters(**vars(args))))
 
 
 def map_to_exports(map):
