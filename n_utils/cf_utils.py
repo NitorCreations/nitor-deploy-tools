@@ -40,11 +40,30 @@ import boto3
 from botocore.exceptions import ClientError
 import requests
 from requests.exceptions import ConnectionError
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from n_vault import Vault
 from .mfa_utils import mfa_read_token, mfa_generate_code
 
 NoneType = type(None)
 ACCOUNT_ID = None
+INSTANCE_IDENTITY_URL = 'http://169.254.169.254/latest/dynamic/instance-identity/document'
+USER_DATA_URL = 'http://169.254.169.254/latest/user-data'
+
+def get_retry(url, retries=5, backoff_factor=0.3,
+    status_forcelist=(500, 502, 504), session=None, timeout=5):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session.get(url, timeout=5)
 
 
 class InstanceInfo(object):
@@ -127,8 +146,7 @@ class InstanceInfo(object):
                 retry = 0
                 while not (self._info and self.instance_id) and retry < 5:
                     retry += 1
-                    response = requests.get('http://169.254.169.254/latest/d' +
-                                            'ynamic/instance-identity/document')
+                    response = get_retry(INSTANCE_IDENTITY_URL)
                     if not response.text:
                         time.sleep(1)
                         continue
@@ -351,8 +369,7 @@ def signal_status(status, resource_name=None):
     clf = boto3.client('cloudformation')
     if not resource_name:
         resource_name = info.logical_id()
-    print("Signalling " + status + " for " + info.stack_name() + "." +
-          resource_name)
+    print("Signalling " + status + " for " + info.stack_name() + "." + resource_name)
     clf.signal_resource(StackName=info.stack_name(),
                         LogicalResourceId=resource_name,
                         UniqueId=info.instance_id(),
@@ -396,7 +413,7 @@ def init():
 
 
 def get_userdata(outfile):
-    response = requests.get('http://169.254.169.254/latest/user-data')
+    response = get_retry(USER_DATA_URL)
     if outfile == "-":
         print(response.text)
     else:
@@ -433,7 +450,6 @@ def resolve_account():
         except:
             pass
     return ACCOUNT_ID
-
 
 def is_ec2():
     if sys.platform.startswith("win"):
