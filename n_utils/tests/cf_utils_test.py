@@ -1,4 +1,4 @@
-from n_utils.cf_utils import InstanceInfo, INSTANCE_IDENTITY_URL
+from n_utils.cf_utils import InstanceInfo, get_images, INSTANCE_IDENTITY_URL
 from dateutil.parser import parse
 
 class IdentityResp:
@@ -30,7 +30,24 @@ class ClientResp:
     def describe_tags(self, Filters=None):
         assert Filters[0]['Name'] == 'resource-id'
         assert Filters[0]['Values'] == ['i-021614c41980832b8']
-        return {"Tags": [{"Key": 'aws:cloudformation:stack-name', "Value": "test-stack"}]}
+        return {"Tags": [
+                    {
+                        "Key": 'Name',
+                        "Value": "test-instance"
+                    },
+                    {
+                        "Key": 'aws:cloudformation:stack-name',
+                        "Value": "test-stack"
+                    },
+                    {
+                        "Key": 'aws:cloudformation:stack-id',
+                        "Value": "test-stack-id"
+                    },
+                    {
+                        "Key": 'aws:cloudformation:logical-id',
+                        "Value": "test-logical-id"
+                    }]
+                }
     def describe_stacks(self, StackName=None):
         assert StackName == "test-stack"
         return {
@@ -85,6 +102,158 @@ class ClientResp:
         }
     ]
 }
+    def describe_images(self, Filters=None):
+        assert Filters[0]['Name'] == 'tag-value'
+        assert Filters[0]['Values'] == ['awsdev_centos_jenkins_bake_*']
+        return {
+    "Images": [
+        {
+            "ProductCodes": [
+                {
+                    "ProductCodeId": "aw0evgkw8e5c1q413zgy5pjce", 
+                    "ProductCodeType": "marketplace"
+                }
+            ], 
+            "Description": "", 
+            "Tags": [
+                {
+                    "Value": "awsdev_centos_jenkins_bake_0001", 
+                    "Key": "Name"
+                }, 
+                {
+                    "Value": "20180410161338", 
+                    "Key": "Tstamp"
+                }, 
+                {
+                    "Value": "awstest_centos_jenkins_promote_0001", 
+                    "Key": "awstest_centos_jenkins_promote"
+                }
+            ], 
+            "VirtualizationType": "hvm", 
+            "Hypervisor": "xen", 
+            "EnaSupport": True, 
+            "SriovNetSupport": "simple", 
+            "ImageId": "ami-03045e7a", 
+            "State": "available", 
+            "BlockDeviceMappings": [
+                {
+                    "DeviceName": "/dev/sda1", 
+                    "Ebs": {
+                        "Encrypted": False, 
+                        "DeleteOnTermination": True, 
+                        "VolumeType": "gp2", 
+                        "VolumeSize": 8, 
+                        "SnapshotId": "snap-0a112c2708d4a1d16"
+                    }
+                }
+            ], 
+            "Architecture": "x86_64", 
+            "ImageLocation": "832585949989/awsdev_centos_jenkins_bake_0001", 
+            "RootDeviceType": "ebs", 
+            "OwnerId": "832585949989", 
+            "RootDeviceName": "/dev/sda1", 
+            "CreationDate": "2018-04-10T13:22:11.000Z", 
+            "Public": False, 
+            "ImageType": "machine", 
+            "Name": "awsdev_centos_jenkins_bake_0001"
+        }, 
+        {
+            "ProductCodes": [
+                {
+                    "ProductCodeId": "aw0evgkw8e5c1q413zgy5pjce", 
+                    "ProductCodeType": "marketplace"
+                }
+            ], 
+            "Description": "", 
+            "Tags": [
+                {
+                    "Value": "aws_centos_jenkins_promote_0001", 
+                    "Key": "aws_centos_jenkins_promote"
+                }, 
+                {
+                    "Value": "awsdev_centos_jenkins_bake_0031", 
+                    "Key": "Name"
+                }, 
+                {
+                    "Value": "20180510103015", 
+                    "Key": "Tstamp"
+                }
+            ], 
+            "VirtualizationType": "hvm", 
+            "Hypervisor": "xen", 
+            "EnaSupport": True, 
+            "SriovNetSupport": "simple", 
+            "ImageId": "ami-3fdfe846", 
+            "State": "available", 
+            "BlockDeviceMappings": [
+                {
+                    "DeviceName": "/dev/sda1", 
+                    "Ebs": {
+                        "Encrypted": False, 
+                        "DeleteOnTermination": True, 
+                        "VolumeType": "gp2", 
+                        "VolumeSize": 8, 
+                        "SnapshotId": "snap-037ed955e6363bab7"
+                    }
+                }
+            ], 
+            "Architecture": "x86_64", 
+            "ImageLocation": "832585949989/awsdev_centos_jenkins_bake_0031", 
+            "RootDeviceType": "ebs", 
+            "OwnerId": "832585949989", 
+            "RootDeviceName": "/dev/sda1", 
+            "CreationDate": "2018-05-10T07:41:11.000Z", 
+            "Public": False, 
+            "ImageType": "machine", 
+            "Name": "awsdev_centos_jenkins_bake_0031"
+        }, 
+        {
+            "ProductCodes": [
+                {
+                    "ProductCodeId": "aw0evgkw8e5c1q413zgy5pjce", 
+                    "ProductCodeType": "marketplace"
+                }
+            ], 
+            "Description": "", 
+            "Tags": [
+                {
+                    "Value": "awsdev_centos_jenkins_bake_0032", 
+                    "Key": "Name"
+                }, 
+                {
+                    "Value": "20180623181343", 
+                    "Key": "Tstamp"
+                }
+            ], 
+            "VirtualizationType": "hvm", 
+            "Hypervisor": "xen", 
+            "EnaSupport": True, 
+            "SriovNetSupport": "simple", 
+            "ImageId": "ami-4dddd2a7", 
+            "State": "available", 
+            "BlockDeviceMappings": [
+                {
+                    "DeviceName": "/dev/sda1", 
+                    "Ebs": {
+                        "Encrypted": False, 
+                        "DeleteOnTermination": True, 
+                        "VolumeType": "gp2", 
+                        "VolumeSize": 8, 
+                        "SnapshotId": "snap-06a4decdcb0904550"
+                    }
+                }
+            ], 
+            "Architecture": "x86_64", 
+            "ImageLocation": "832585949989/awsdev_centos_jenkins_bake_0032", 
+            "RootDeviceType": "ebs", 
+            "OwnerId": "832585949989", 
+            "RootDeviceName": "/dev/sda1", 
+            "CreationDate": "2018-06-23T15:23:51.000Z", 
+            "Public": False, 
+            "ImageType": "machine", 
+            "Name": "awsdev_centos_jenkins_bake_0032"
+        }]} 
+
 
 
 def test_instance_info(mocker):
@@ -100,6 +269,19 @@ def test_instance_info(mocker):
     assert info.instance_id() == "i-021614c41980832b8"
     assert info.region() == "eu-west-1"
     assert info.stack_name() == "test-stack"
+    assert info.stack_id() == "test-stack-id"
+    assert info.logical_id() == "test-logical-id"
+    assert info.initial_status() == "UPDATE_ROLLBACK_COMPLETE"
+    assert info.availability_zone() == "eu-west-1a"
+    assert info.private_ip() == "192.168.208.238"
+    assert info.tag("Name") == "test-instance"
     retry.assert_called_with(INSTANCE_IDENTITY_URL)
     wait_net_service.assert_called_with("169.254.169.254", 80, 120)
+
+def test_get_images(mocker):
+    boto3 = mocker.patch('n_utils.cf_utils.boto3')
+    boto3.client.return_value = ClientResp()
+    images = get_images("awsdev_centos_jenkins_bake")
+    assert images[0]["Name"] == "awsdev_centos_jenkins_bake_0032"
+    assert images[2]["Name"] == "awsdev_centos_jenkins_bake_0001"
 
