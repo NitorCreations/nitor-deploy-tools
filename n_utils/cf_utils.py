@@ -550,12 +550,25 @@ def stack_params_and_outputs_and_stack(regn, stack_name):
     """ Get parameters and outputs from a stack as a single dict and the full stack
     """
     cloudformation = boto3.client("cloudformation", region_name=regn)
-    stack = cloudformation.describe_stacks(StackName=stack_name)['Stacks'][0]
+    retry = 0
+    stack = None
+    while not stack and retry < 10:
+        try:
+            stack = cloudformation.describe_stacks(StackName=stack_name)
+            stack = stack['Stacks'][0]
+        except (ClientError, ConnectionError):
+            retry = retry + 1
+            time.sleep(1)
+            continue
+    retry = 0
     resources = {}
-    try:
-        resources = cloudformation.describe_stack_resources(StackName=stack_name)
-    except ClientError:
-        pass
+    while not resources and retry < 10:
+        try:
+            resources = cloudformation.describe_stack_resources(StackName=stack_name)
+        except (ClientError, ConnectionError):
+            retry = retry + 1
+            time.sleep(1)
+            continue
     resp = {}
     if 'CreationTime' in stack:
         stack['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
