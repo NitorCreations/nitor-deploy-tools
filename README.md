@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/NitorCreations/nitor-deploy-tools.svg?branch=master)](https://travis-ci.org/NitorCreations/nitor-deploy-tools)
 [![Coverage Status](https://coveralls.io/repos/github/NitorCreations/nitor-deploy-tools/badge.svg?branch=master)](https://coveralls.io/github/NitorCreations/nitor-deploy-tools?branch=master)
 
-## Released version 1.0a40
+## Released version 0.223
 
 Nitor deploy tools are a set of tools to implement a true Infrastructure As Code workflow
 with AWS and CloudFormation.
@@ -28,8 +28,9 @@ has at it's core a thought-out way of a branching infrastructure development mod
 
 ## What it is
 
-nitor-deploy-tools works by defining _Amazon Machine Images_, _Docker containers_ and
-deploying _[CloudFormation](https://aws.amazon.com/cloudformation/) stacks_ of resources.
+nitor-deploy-tools works by defining _Amazon Machine Images_, _Docker containers_,
+_Serverless services_ and deploying _[CloudFormation](https://aws.amazon.com/cloudformation/)
+stacks_ of resources.
 
 To use nitor-deploy-tools you need to set up a _project repository_ that
 describes the images you want to build, and the stacks you want to deploy them in. See
