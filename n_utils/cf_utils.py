@@ -543,7 +543,7 @@ def stacks():
 def stack_params_and_outputs(regn, stack_name):
     """ Get parameters and outputs from a stack as a single dict
     """
-    params, stack = stack_params_and_outputs_and_stack(regn, stack_name)
+    params, _ = stack_params_and_outputs_and_stack(regn, stack_name)
     return params
 
 def stack_params_and_outputs_and_stack(regn, stack_name):
