@@ -202,7 +202,7 @@ class InstanceInfo(object):
                     try:
                         tag_response = ec2.describe_tags(Filters=[{'Name': 'resource-id',
                                                                    'Values': [self.instance_id()]}])
-                    except ConnectionError:
+                    except (ConnectionError, EndpointConnectionError):
                         retry = retry + 1
                         time.sleep(1)
                         continue
@@ -556,7 +556,7 @@ def stack_params_and_outputs_and_stack(regn, stack_name):
         try:
             stack = cloudformation.describe_stacks(StackName=stack_name)
             stack = stack['Stacks'][0]
-        except (ClientError, ConnectionError):
+        except (ClientError, ConnectionError, EndpointConnectionError):
             retry = retry + 1
             time.sleep(1)
             continue
@@ -565,7 +565,7 @@ def stack_params_and_outputs_and_stack(regn, stack_name):
     while not resources and retry < 10:
         try:
             resources = cloudformation.describe_stack_resources(StackName=stack_name)
-        except (ClientError, ConnectionError):
+        except (ClientError, ConnectionError, EndpointConnectionError):
             retry = retry + 1
             time.sleep(1)
             continue
