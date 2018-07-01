@@ -166,6 +166,14 @@ class InstanceInfo(object):
         else:
             return None
 
+    def clear_cache(self):
+        if os.path.isfile(INSTANCE_DATA_LINUX):
+            os.remove(INSTANCE_DATA_LINUX)
+        if os.path.isfile(INSTANCE_DATA_WIN):
+            os.remove(INSTANCE_DATA_WIN)
+        self._info = None
+        self.__init__()
+
     def __init__(self):
         if os.path.isfile(INSTANCE_DATA_LINUX) and \
            time.time() - os.path.getmtime(INSTANCE_DATA_LINUX) < 900:
@@ -366,6 +374,12 @@ class LogSender(object):
 
 
 def send_logs_to_cloudwatch(file_name):
+    info = InstanceInfo()
+    stack_name = info.stack_name()
+    while not stack_name:
+        time.sleep(1)
+        info.clear_cache()
+        stack_name = info.stack_name()
     log_sender = LogSender(file_name)
     read_and_follow(file_name, log_sender.send)
 

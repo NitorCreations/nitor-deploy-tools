@@ -62,7 +62,6 @@ onexit () {
 trap onexit EXIT
 status=FAILURE
 if ! [ "$LOG_TAILER" ]; then
-  rm -f /opt/nitor/instance-data.json
   logs-to-cloudwatch /var/log/cloud-init-output.log &
   LOG_TAILER=$!
 fi
