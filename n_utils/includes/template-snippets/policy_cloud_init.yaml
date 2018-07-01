@@ -20,6 +20,7 @@ PolicyDocument:
     Resource: '*'
     Action:
     - 'cloudformation:DescribeStacks'
+    - 'cloudformation:DescribeResources'
   - Effect: Allow
     Resource: 'arn:aws:logs:*:*:*'
     Action:
