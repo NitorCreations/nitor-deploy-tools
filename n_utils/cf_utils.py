@@ -562,10 +562,12 @@ def stack_params_and_outputs_and_stack(regn, stack_name):
             continue
     retry = 0
     resources = {}
-    while not resources and retry < 10:
+    while not resources and retry < 3:
         try:
             resources = cloudformation.describe_stack_resources(StackName=stack_name)
-        except (ClientError, ConnectionError, EndpointConnectionError):
+        except ClientError:
+            break
+        except (ConnectionError, EndpointConnectionError):
             retry = retry + 1
             time.sleep(1)
             continue
