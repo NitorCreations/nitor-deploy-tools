@@ -744,7 +744,7 @@ def _apply_simple_regex(RE, line, params, vault, vault_keys):
             if isinstance(param_value, OrderedDict):
                 return param_value
             else:
-                ret = ret[:match.start()] + param_value + ret[match.end():]
+                ret = ret[:match.start()] + str(param_value) + ret[match.end():]
         match = RE.search(ret, next_start)
     return ret
 
