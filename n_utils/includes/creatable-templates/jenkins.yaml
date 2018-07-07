@@ -5,7 +5,7 @@ Files:
   - 'creatable-templates/jenkins/packages.txt': 'image/packages.txt'
   - 'creatable-templates/jenkins/post_install.sh': 'image/post_install.sh'
   - 'creatable-templates/jenkins/pre_install.sh': 'image/pre_install.sh'
-  - 'creatable-templates/jenkins/userdata.sh': 'stack-%(stack_name)s/userdata'
+  - 'creatable-templates/jenkins/userdata.sh': 'stack-%(stack_name)s/userdata.sh'
 Description: NDT template project jenkins
 Parameters:
   'Fn::Merge':
