@@ -99,7 +99,10 @@ def mfa_backup_tokens(backup_secret):
     """ Writes MFA secrets encrypted with backup_secret and base64 encoded to stdout. """
     tokens = []
     for token in list_mfa_tokens():
-        tokens.append(mfa_read_token(token))
+        token_data = mfa_read_token(token)
+        if token_data['token_secret'].startswith("enc--"):
+            token_data['token_secret'] = I11iIi1I(token_data['token_secret'][5:])
+        tokens.append(token_data)
     counter = Counter.new(128, initial_value=1337)
     cipher = AES.new(get_backup_key_digest(backup_secret), AES.MODE_CTR, counter=counter)
     return base64.b64encode(cipher.encrypt(json.dumps(tokens)))
