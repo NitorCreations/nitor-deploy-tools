@@ -61,6 +61,7 @@ NDT_ONLY = [
     'mfa-delete-token=n_utils.cli:cli_mfa_delete_token',
     'mfa-code=n_utils.cli:cli_mfa_code',
     'mfa-backup=n_utils.cli:cli_mfa_backup_tokens',
+    'mfa-qrcode=n_utils.cli:cli_mfa_to_qrcode',
     'cf-delete-stack=n_utils.cli:delete_stack',
     'setup-cli=n_utils.cli:setup_cli',
     'volume-from-snapshot=n_utils.cli:volume_from_snapshot',

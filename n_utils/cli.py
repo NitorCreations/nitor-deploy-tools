@@ -48,7 +48,8 @@ from .ecr_utils import ensure_repo, repo_uri
 from .log_events import CloudWatchLogsGroups, CloudFormationEvents, CloudWatchLogsThread
 from .maven_utils import add_server
 from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
-    mfa_generate_code_with_secret, list_mfa_tokens, mfa_backup_tokens, mfa_decrypt_backup_tokens
+    mfa_generate_code_with_secret, list_mfa_tokens, mfa_backup_tokens, mfa_decrypt_backup_tokens, \
+    mfa_to_qrcode
 from .account_utils import list_created_accounts, create_account
 from .aws_infra_util import load_parameters
 
@@ -926,6 +927,15 @@ def cli_mfa_code():
     args = parser.parse_args()
     print(mfa_generate_code(args.token_name))
 
+def cli_mfa_to_qrcode():
+    """ Generates a QR code to import a token to other devices. """
+    parser = get_parser()
+    parser.add_argument("token_name",
+                        help="Name of the token to use.").completer = \
+        ChoicesCompleter(list_mfa_tokens())
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    mfa_to_qrcode(args.token_name)
 
 def cli_mfa_backup_tokens():
     """ Encrypt or decrypt a backup JSON structure of tokens.

@@ -22,6 +22,7 @@ from os import walk
 from .yuuuu3332111i1l1i import IiII1IiiIiI1, I11iIi1I
 import json
 import base64
+import pyqrcode
 from Crypto . Cipher import AES
 from Crypto . Util import Counter
 from Crypto . Hash import SHA256
@@ -80,6 +81,16 @@ def mfa_generate_code(token_name):
     totp = pyotp.TOTP(secret)
     return totp.now()
 
+def mfa_to_qrcode(token_name):
+    """ Generates a qr code of the token for importing into other devices """
+    token = mfa_read_token(token_name)
+    if token['token_secret'].startswith("enc--"):
+        secret = I11iIi1I(token['token_secret'][5:])
+    else:
+        secret = token['token_secret']
+    url = "otpauth://totp/" + token_name + "?secret=" + secret
+    qr = pyqrcode.create(url)
+    print(qr.terminal())
 
 def mfa_generate_code_with_secret(secret):
     """ Generates an MFA code using the secret passed in. """
