@@ -121,10 +121,11 @@
       chdir: "C:\\"
   - win_updates:
       category_names:
-      - 'SecurityUpdates'
-      - 'CriticalUpdates'
-      - 'UpdateRollups'
-      - 'Updates'
+      - SecurityUpdates
+      - CriticalUpdates
+      - UpdateRollups
+      - Updates
+      - ServicePacks
     when: base_ami_id == "clean"
   - win_chocolatey: name="{{ item }}"
     with_items: "{{ packages }}"
