@@ -17,8 +17,7 @@ def load_project_env():
             next = line.split("=", 1)
             vars[next[0]] = next[1]
     do_print = False
-    ret = "unset AWS_DEFAULT_PROFILE AWS_DEFAULT_REGION AWS_PROFILE" + \
-          " AWS_SESSION_TOKEN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY" + linesep
+    ret = ""
     if "ndt.source.env" in vars:
         do_print = True
         ret = ret + ". " + vars["ndt.source.env"] + linesep
