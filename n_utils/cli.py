@@ -72,39 +72,6 @@ def get_parser(formatter=None):
     else:
         return argparse.ArgumentParser(description=func.__doc__)
 
-
-def ndt_register_complete():
-    """Print out shell function and command to register ndt command completion
-    """
-    print("""_ndt_complete() {
-    local IFS=$'\\013'
-    local COMP_CUR="${COMP_WORDS[COMP_CWORD]}"
-    local COMP_PREV="${COMP_WORDS[COMP_CWORD-1]}"
-    local SUPPRESS_SPACE=0
-    if compopt +o nospace 2> /dev/null; then
-        SUPPRESS_SPACE=1
-    fi
-    COMPREPLY=( $(IFS="$IFS" \\
-                  COMP_LINE="$COMP_LINE" \\
-                  COMP_POINT="$COMP_POINT" \\
-                  COMP_TYPE="$COMP_TYPE" \\
-                  COMP_CUR="$COMP_CUR" \\
-                  COMP_PREV="$COMP_PREV" \\
-                  COMP_CWORD=$COMP_CWORD \\
-                  _ARGCOMPLETE_COMP_WORDBREAKS="$COMP_WORDBREAKS" \\
-                  _ARGCOMPLETE=1 \\
-                  _ARGCOMPLETE_SUPPRESS_SPACE=$SUPPRESS_SPACE \\
-                  "$1" 8>&1 9>&2 1>/dev/null 2>/dev/null) )
-    if [[ $? != 0 ]]; then
-        unset COMPREPLY
-    elif [[ $SUPPRESS_SPACE == 1 ]] && [[ "$COMPREPLY" =~ [=/:]$ ]]; then
-        compopt -o nospace
-    fi
-}
-complete -o nospace -F _ndt_complete "ndt"
-""")
-
-
 def do_command_completion():
     """ ndt command completion function
     """
@@ -618,6 +585,7 @@ def assume_role():
     print("AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\"")
     print("AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\"")
     print("AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\"")
+    print("AWS_SESSION_EXPIRATION=\"" + creds['Expiration'] + "\"")
     print("export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN")
 
 
@@ -1033,11 +1001,11 @@ def cli_load_parameters():
 
     transform = json.dumps
     if args.export_statements:
-        transform = map_to_exports # noqa
+        transform = map_to_exports
     if args.properties:
-        transform = map_to_properties # noqa
+        transform = map_to_properties
     if args.yaml:
-        transform = yaml.dump # noqa
+        transform = yaml.dump
     del args.export_statements
     del args.yaml
     del args.json
@@ -1045,8 +1013,7 @@ def cli_load_parameters():
     if (args.stack or args.serverless or args.docker or not isinstance(args.image, NoneType)) \
        and not args.component:
         parser.error("image, stack, doker or serverless do not make sense without component")
-    print(transform(load_parameters(**vars(args))))
-
+    print(transform(load_parameters(**vars(args))), end="")
 
 def map_to_exports(map):
     """ Prints the map as eval-able set of environment variables. Keys

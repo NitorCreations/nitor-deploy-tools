@@ -62,9 +62,30 @@ command line access set up.
 Most things have decent bash command completion, even for things like AMI Ids in AWS. To make it work, the things
 outputted by `nitor-dt-register-complete` need to be in your environment. So put the following somewhere
 (e.g. your ~/.bashrc) where it gets run for your profile (or run it manually when working with ndt)
+
 ```bash
 eval "$(nitor-dt-register-complete)"
 ```
+
+Optionally you can add the argument `--project-env` to add a `PROMPT_COMMAND` hook for bash to check git
+local variables to export a useful project environmnet that usually points to AWS credentials profile.
+This could also be a script that assumes a role for you even including MFA authentication. The script
+is run for every prompt though inside the project so you will want to make it check if the session is still
+valid before trying to assume role. You can use then environment variable `AWS_SESSION_EXPIRATION` that
+is set by `ndt assume-role` to only assume role when the previous role has expired. See section about
+TOTP MFA codes below. An example of what a sourceable role script could be is below:
+
+```bash
+#!/bin/bash
+if [ $(date +%s) -lt $(date +%s -d "$AWS_SESSION_EXPIRATION") ]; then exit 0; fi
+# Set the credentials that have access to the role
+export AWS_DEFAULT_REGION=eu-central-1 AWS_PROFILE=myprofile AWS_DEFAULT_PROFILE=myprofile
+unset AWS_SESSION_TOKEN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_EXPIRATION
+eval $(ndt assume-role -t mytoken arn:aws:iam::432486532345:role/my-admin-role)
+unset AWS_PROFILE AWS_DEFAULT_PROFILE
+```
+
+Note that the date command is different on OSX: https://unix.stackexchange.com/questions/84381/how-to-compare-two-dates-in-a-shell
 
 ## Template pre-processing
 
