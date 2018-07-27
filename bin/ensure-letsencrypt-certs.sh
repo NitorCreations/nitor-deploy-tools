@@ -19,11 +19,6 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
-cleanup() {
-  fetch-secrets.sh logout
-}
-trap cleanup EXIT
-
 usage() {
   echo "usage: ensure-letsencrypt-certs.sh [-h] domain-name [domain-name ...]" >&2
   echo "" >&2
@@ -46,6 +41,11 @@ fi
 if [ -z "$1" ]; then
   usage
 fi
+
+cleanup() {
+  fetch-secrets.sh logout
+}
+trap cleanup EXIT
 
 RENEW_DAYS="30"
 if [ -z "$CERT_DIR" ]; then
