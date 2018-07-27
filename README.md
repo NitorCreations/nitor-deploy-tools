@@ -1395,7 +1395,6 @@ positional arguments
 
 optional arguments:
   -h, --help  show this help message and exit
-/usr/local/bin/ensure-letsencrypt-certs.sh: line 23: fetch-secrets.sh: command not found
 ```
 
 ### `lastpass-fetch-notes.sh`
