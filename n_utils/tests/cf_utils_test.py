@@ -1,4 +1,4 @@
-from n_utils.cf_utils import InstanceInfo, get_images, INSTANCE_IDENTITY_URL
+from n_utils.cf_utils import InstanceInfo, get_images, INSTANCE_IDENTITY_URL, resolve_account
 from dateutil.parser import parse
 
 
@@ -258,6 +258,23 @@ class ClientResp:
         }
 
 
+CALLER_IDENTITY = {
+    'UserId': 'BPAIDAJNYSZAKD7QO3N6T',
+    'Account': '377074220690',
+    'Arn': 'arn:aws:iam::377074220690:user/foo@nitor.com',
+    'ResponseMetadata': {
+        'RequestId': '83592c1a-9494-11e8-a008-4f746bcda707',
+        'HTTPStatusCode': 200,
+        'HTTPHeaders': {
+            'x-amzn-requestid': '83592c1a-9494-11e8-a008-4f746bcda707',
+            'content-type': 'text/xml',
+            'content-length': '422',
+            'date': 'Tue, 31 Jul 2018 07:37:01 GMT'
+        },
+        'RetryAttempts': 0
+    }
+}
+
 def test_instance_info(mocker):
     boto3 = mocker.patch('n_utils.cf_utils.boto3')
     boto3.client.return_value = ClientResp()
@@ -285,3 +302,12 @@ def test_get_images(mocker):
     images = get_images("awsdev_centos_jenkins_bake")
     assert images[0]["Name"] == "awsdev_centos_jenkins_bake_0032"
     assert images[2]["Name"] == "awsdev_centos_jenkins_bake_0001"
+
+
+def test_resolve_account(mocker):
+    sts = mocker.MagicMock()
+    sts.get_caller_identity = mocker.MagicMock(return_value=CALLER_IDENTITY)
+    boto3 = mocker.patch('n_utils.cf_utils.boto3')
+    boto3.client.return_value = sts
+
+    assert resolve_account() == '377074220690'
