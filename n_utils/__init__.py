@@ -105,6 +105,5 @@ for script in NDT_ONLY_SCRIPT:
         value = "ndtshell"
     COMMAND_MAPPINGS[name] = value
 for script in NDT_AND_CONSOLE + NDT_ONLY:
-    name = script.split("=")[0]
-    value = script.split("=")[1]
+    name, value = script.split("=")
     COMMAND_MAPPINGS[name] = value

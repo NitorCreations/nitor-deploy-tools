@@ -46,7 +46,7 @@ def log_data(data, output_format="yaml"):
     lexer = lexers.get_lexer_by_name(output_format)
     formatter = formatters.get_formatter_by_name("256")
     formatter.__init__(style=get_style_by_name('emacs'))
-    if not type(formatted) is str:
+    if not isinstance(formatted, str):
         formatted = str(formatted, 'UTF-8')
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
@@ -306,11 +306,12 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
 
 class Unbuffered(object):
     SYS_ENCODING = locale.getpreferredencoding()
+
     def __init__(self, stream):
         self.stream = stream
 
     def write(self, data):
-        if not type(data) is str:
+        if not isinstance(data, str):
             self.stream.write(data.decode(self.SYS_ENCODING))
         else:
             self.stream.write(data)

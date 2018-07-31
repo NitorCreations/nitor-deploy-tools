@@ -52,8 +52,9 @@ USER_DATA_URL = 'http://169.254.169.254/latest/user-data'
 INSTANCE_DATA_LINUX = '/opt/nitor/instance-data.json'
 INSTANCE_DATA_WIN = 'C:/nitor/instance-data.json'
 
+
 def get_retry(url, retries=5, backoff_factor=0.3,
-    status_forcelist=(500, 502, 504), session=None, timeout=5):
+              status_forcelist=(500, 502, 504), session=None, timeout=5):
     session = session or requests.Session()
     retry = Retry(
         total=retries,
@@ -66,6 +67,7 @@ def get_retry(url, retries=5, backoff_factor=0.3,
     session.mount('http://', adapter)
     session.mount('https://', adapter)
     return session.get(url, timeout=5)
+
 
 def wait_net_service(server, port, timeout=None):
     """ Wait for network service to appear
@@ -96,11 +98,12 @@ def wait_net_service(server, port, timeout=None):
         except socket.error as err:
             # catch timeout exception from underlying network library
             # this one is different from socket.timeout
-            if type(err.args) != tuple or err[0] != errno.ETIMEDOUT:
+            if not isinstance(err.args, tuple) or err[0] != errno.ETIMEDOUT:
                 raise
         else:
             s.close()
             return True
+
 
 class InstanceInfo(object):
     """ A class to get the relevant metadata for an instance running in EC2
@@ -179,13 +182,13 @@ class InstanceInfo(object):
            time.time() - os.path.getmtime(INSTANCE_DATA_LINUX) < 900:
             try:
                 self._info = json.load(open(INSTANCE_DATA_LINUX))
-            except:
+            except BaseException:
                 pass
         if os.path.isfile(INSTANCE_DATA_WIN) and \
            time.time() - os.path.getmtime(INSTANCE_DATA_WIN) < 900:
             try:
                 self._info = json.load(open(INSTANCE_DATA_WIN))
-            except:
+            except BaseException:
                 pass
         if not self._info and is_ec2():
             try:
@@ -246,7 +249,7 @@ class InstanceInfo(object):
                              stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP |
                              stat.S_IXGRP | stat.S_IROTH | stat.S_IWOTH |
                              stat.S_IXOTH)
-                except:
+                except BaseException:
                     pass
         if self.region():
             os.environ['AWS_DEFAULT_REGION'] = self.region()
@@ -299,12 +302,12 @@ class LogSender(object):
             file_name.replace(':', '_').replace('*', '_')
         try:
             self._logs.create_log_group(logGroupName=self.group_name)
-        except:
+        except BaseException:
             pass
         try:
             self._logs.create_log_stream(logGroupName=self.group_name,
                                          logStreamName=self.stream_name)
-        except:
+        except BaseException:
             pass
         self.token = None
         self.send(str(info))
@@ -485,9 +488,10 @@ def resolve_account():
         try:
             sts = boto3.client("sts")
             ACCOUNT_ID = sts.get_caller_identity()['Account']
-        except:
+        except BaseException:
             pass
     return ACCOUNT_ID
+
 
 def is_ec2():
     if sys.platform.startswith("win"):
@@ -540,11 +544,13 @@ def stacks():
         for stack in page.get('Stacks', []):
             yield stack['StackName']
 
+
 def stack_params_and_outputs(regn, stack_name):
     """ Get parameters and outputs from a stack as a single dict
     """
     params, _ = stack_params_and_outputs_and_stack(regn, stack_name)
     return params
+
 
 def stack_params_and_outputs_and_stack(regn, stack_name):
     """ Get parameters and outputs from a stack as a single dict and the full stack
@@ -574,10 +580,10 @@ def stack_params_and_outputs_and_stack(regn, stack_name):
     resp = {}
     if 'CreationTime' in stack:
         stack['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
-                                                stack['CreationTime'].timetuple())
+                                              stack['CreationTime'].timetuple())
     if 'LastUpdatedTime' in stack:
         stack['LastUpdatedTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
-                                                    stack['LastUpdatedTime'].timetuple())
+                                                 stack['LastUpdatedTime'].timetuple())
     if "StackResources" in resources:
         for resource in resources["StackResources"]:
             resp[resource['LogicalResourceId']] = resource['PhysicalResourceId']

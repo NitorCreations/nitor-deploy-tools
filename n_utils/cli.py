@@ -72,6 +72,7 @@ def get_parser(formatter=None):
     else:
         return argparse.ArgumentParser(description=func.__doc__)
 
+
 def do_command_completion():
     """ ndt command completion function
     """
@@ -896,6 +897,7 @@ def cli_mfa_code():
     args = parser.parse_args()
     print(mfa_generate_code(args.token_name))
 
+
 def cli_mfa_to_qrcode():
     """ Generates a QR code to import a token to other devices. """
     parser = get_parser()
@@ -905,6 +907,7 @@ def cli_mfa_to_qrcode():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     mfa_to_qrcode(args.token_name)
+
 
 def cli_mfa_backup_tokens():
     """ Encrypt or decrypt a backup JSON structure of tokens.
@@ -1015,6 +1018,7 @@ def cli_load_parameters():
        and not args.component:
         parser.error("image, stack, doker or serverless do not make sense without component")
     print(transform(load_parameters(**vars(args))), end="")
+
 
 def map_to_exports(map):
     """ Prints the map as eval-able set of environment variables. Keys

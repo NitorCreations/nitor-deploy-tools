@@ -534,22 +534,22 @@ class Network(ContextClassBase):
         try:
             nw = ipaddr.IPv4Network(self.vpc_cidr)
             return nw.prefixlen + 4
-        except:
+        except BaseException:
             try:
                 nw = ipaddr.IPv4Network(self.last_vpc_cidr)
                 return nw.prefixlen + 4
-            except:
+            except BaseException:
                 return 20
 
     def subnet_base_default(self):
         try:
             nw = ipaddr.IPv4Network(self.vpc_cidr)
             return nw.network
-        except:
+        except BaseException:
             try:
                 nw = ipaddr.IPv4Network(self.last_vpc_cidr)
                 return nw.network
-            except:
+            except BaseException:
                 return "10." + str(random.randint(0, 255)) + ".0.0"
 
     def set_template(self, template):
@@ -663,7 +663,7 @@ class Route53(ContextClassBase):
                 "Description": "Name of hosted zone to use",
                 "Default": self.hosted_zone['Name'][:-1]
             },
-            "paramHostedZoneId":  {
+            "paramHostedZoneId": {
                 "Type": "String",
                 "Description": "Id of hosted zone to use",
                 "Default": self.hosted_zone['Id'].split("/")[-1:][0]

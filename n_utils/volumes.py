@@ -23,11 +23,11 @@ from .aws_infra_util import find_include
 
 
 def letter_to_target_id(letter):
-    return ord(letter)-ord("f")+5
+    return ord(letter) - ord("f") + 5
 
 
 def target_id_to_letter(target_id):
-    return str(chr(target_id-5+ord("f")))
+    return str(chr(target_id - 5 + ord("f")))
 
 
 def wmic_partition_get():

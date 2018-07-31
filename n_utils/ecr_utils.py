@@ -50,7 +50,7 @@ def ensure_repo(name):
             FNULL = open(devnull, 'wb')
             if check_call(["sudo", "docker", "--help"], stdout=FNULL, stderr=STDOUT, close_fds=True) == 0:
                 sudo = "sudo "
-        except:
+        except BaseException:
             pass
         print(sudo + "docker login -u " + user + " -p " + token + " " +
               auth_data['proxyEndpoint'])

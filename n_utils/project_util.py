@@ -3,11 +3,12 @@ from os import linesep
 from sys import argv
 import subprocess
 
+
 def load_project_env():
     """ Print parameters set by git config variables to setup project environment with region and aws credentials
     """
     proc = subprocess.Popen(["git", "config", "--list", "--local"], stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE)
     out = proc.communicate()
     if proc.returncode:
         return
@@ -24,13 +25,14 @@ def load_project_env():
     if "ndt.aws.profile" in vars:
         do_print = True
         ret = ret + "export AWS_PROFILE=" + vars["ndt.aws.profile"] + \
-              " AWS_DEFAULT_PROFILE=" + vars["ndt.aws.profile"] + linesep
+            " AWS_DEFAULT_PROFILE=" + vars["ndt.aws.profile"] + linesep
     if "ndt.aws.region" in vars:
         do_print = True
         ret = ret + "export AWS_REGION=" + vars["ndt.aws.region"] + \
-              " AWS_DEFAULT_REGION=" + vars["ndt.aws.region"] +  linesep
+            " AWS_DEFAULT_REGION=" + vars["ndt.aws.region"] + linesep
     if do_print:
         print(ret, end="")
+
 
 def ndt_register_complete():
     """Print out shell function and command to register ndt command completion
@@ -72,4 +74,3 @@ if ! [[ "$PROMPT_COMMAND" =~ _projectenv_hook ]]; then
   PROMPT_COMMAND="_projectenv_hook;$PROMPT_COMMAND";
 fi
 """, end="")
-

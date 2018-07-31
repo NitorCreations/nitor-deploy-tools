@@ -81,6 +81,7 @@ def mfa_generate_code(token_name):
     totp = pyotp.TOTP(secret)
     return totp.now()
 
+
 def mfa_to_qrcode(token_name):
     """ Generates a qr code of the token for importing into other devices """
     token = mfa_read_token(token_name)
@@ -91,6 +92,7 @@ def mfa_to_qrcode(token_name):
     url = "otpauth://totp/" + token_name + "?secret=" + secret
     qr = pyqrcode.create(url)
     print(qr.terminal())
+
 
 def mfa_generate_code_with_secret(secret):
     """ Generates an MFA code using the secret passed in. """
