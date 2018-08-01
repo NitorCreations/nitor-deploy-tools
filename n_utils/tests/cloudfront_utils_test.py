@@ -1,7 +1,5 @@
 from datetime import datetime
 
-import pytest
-
 from n_utils.cloudfront_utils import distributions, distribution_comments
 
 DISTRIBUTION = {
@@ -31,16 +29,6 @@ DISTRIBUTION = {
         ]
     }
 }
-
-
-@pytest.fixture(scope="function")
-def paginator(mocker):
-    client = mocker.MagicMock()
-    paginator = mocker.MagicMock()
-    client.get_paginator.return_value = paginator
-    boto3 = mocker.patch('n_utils.cloudfront_utils.boto3')
-    boto3.client.return_value = client
-    return paginator
 
 
 def test_distributions(mocker, paginator):
