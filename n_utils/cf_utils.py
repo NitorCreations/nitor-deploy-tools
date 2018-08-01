@@ -464,7 +464,7 @@ def id_generator(size=10, chars=string.ascii_uppercase + string.digits +
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def assume_role(role_arn, mfa_token_name=None):
+def assume_role(role_arn, mfa_token_name=None, duration_minutes=120):
     sts = boto3.client("sts")
     if mfa_token_name:
         token = mfa_read_token(mfa_token_name)
@@ -472,10 +472,12 @@ def assume_role(role_arn, mfa_token_name=None):
         response = sts.assume_role(RoleArn=role_arn,
                                    RoleSessionName="n-sess-" + id_generator(),
                                    SerialNumber=token['token_arn'],
-                                   TokenCode=code)
+                                   TokenCode=code,
+                                   DurationSeconds=(duration_minutes * 60))
     else:
         response = sts.assume_role(RoleArn=role_arn, RoleSessionName="n-sess-" +
-                                   id_generator())
+                                   id_generator(),
+                                   DurationSeconds=(duration_minutes * 60))
     return response['Credentials']
 
 

@@ -579,15 +579,19 @@ def assume_role():
     parser.add_argument("role_arn", help="The ARN of the role to assume")
     parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
                         help="Name of MFA token to use", required=False)
+    parser.add_argument("-d", "--duration", help="Duration for the session in minutes", 
+                        default="120", type=int)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    creds = cf_utils.assume_role(args.role_arn, mfa_token_name=args.mfa_token)
+    creds = cf_utils.assume_role(args.role_arn, mfa_token_name=args.mfa_token,
+                                 duration_minutes=args.duration)
     print("AWS_ROLE_ARN=\"" + args.role_arn + "\"")
     print("AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\"")
     print("AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\"")
     print("AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\"")
-    print("AWS_SESSION_EXPIRATION=\"" + creds['Expiration'] + "\"")
-    print("export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN")
+    print("AWS_SESSION_EXPIRATION=\"" + time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                                                      creds['Expiration'].timetuple()) + "\"")
+    print("export AWS_ROLE_ARN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SESSION_EXPIRATION")
 
 
 def get_parameter():
