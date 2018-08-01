@@ -12,12 +12,17 @@ def get_test_target_module(test_module):
 
 
 @pytest.fixture(scope='function')
-def paginator(mocker, request):
+def boto3_client(mocker, request):
     target = '{}.{}.boto3'.format(BASE_MODULE_NAME, get_test_target_module(request.module.__name__))
     print('Mocking {}'.format(target))
     client = mocker.MagicMock()
-    paginator = mocker.MagicMock()
-    client.get_paginator.return_value = paginator
     boto3 = mocker.patch(target)
     boto3.client.return_value = client
+    return client
+
+
+@pytest.fixture(scope='function')
+def paginator(mocker, boto3_client):
+    paginator = mocker.MagicMock()
+    boto3_client.get_paginator.return_value = paginator
     return paginator
