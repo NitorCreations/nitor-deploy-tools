@@ -21,7 +21,9 @@ import boto3
 
 def distributions():
     pages = boto3.client("cloudfront").get_paginator('list_distributions')
+    print(pages.paginate())
     for page in pages.paginate():
+        print(page)
         distribution_list = page.get('DistributionList')
         for distribution in distribution_list['Items']:
             yield distribution['Id']
