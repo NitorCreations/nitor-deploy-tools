@@ -56,7 +56,7 @@
         volumes:
           - device_name: /dev/sda1
             device_type: gp2
-            volume_size: 30
+            volume_size: "{{ volume_size }}"
             delete_on_termination: true
         wait: yes
       register: ec2_prototype_instance
