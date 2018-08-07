@@ -20,7 +20,6 @@ from builtins import range
 from past.builtins import basestring
 import collections
 import json
-import glob
 import os
 import re
 import subprocess
@@ -28,19 +27,11 @@ import sys
 import yaml
 from yaml import ScalarNode, SequenceNode, MappingNode
 from copy import deepcopy
-from .cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
+from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
+from n_utils.ndt import find_include
 
 stacks = dict()
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
-include_dirs = []
-if "CF_TEMPLATE_INCLUDE" in os.environ:
-    for next_dir in os.environ["CF_TEMPLATE_INCLUDE"].split(":"):
-        if not next_dir.endswith(os.path.sep):
-            next_dir = next_dir + os.path.sep
-        include_dirs.append(next_dir)
-
-include_dirs.append(os.path.join(os.path.dirname(__file__), "includes") +
-                    os.path.sep)
 
 ############################################################################
 # _THE_ yaml & json deserialize/serialize functions
@@ -357,25 +348,6 @@ def import_script(filename):
                 else:
                     arr.append(line)
     return arr
-
-
-def find_include(basefile):
-    if os.path.isfile(basefile):
-        return basefile
-    for search_dir in include_dirs:
-        if os.path.isfile(search_dir + basefile):
-            return search_dir + basefile
-    return None
-
-
-def find_all_includes(pattern):
-    ret = []
-    dirs = list(include_dirs)
-    dirs.insert(0, "./")
-    for search_dir in dirs:
-        for next_match in glob.glob(search_dir + pattern):
-            ret.append(next_match)
-    return ret
 
 
 def resolve_file(filename, basefile, templateParams):

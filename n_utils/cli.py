@@ -29,7 +29,6 @@ from inspect import currentframe, getframeinfo
 from subprocess import PIPE, Popen
 import argcomplete
 import yaml
-from argcomplete import USING_PYTHON2, ensure_str, split_line
 from argcomplete.completers import ChoicesCompleter, FilesCompleter
 from pygments import highlight, lexers, formatters
 from pygments.styles import get_style_by_name
@@ -38,20 +37,20 @@ from . import cf_bootstrap
 from . import cf_deploy
 from . import cf_utils
 from . import volumes
-from . import COMMAND_MAPPINGS
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
     share_to_another_region, set_region, register_private_dns, interpolate_file
 from .cloudfront_utils import distributions, distribution_comments, \
     upsert_cloudfront_records
-from .ecr_utils import ensure_repo, repo_uri
-from .log_events import CloudWatchLogsGroups, CloudFormationEvents, CloudWatchLogsThread
-from .maven_utils import add_server
-from .mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
+from n_utils.ecr_utils import ensure_repo, repo_uri
+from n_utils.log_events import CloudWatchLogsGroups, CloudFormationEvents, CloudWatchLogsThread
+from n_utils.maven_utils import add_server
+from n_utils.mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code, \
     mfa_generate_code_with_secret, list_mfa_tokens, mfa_backup_tokens, mfa_decrypt_backup_tokens, \
     mfa_to_qrcode
-from .account_utils import list_created_accounts, create_account
-from .aws_infra_util import load_parameters
+from n_utils.account_utils import list_created_accounts, create_account
+from n_utils.aws_infra_util import load_parameters
+from n_utils.ndt import find_include, find_all_includes, include_dirs
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -71,95 +70,6 @@ def get_parser(formatter=None):
         return argparse.ArgumentParser(formatter_class=formatter, description=func.__doc__)
     else:
         return argparse.ArgumentParser(description=func.__doc__)
-
-def do_command_completion():
-    """ ndt command completion function
-    """
-    output_stream = os.fdopen(8, "wb")
-    ifs = os.environ.get("_ARGCOMPLETE_IFS", "\v")
-    if len(ifs) != 1:
-        sys.exit(1)
-    current = os.environ["COMP_CUR"]
-    prev = os.environ["COMP_PREV"]
-    comp_line = os.environ["COMP_LINE"]
-    comp_point = int(os.environ["COMP_POINT"])
-
-    # Adjust comp_point for wide chars
-    if USING_PYTHON2:
-        comp_point = len(comp_line[:comp_point].decode(SYS_ENCODING))
-    else:
-        comp_point = len(comp_line.encode(SYS_ENCODING)[:comp_point].decode(SYS_ENCODING))
-
-    comp_line = ensure_str(comp_line)
-    comp_words = split_line(comp_line, comp_point)[3]
-    if "COMP_CWORD" in os.environ and os.environ["COMP_CWORD"] == "1":
-        keys = [x for x in list(COMMAND_MAPPINGS.keys()) if x.startswith(current)]
-        output_stream.write(ifs.join(keys).encode(SYS_ENCODING))
-        output_stream.flush()
-        sys.exit(0)
-    else:
-        command = prev
-        if len(comp_words) > 1:
-            command = comp_words[1]
-        if command not in COMMAND_MAPPINGS:
-            sys.exit(1)
-        command_type = COMMAND_MAPPINGS[command]
-        if command_type == "shell":
-            command = command + ".sh"
-        if command_type == "ndtshell":
-            command = command + ".sh"
-        if command_type == "ndtshell" or command_type == "ndtscript":
-            command = aws_infra_util.find_include(command)
-        if command_type == "shell" or command_type == "script" or \
-           command_type == "ndtshell" or command_type == "ndtscript":
-            proc = Popen([command], stderr=PIPE, stdout=PIPE)
-            output = proc.communicate()[0]
-            if proc.returncode == 0:
-                output_stream.write(output.replace("\n", ifs).decode(SYS_ENCODING))
-                output_stream.flush()
-            else:
-                sys.exit(1)
-        else:
-            line = comp_line[3:].lstrip()
-            os.environ['COMP_POINT'] = str(comp_point - (len(comp_line) -
-                                                         len(line)))
-            os.environ['COMP_LINE'] = line
-            parts = command_type.split(":")
-            getattr(__import__(parts[0], fromlist=[parts[1]]), parts[1])()
-        sys.exit(0)
-
-
-def ndt():
-    """ The main nitor deploy tools command that provides bash command
-    completion and subcommand execution
-    """
-    if "_ARGCOMPLETE" in os.environ:
-        do_command_completion()
-    else:
-        if len(sys.argv) < 2 or sys.argv[1] not in COMMAND_MAPPINGS:
-            sys.stderr.writelines([u'usage: ndt <command> [args...]\n'])
-            sys.stderr.writelines([u'\tcommand shoud be one of:\n'])
-            for command in sorted(COMMAND_MAPPINGS):
-                sys.stderr.writelines([u'\t\t' + command + '\n'])
-            sys.exit(1)
-        command = sys.argv[1]
-        command_type = COMMAND_MAPPINGS[command]
-        if command_type == "shell":
-            command = command + ".sh"
-        if command_type == "ndtshell":
-            command = command + ".sh"
-        if command_type == "ndtshell" or command_type == "ndtscript":
-            command = aws_infra_util.find_include(command)
-        if command_type == "shell" or command_type == "script" or \
-           command_type == "ndtshell" or command_type == "ndtscript":
-            sys.exit(Popen([command] + sys.argv[2:]).wait())
-        else:
-            parts = command_type.split(":")
-            my_func = getattr(__import__(parts[0], fromlist=[parts[1]]),
-                              parts[1])
-            sys.argv = sys.argv[1:]
-            sys.argv[0] = "ndt " + sys.argv[0]
-            my_func()
 
 
 def list_file_to_json():
@@ -548,10 +458,10 @@ def resolve_include():
     parser.add_argument("file", help="The file to find")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    inc_file = aws_infra_util.find_include(args.file)
+    inc_file = find_include(args.file)
     if not inc_file:
         parser.error("Include " + args.file + " not found on include paths " +
-                     str(aws_infra_util.include_dirs))
+                     str(include_dirs))
     print(inc_file)
 
 
@@ -562,10 +472,10 @@ def resolve_all_includes():
     parser.add_argument("pattern", help="The file pattern to find")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    inc_file = aws_infra_util.find_all_includes(args.pattern)
+    inc_file = find_all_includes(args.pattern)
     if not inc_file:
         parser.error("Include " + args.pattern + " not found on include paths " +
-                     str(aws_infra_util.include_dirs))
+                     str(include_dirs))
     for next_file in inc_file:
         print(next_file)
 
