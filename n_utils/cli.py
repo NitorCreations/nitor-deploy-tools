@@ -25,7 +25,8 @@ import os
 import sys
 import time
 import re
-from inspect import currentframe, getframeinfo
+import inspect
+from inspect import trace, getframeinfo
 from subprocess import PIPE, Popen
 import argcomplete
 import yaml
@@ -58,9 +59,8 @@ NoneType = type(None)
 
 
 def get_parser(formatter=None):
-    caller = currentframe().f_back
-    func_name = getframeinfo(caller)[2]
-    caller = caller.f_back
+    func_name = inspect.stack()[1][3]
+    caller = sys._getframe().f_back
     func = caller.f_locals.get(
         func_name, caller.f_globals.get(
             func_name
