@@ -4,7 +4,7 @@ ENV NODE_VERSION=8.11.1 \
  YARN_VERSION=1.5.1 \
  JAVA_HOME=/docker-java-home \
  GRADLE_VERSION=4.6 \
- MAVEN_VERSION=3.5.3 \
+ MAVEN_VERSION=3.5.4 \
  PHANTOMJS_VERSION=2.1.1
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk git openssh-client unzip chromium-bsu jq gpg
