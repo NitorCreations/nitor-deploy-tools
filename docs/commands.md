@@ -881,6 +881,8 @@ optional arguments:
 usage: associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
                      [-p ALLOCATIONIDPARAM]
 
+Associate an Elastic IP for the instance that this script runs on
+
 optional arguments:
   -h, --help            show this help message and exit
   -i IP, --ip IP        Elastic IP to allocate - default is to get paramEip
@@ -902,6 +904,10 @@ optional arguments:
 ```bash
 usage: cf-logs-to-cloudwatch [-h] file
 
+Read a file and send rows to cloudwatch and keep following the end for new
+data. The log group will be the stack name that created instance and the
+logstream will be the instance id and filename.
+
 positional arguments:
   file        File to follow
 
@@ -914,6 +920,8 @@ optional arguments:
 ```bash
 usage: ec2-associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
                          [-p ALLOCATIONIDPARAM]
+
+Associate an Elastic IP for the instance that this script runs on
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -936,6 +944,10 @@ optional arguments:
 ```bash
 usage: logs-to-cloudwatch [-h] file
 
+Read a file and send rows to cloudwatch and keep following the end for new
+data. The log group will be the stack name that created instance and the
+logstream will be the instance id and filename.
+
 positional arguments:
   file        File to follow
 
@@ -947,6 +959,8 @@ optional arguments:
 
 ```bash
 usage: n-include [-h] file
+
+Find a file from the first of the defined include paths
 
 positional arguments:
   file        The file to find
@@ -960,6 +974,8 @@ optional arguments:
 ```bash
 usage: n-include-all [-h] pattern
 
+Find a file from the first of the defined include paths
+
 positional arguments:
   pattern     The file pattern to find
 
@@ -971,6 +987,9 @@ optional arguments:
 
 ```bash
 usage: signal-cf-status [-h] [-r RESOURCE] status
+
+Signal CloudFormation status to a logical resource in CloudFormation that is
+either given on the command line or resolved from CloudFormation tags
 
 positional arguments:
   status                Status to indicate: SUCCESS | FAILURE
