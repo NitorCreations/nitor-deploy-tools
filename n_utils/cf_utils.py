@@ -464,7 +464,7 @@ def id_generator(size=10, chars=string.ascii_uppercase + string.digits +
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def assume_role(role_arn, mfa_token_name=None, duration_minutes=120):
+def assume_role(role_arn, mfa_token_name=None, duration_minutes=60):
     sts = boto3.client("sts")
     if mfa_token_name:
         token = mfa_read_token(mfa_token_name)

@@ -490,7 +490,7 @@ def assume_role():
     parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
                         help="Name of MFA token to use", required=False)
     parser.add_argument("-d", "--duration", help="Duration for the session in minutes", 
-                        default="120", type=int)
+                        default="60", type=int)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     creds = cf_utils.assume_role(args.role_arn, mfa_token_name=args.mfa_token,
