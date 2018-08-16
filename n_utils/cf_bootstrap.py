@@ -40,8 +40,9 @@ from argcomplete.completers import ChoicesCompleter
 import boto3
 import ipaddr
 from awscli.customizations.configure.writer import ConfigFileWriter
-from .aws_infra_util import find_include, find_all_includes, yaml_load, yaml_save
-from .cf_utils import has_output_selector, select_stacks
+from n_utils.ndt import find_include, find_all_includes
+from n_utils.aws_infra_util import yaml_load, yaml_save
+from n_utils.cf_utils import has_output_selector, select_stacks
 
 
 def enum(**enums):

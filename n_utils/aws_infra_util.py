@@ -17,30 +17,21 @@
 from __future__ import print_function
 from builtins import str
 from builtins import range
-from past.builtins import basestring
 import collections
 import json
-import glob
 import os
 import re
 import subprocess
 import sys
 import yaml
+import six
 from yaml import ScalarNode, SequenceNode, MappingNode
 from copy import deepcopy
-from .cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
+from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
+from n_utils.ndt import find_include
 
 stacks = dict()
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
-include_dirs = []
-if "CF_TEMPLATE_INCLUDE" in os.environ:
-    for next_dir in os.environ["CF_TEMPLATE_INCLUDE"].split(":"):
-        if not next_dir.endswith(os.path.sep):
-            next_dir = next_dir + os.path.sep
-        include_dirs.append(next_dir)
-
-include_dirs.append(os.path.join(os.path.dirname(__file__), "includes") +
-                    os.path.sep)
 
 ############################################################################
 # _THE_ yaml & json deserialize/serialize functions
@@ -359,25 +350,6 @@ def import_script(filename):
     return arr
 
 
-def find_include(basefile):
-    if os.path.isfile(basefile):
-        return basefile
-    for search_dir in include_dirs:
-        if os.path.isfile(search_dir + basefile):
-            return search_dir + basefile
-    return None
-
-
-def find_all_includes(pattern):
-    ret = []
-    dirs = list(include_dirs)
-    dirs.insert(0, "./")
-    for search_dir in dirs:
-        for next_match in glob.glob(search_dir + pattern):
-            ret.append(next_match)
-    return ret
-
-
 def resolve_file(filename, basefile, templateParams):
     resolved = filename % templateParams
     if filename[0] == "/":
@@ -457,24 +429,6 @@ def _get_params(data, template):
         _add_params(params, data['resources'], 'Resources', False)
     return params
 
-# replaces "((param))" references in `data` with values from `params` argument.
-# Param references with no association in `params` are left as-is.
-
-
-def apply_params(data, params):
-    if isinstance(data, collections.OrderedDict) or isinstance(data, dict):
-        for k, val in list(data.items()):
-            key2 = apply_params(k, params)
-            val2 = apply_params(val, params)
-            if k != key2:
-                del data[k]
-            data[key2] = val2
-    elif isinstance(data, list):
-        for i in range(0, len(data)):
-            data[i] = apply_params(data[i], params)
-    elif isinstance(data, str) or isinstance(data, bytes):
-        data = expand_vars(data, params, None, [])
-    return data
 
 # Applies recursively source to script inline expression
 
@@ -516,7 +470,9 @@ def import_scripts_pass1(data, basefile, path, templateParams):
             yaml_file = resolve_file(val, basefile, templateParams)
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
-                contents = apply_params(contents, data)
+                params = collections.OrderedDict(templateParams.items())
+                params.update(data)
+                contents = expand_vars(contents, params, None, [])
                 data.clear()
                 if isinstance(contents, collections.OrderedDict):
                     for k, val in list(contents.items()):
@@ -654,6 +610,7 @@ def import_scripts(data, basefile):
     global gotImportErrors
     gotImportErrors = False
 
+    data = expand_vars(data, _get_params(data, basefile), None, [])
     data = import_scripts_pass1(data, basefile, "", _get_params(data, basefile))
     data = import_scripts_pass2(data, basefile, "", _get_params(data, basefile), False)
     if gotImportErrors:
@@ -729,7 +686,7 @@ def extract_scripts(data, prefix, path=""):
         if k == "Fn::Join":
             if not val[0] == "":
                 continue
-            if isinstance(val[1][0], basestring) and (val[1][0].find("#!") != 0):
+            if isinstance(val[1][0], six.string_types) and (val[1][0].find("#!") != 0):
                 continue
             script_file = extract_script(prefix, path, val[1])
             del data[k]

@@ -18,8 +18,8 @@ import argcomplete
 import boto3
 from botocore.exceptions import ClientError
 import psutil
-from .cf_utils import set_region, resolve_account, InstanceInfo
-from .aws_infra_util import find_include
+from n_utils.cf_utils import set_region, resolve_account, InstanceInfo
+from n_utils.ndt import find_include
 
 
 def letter_to_target_id(letter):

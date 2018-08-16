@@ -3,10 +3,9 @@ from __future__ import absolute_import
 import os
 import boto3
 from time import time, sleep
-from . import cf_utils
-from . import cf_deploy
-from . import aws_infra_util
-
+from n_utils import cf_utils
+from n_utils import cf_deploy
+from n_utils.ndt import find_include
 
 def create_account(email, account_name, role_name="OrganizationAccountAccessRole",
                    trust_role="TrustedAccountAccessRole",
@@ -45,7 +44,7 @@ def create_account(email, account_name, role_name="OrganizationAccountAccessRole
 
     os.environ['paramManagedAccount'] = account_id
     os.environ['paramManageRole'] = role_name
-    template = aws_infra_util.find_include("manage-account.yaml")
+    template = find_include("manage-account.yaml")
     cf_deploy.deploy("managed-account-" + account_name + "-" + account_id, template, cf_utils.region())
 
     if trusted_accounts:
@@ -57,9 +56,9 @@ def create_account(email, account_name, role_name="OrganizationAccountAccessRole
         for trusted_account in trusted_accounts:
             os.environ['paramTrustedAccount'] = trusted_roles[trusted_account].split(":")[4]
             os.environ['paramRoleName'] = trust_role
-            template = aws_infra_util.find_include("trust-account-role.yaml")
+            template = find_include("trust-account-role.yaml")
             cf_deploy.deploy("trust-" + trusted_account, template, cf_utils.region(), session=session)
-        template = aws_infra_util.find_include("manage-account.yaml")
+        template = find_include("manage-account.yaml")
         for trusted_account in trusted_accounts:
             role_arn = trusted_roles[trusted_account]
             print("Assuming role " + role_arn)

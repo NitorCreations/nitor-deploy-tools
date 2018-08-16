@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import time
+import six
 from datetime import datetime
 import boto3
 
@@ -51,10 +52,9 @@ def log_data(data, output_format="yaml"):
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
 
-
 def log(message):
-    sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " "
-                      + message + os.linesep).encode(locale.getpreferredencoding()))
+    os.write(1, (colored(fmttime(datetime.now()), 'yellow') + " "
+                 + message + os.linesep).encode(locale.getpreferredencoding()))
 
 
 def update_stack(stack_name, template, params, dry_run=False, session=None, tags=None):
@@ -305,16 +305,19 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
 
 
 class Unbuffered(object):
-    SYS_ENCODING = locale.getpreferredencoding()
-
     def __init__(self, stream):
         self.stream = stream
+        self.SYS_ENCODING = locale.getpreferredencoding(False)
+        if self.SYS_ENCODING == "ascii":
+            self.SYS_ENCODING = "ISO8859-15"
 
     def write(self, data):
-        if not isinstance(data, str):
+        if isinstance(data, bytes):
             self.stream.write(data.decode(self.SYS_ENCODING))
-        else:
+        elif isinstance(data, six.string_types):
             self.stream.write(data)
+        else:
+            self.stream.write(str(data))
         self.stream.flush()
 
     def writelines(self, datas):

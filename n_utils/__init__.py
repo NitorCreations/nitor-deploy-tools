@@ -91,7 +91,7 @@ NDT_ONLY_SCRIPT = [
 ]
 CONSOLE_ONLY = [
     'cf-update-stack=n_utils.cli:update_stack',
-    'ndt=n_utils.cli:ndt',
+    'ndt=n_utils.ndt:ndt',
     'nitor-dt-register-complete=n_utils.project_util:ndt_register_complete',
     'nitor-dt-load-project-env=n_utils.project_util:load_project_env'
 ]
