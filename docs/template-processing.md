@@ -9,8 +9,11 @@ serverless projects. The flow of the prosessing is roughly as follows:
 * Expand and resolve the parameter section for the template to get all the parameters
   actually in use in the template
 * Expand the rest of the template verifying all parameter references
-* `TODO` All values that use `${parameter}` notation will be filled in as the template is pre-procesed.
+* All values that use a dynamic parameter notation will be filled in as the template is pre-procesed.
+    * There are three types of dynamic parameter notation: `((parameter))`, `$parameter` and `${parameter}`
 * `Ref: parameter` references will be posted to CloudFormation as-is
+
+Easiest way to test your parameter processing is to run `ndt yaml-to-yaml my/stack-awesome/template.yaml`
 
 ### Pre-processing functions
 
