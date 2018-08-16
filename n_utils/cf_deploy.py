@@ -47,7 +47,7 @@ def log_data(data, output_format="yaml"):
     lexer = lexers.get_lexer_by_name(output_format)
     formatter = formatters.get_formatter_by_name("256")
     formatter.__init__(style=get_style_by_name('emacs'))
-    if not isinstance(formatted, str):
+    if not isinstance(formatted, six.string_types):
         formatted = str(formatted, 'UTF-8')
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
