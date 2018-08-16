@@ -429,24 +429,6 @@ def _get_params(data, template):
         _add_params(params, data['resources'], 'Resources', False)
     return params
 
-# replaces "((param))" references in `data` with values from `params` argument.
-# Param references with no association in `params` are left as-is.
-
-
-def apply_params(data, params):
-    if isinstance(data, collections.OrderedDict) or isinstance(data, dict):
-        for k, val in list(data.items()):
-            key2 = apply_params(k, params)
-            val2 = apply_params(val, params)
-            if k != key2:
-                del data[k]
-            data[key2] = val2
-    elif isinstance(data, list):
-        for i in range(0, len(data)):
-            data[i] = apply_params(data[i], params)
-    elif isinstance(data, str) or isinstance(data, bytes):
-        data = expand_vars(data, params, None, [])
-    return data
 
 # Applies recursively source to script inline expression
 
@@ -488,7 +470,9 @@ def import_scripts_pass1(data, basefile, path, templateParams):
             yaml_file = resolve_file(val, basefile, templateParams)
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
-                contents = apply_params(contents, data)
+                params = collections.OrderedDict(templateParams.items())
+                params.update(data)
+                contents = expand_vars(contents, params, None, [])
                 data.clear()
                 if isinstance(contents, collections.OrderedDict):
                     for k, val in list(contents.items()):
@@ -626,6 +610,7 @@ def import_scripts(data, basefile):
     global gotImportErrors
     gotImportErrors = False
 
+    data = expand_vars(data, _get_params(data, basefile), None, [])
     data = import_scripts_pass1(data, basefile, "", _get_params(data, basefile))
     data = import_scripts_pass2(data, basefile, "", _get_params(data, basefile), False)
     if gotImportErrors:

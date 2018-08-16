@@ -752,13 +752,24 @@ def _apply_simple_regex(RE, line, params, vault, vault_keys):
 
 
 def expand_vars(line, params, vault, vault_keys):
-    ret = _apply_simple_regex(SIMPLE_PARAM_RE, line, params, vault, vault_keys)
-    if isinstance(ret, OrderedDict):
+    if isinstance(line, OrderedDict) or isinstance(line, dict):
+        ret = OrderedDict(line.items())
+        for key, value in line.items():
+            new_key = expand_vars(key, params, vault, vault_keys)
+            new_value = expand_vars(value, params, vault, vault_keys)
+            ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in ret.items()])
         return ret
-    ret = _apply_simple_regex(PARAM_REF_RE, ret, params, vault, vault_keys)
-    if isinstance(ret, OrderedDict):
-        return ret
-    return _process_line(ret, params, vault, vault_keys)
+    if isinstance(line, list):
+        return [expand_vars(x, params, vault, vault_keys) for x in line]
+    if isinstance(line, str) or isinstance(line, basestring) or isinstance(line, unicode) or isinstance(line, bytes):
+        ret = _apply_simple_regex(SIMPLE_PARAM_RE, line, params, vault, vault_keys)
+        if isinstance(ret, OrderedDict):
+            return expand_vars(ret, params, vault, vault_keys)
+        ret = _apply_simple_regex(PARAM_REF_RE, ret, params, vault, vault_keys)
+        if isinstance(ret, OrderedDict):
+            return expand_vars(ret, params, vault, vault_keys)
+        return _process_line(ret, params, vault, vault_keys)
+    return line
 
 
 def _process_line(line, params, vault, vault_keys):
