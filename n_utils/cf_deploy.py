@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import time
+import six
 from datetime import datetime
 import boto3
 
@@ -304,15 +305,17 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
 
 
 class Unbuffered(object):
-    SYS_ENCODING = locale.getpreferredencoding()
+    SYS_ENCODING = locale.getpreferredencoding(False)
     def __init__(self, stream):
         self.stream = stream
 
     def write(self, data):
-        if not type(data) is str:
+        if isinstance(data, bytes):
             self.stream.write(data.decode(self.SYS_ENCODING))
-        else:
+        elif isinstance(data, six.string_types):
             self.stream.write(data)
+        else:
+            self.stream.write(str(data))
         self.stream.flush()
 
     def writelines(self, datas):
