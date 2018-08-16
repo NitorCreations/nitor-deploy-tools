@@ -17,7 +17,6 @@
 from __future__ import print_function
 from builtins import str
 from builtins import range
-from past.builtins import basestring
 import collections
 import json
 import os
@@ -25,6 +24,7 @@ import re
 import subprocess
 import sys
 import yaml
+import six
 from yaml import ScalarNode, SequenceNode, MappingNode
 from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
@@ -686,7 +686,7 @@ def extract_scripts(data, prefix, path=""):
         if k == "Fn::Join":
             if not val[0] == "":
                 continue
-            if isinstance(val[1][0], basestring) and (val[1][0].find("#!") != 0):
+            if isinstance(val[1][0], six.string_types) and (val[1][0].find("#!") != 0):
                 continue
             script_file = extract_script(prefix, path, val[1])
             del data[k]

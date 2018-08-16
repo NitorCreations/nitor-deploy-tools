@@ -31,6 +31,7 @@ import string
 import sys
 import time
 import tempfile
+import six
 from collections import deque, OrderedDict
 from os.path import expanduser
 from threading import Event, Lock, Thread
@@ -761,7 +762,7 @@ def expand_vars(line, params, vault, vault_keys):
         return ret
     if isinstance(line, list):
         return [expand_vars(x, params, vault, vault_keys) for x in line]
-    if isinstance(line, str) or isinstance(line, basestring) or isinstance(line, unicode) or isinstance(line, bytes):
+    if isinstance(line, six.string_types):
         ret = _apply_simple_regex(SIMPLE_PARAM_RE, line, params, vault, vault_keys)
         if isinstance(ret, OrderedDict):
             return expand_vars(ret, params, vault, vault_keys)
