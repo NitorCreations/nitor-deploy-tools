@@ -305,9 +305,11 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
 
 
 class Unbuffered(object):
-    SYS_ENCODING = locale.getpreferredencoding(False)
     def __init__(self, stream):
         self.stream = stream
+        self.SYS_ENCODING = locale.getpreferredencoding(False)
+        if self.SYS_ENCODING == "ascii":
+            self.SYS_ENCODING = "ISO8859-15"
 
     def write(self, data):
         if isinstance(data, bytes):
