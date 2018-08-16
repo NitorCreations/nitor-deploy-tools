@@ -21,7 +21,7 @@ There are a few usefull fuction you can insert and use in the pre-processing pha
 
 #### `Fn::ImportYaml`
 
-Imports an external yaml file into the place occupied with this function. Example:
+Imports an external yaml file into the place occupied with this function. Here is an example:
 
 ```yaml
 Parameters:
@@ -34,7 +34,7 @@ Parameters:
 ```
 
 The fields in the same object as the function will be used to fill in references with the
-notation `((parameter))` in the target yaml. Example of the target:
+notation `((parameter))` in the target yaml. Here is an example of the target:
 
 ```yaml
 paramSshKeyName:
@@ -61,7 +61,7 @@ before include.
 #### `Fn::Merge`
 
 Often you will want to merge an imported yaml snippet into an existing list and this function does that.
-Example:
+Here is an example:
 
 ```yaml
 Parameters:
@@ -91,7 +91,7 @@ does a few useful tricks:
 Shell scripts usually most simply can define environment variables with the prefix `CF_` and the
 rest of the name will be the name of the parameter that will be inserted as a reference to the value.
 
-Example:
+Here is an example:
 ```bash
 CF_AWS__StackName=
 CF_AWS__Region=
@@ -164,7 +164,7 @@ type transformation. Suffixing a paremter with `#optional` will result in no err
 parameter is not present in the stack and in that case the value will simply be empty instead of a
 reference.
 
-Raw cloudformation json can be inserted with the notation `#CF{ myContent }`. Example:
+Raw cloudformation json can be inserted with the notation `#CF{ myContent }`. Here is an example:
 
 ```bash
 NEW_RELIC_LICENSE_KEY=#CF{ "Ref": "paramNewRelicLicenseKey" }
@@ -184,3 +184,35 @@ referencing stacks will not be modified in any way if referenced staks change. L
 manage changes across several stacks in the same repository that refer to eachother. You can run
 `ndt show-stack-params-and-outputs [stack-name]` to see the parameters and resources that are available
 in each stack.
+
+Here is an example:
+```yaml
+StackRef:
+  region: {Ref: 'AWS::Region'}
+  stackName: common-policies-$paramEnvId
+  paramName: KMSPolicy
+```
+
+### Tags
+
+For CloudFormation templates you can add a top level entry `Tags` and that will be given to CloudFormation API
+as tags for the stack and all possible resources will be tagged with those tags. Serverless template has
+a similar entry `stackTags` under `provider` that functions the same way.
+
+Here is an example (CloudFormation):
+```yaml
+Tags
+  - Key: Environment
+    Value: $paramEnvId
+```
+
+and serverless:
+```yaml
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage}
+  region: eu-central-1
+  stackTags:
+    Environment: $paramEnvId
+```
