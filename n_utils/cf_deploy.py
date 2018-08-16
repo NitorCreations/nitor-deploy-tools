@@ -51,10 +51,9 @@ def log_data(data, output_format="yaml"):
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
 
-
 def log(message):
-    sys.stdout.write((colored(fmttime(datetime.now()), 'yellow') + " "
-                      + message + os.linesep).encode(locale.getpreferredencoding()))
+    os.write(1, (colored(fmttime(datetime.now()), 'yellow') + " "
+                 + message + os.linesep).encode(locale.getpreferredencoding()))
 
 
 def update_stack(stack_name, template, params, dry_run=False, session=None, tags=None):
