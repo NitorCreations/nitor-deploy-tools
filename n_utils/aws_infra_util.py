@@ -216,7 +216,7 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         _add_subcomponent_file(component, branch, "serverless", serverless, files)
         _add_subcomponent_file(component, branch, "docker", docker, files)
         _add_subcomponent_file(component, branch, "image", image, files)
-        if isinstance(image, six.string_types):
+        if (image, six.string_types):
             files.append(component + os.sep + "image" + os.sep + "infra.properties")
             files.append(component + os.sep + "image" + os.sep + "infra-" + branch + ".properties")
     for file in files:
@@ -381,7 +381,7 @@ def _add_params(target, source, source_prop, use_value):
 
 
 def _get_params(data, template):
-    params = dict()
+    params = collections.OrderedDict()
 
     # first load defaults for all parameters in "Parameters"
     _add_params(params, data, 'Parameters', True)
@@ -447,9 +447,8 @@ def apply_source(data, filename, optional, default):
 # returns new data
 
 
-def import_scripts_pass1(data, basefile, path, templateParams):
-    if isinstance(data, collections.OrderedDict):
-        templateParams.update(_get_params(data, basefile))
+def import_scripts_pass1(data, root, basefile, path, templateParams):
+    templateParams.update(_get_params(root, basefile))
     global gotImportErrors
     if isinstance(data, collections.OrderedDict):
         if 'Fn::ImportFile' in data:
@@ -476,12 +475,12 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                 data.clear()
                 if isinstance(contents, collections.OrderedDict):
                     for k, val in list(contents.items()):
-                        data[k] = import_scripts_pass1(val, yaml_file, path +
+                        data[k] = import_scripts_pass1(val, root, yaml_file, path +
                                                        k + "_", templateParams)
                 elif isinstance(contents, list):
                     data = contents
                     for i in range(0, len(data)):
-                        data[i] = import_scripts_pass1(data[i], yaml_file,
+                        data[i] = import_scripts_pass1(data[i], root, yaml_file,
                                                        path + str(i) + "_", templateParams)
                 else:
                     print("ERROR: " + path + ": Can't import yaml file \"" +
@@ -505,9 +504,9 @@ def import_scripts_pass1(data, basefile, path, templateParams):
                 print("ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile)
                 gotImportErrors = True
                 return data
-            data = import_scripts_pass1(merge_list[0], basefile, path + "0_", templateParams)
+            data = import_scripts_pass1(merge_list[0], root, basefile, path + "0_", templateParams)
             for i in range(1, len(merge_list)):
-                merge = import_scripts_pass1(merge_list[i], basefile, path + str(i) + "_", templateParams)
+                merge = import_scripts_pass1(merge_list[i], root, basefile, path + str(i) + "_", templateParams)
                 if isinstance(data, collections.OrderedDict):
                     if not isinstance(merge, collections.OrderedDict):
                         print("ERROR: " + path + ": First Fn::Merge entry " +
@@ -535,10 +534,10 @@ def import_scripts_pass1(data, basefile, path, templateParams):
             data['__source'] = basefile
         else:
             for k, val in list(data.items()):
-                data[k] = import_scripts_pass1(val, basefile, path + k + "_", templateParams)
+                data[k] = import_scripts_pass1(val, root, basefile, path + k + "_", templateParams)
     elif isinstance(data, list):
         for i in range(0, len(data)):
-            data[i] = import_scripts_pass1(data[i], basefile, path + str(i) + "_", templateParams)
+            data[i] = import_scripts_pass1(data[i], root, basefile, path + str(i) + "_", templateParams)
     return data
 
 # returns new data
@@ -611,7 +610,7 @@ def import_scripts(data, basefile):
     gotImportErrors = False
 
     data = expand_vars(data, _get_params(data, basefile), None, [])
-    data = import_scripts_pass1(data, basefile, "", _get_params(data, basefile))
+    data = import_scripts_pass1(data, data, basefile, "", _get_params(data, basefile))
     data = import_scripts_pass2(data, basefile, "", _get_params(data, basefile), False)
     if gotImportErrors:
         sys.exit(1)
