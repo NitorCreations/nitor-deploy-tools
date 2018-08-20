@@ -376,18 +376,27 @@ PARAM_NOT_AVAILABLE = "N/A"
 
 def _add_params(target, source, source_prop, use_value):
     if source_prop in source:
-        for k, val in list(source[source_prop].items()):
-            target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
-
+        if isinstance(source[source_prop], collections.OrderedDict) or isinstance(source[source_prop], dict):
+            for k, val in list(source[source_prop].items()):
+                target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
+        elif isinstance(source[source_prop], list):
+            for list_item in source[source_prop]:
+                for k, val in list(list_item.items()):
+                    target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
 
 def _get_params(data, template):
     params = collections.OrderedDict()
 
     # first load defaults for all parameters in "Parameters"
-    _add_params(params, data, 'Parameters', True)
-    if "resources" in data:
-        _add_params(params, data['resources'], 'Parameters', True)
+    if 'Parameters' in data:
+        _add_params(params, data, 'Parameters', True)
+        if 'Fn::Merge' in data['Parameters']:
+            _add_params(params, data['Parameters'], 'Fn::Merge', True)
+    if "resources" in data and 'Parameters' in data['resources']:
         params['ServerlessDeploymentBucket'] = PARAM_NOT_AVAILABLE
+        _add_params(params, data['resources'], 'Parameters', True)
+        if 'Fn::Merge' in data['resources']['Parameters']:
+            _add_params(params, data['resources']['Parameters'], 'Fn::Merge', True)
 
     params['STACK_NAME'] = PARAM_NOT_AVAILABLE
 
