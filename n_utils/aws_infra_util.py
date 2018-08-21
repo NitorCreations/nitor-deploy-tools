@@ -229,9 +229,9 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         if account:
             ret["ACCOUNT_ID"] = account
     if "GIT_BRANCH" not in ret:
-        ret["GIT_BRANCH"] = os.environ["GIT_BRANCH"]
+        ret["GIT_BRANCH"] = branch
     if "paramEnvId" not in ret:
-        ret["paramEnvId"] = os.environ["GIT_BRANCH"]
+        ret["paramEnvId"] = branch
     if "ORIG_STACK_NAME" in os.environ:
         ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
         if "STACK_NAME" not in ret:
