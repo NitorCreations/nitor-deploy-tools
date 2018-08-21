@@ -420,7 +420,10 @@ def _get_params(data, template):
     params['REGION'] = os.environ['REGION']
 
     if 'ACCOUNT_ID' not in os.environ:
-        os.environ['ACCOUNT_ID'] = resolve_account()
+        if resolve_account():
+            os.environ['ACCOUNT_ID'] = resolve_account()
+        else:
+            os.environ['ACCOUNT_ID'] = "None"
     params['ACCOUNT_ID'] = os.environ['ACCOUNT_ID']
 
     global SOURCED_PARAMS
