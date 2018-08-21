@@ -106,24 +106,6 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-for DOCKER in $(get_dockers $image); do
-  unset BAKE_IMAGE_BRANCH DOCKER_NAME
-  eval "$(ndt load-parameters -b "${GIT_BRANCH}" "$image" -d "$DOCKER" -e | egrep '^DOCKER_NAME=|^BAKE_IMAGE_BRANCH=')"
-  if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH}" != "$BAKE_IMAGE_BRANCH" ]; then
-    checkout_branch "$BAKE_IMAGE_BRANCH"
-    cd "$BAKE_IMAGE_BRANCH-checkout"
-    unset DOCKER_NAME paramEnvId
-    eval "$(ndt load-parameters -b "$BAKE_IMAGE_BRANCH" "$image" -d "$DOCKER" -e | egrep '^DOCKER_NAME=')"
-    cd ..
-    rm -rf "$BAKE_IMAGE_BRANCH-checkout"
-  fi
-  DOCKER_PARAM_NAME="paramDockerUri$DOCKER"
-  URI="$(ndt ecr-repo-uri $DOCKER_NAME)"
-  [ "$URI" ] && eval "$DOCKER_PARAM_NAME=$URI"
-done
-# Re-export everything
-eval "$(ndt load-parameters "$image" -s "$stackName" -e)"
-
 export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
 
 cf-update-stack "${STACK_NAME}" "${image}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN
