@@ -1,5 +1,4 @@
 Parameters:
   'Fn::Merge':
-  - paramTest:
-      Default: test2
-  - 'Fn::ImportYaml': include-${paramTest}.yaml
+  - 'Fn::ImportYaml': include-test.yaml
+  - 'Fn::ImportYaml': include-${paramTest3}.yaml

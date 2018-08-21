@@ -17,7 +17,6 @@
 from __future__ import print_function
 from builtins import str
 from builtins import range
-import collections
 import json
 import os
 import re
@@ -25,6 +24,8 @@ import subprocess
 import sys
 import yaml
 import six
+from collections import OrderedDict
+from glob import glob
 from yaml import ScalarNode, SequenceNode, MappingNode
 from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
@@ -158,7 +159,7 @@ def run_command(command):
     return output[0]
 
 
-def _process_line(line, params, used_params):
+def _process_infra_prop_line(line, params, used_params):
     key_val = line.split("=", 1)
     if len(key_val) == 2:
         key = re.sub("[^a-zA-Z0-9_]", "", key_val[0].strip())
@@ -187,9 +188,9 @@ def import_parameter_file(filename, params):
             else:
                 line = prevline + line
                 prevline = ""
-                _process_line(line, params, used_params)
+                _process_infra_prop_line(line, params, used_params)
         if prevline:
-            _process_line(prevline, params, used_params)
+            _process_infra_prop_line(prevline, params, used_params)
 
 
 def _add_subcomponent_file(component, branch, type, name, files):
@@ -258,7 +259,7 @@ def yaml_load(stream):
 
     def construct_mapping(loader, node):
         loader.flatten_mapping(node)
-        return collections.OrderedDict(loader.construct_pairs(node))
+        return OrderedDict(loader.construct_pairs(node))
     OrderedLoader.add_constructor(
         yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
         construct_mapping)
@@ -274,12 +275,12 @@ def yaml_save(data):
         return dumper.represent_mapping(
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             list(data.items()))
-    OrderedDumper.add_representer(collections.OrderedDict, _dict_representer)
+    OrderedDumper.add_representer(OrderedDict, _dict_representer)
     return yaml.dump(data, None, OrderedDumper, default_flow_style=False)
 
 
 def json_load(stream):
-    return json.loads(stream, object_pairs_hook=collections.OrderedDict)
+    return json.loads(stream, object_pairs_hook=OrderedDict)
 
 
 def json_save(data):
@@ -315,7 +316,7 @@ def import_script(filename):
                 js_prefix = result.group(1)
                 encoded_varname = result.group(2)
                 var_name = decode_parameter_name(encoded_varname)
-                ref = collections.OrderedDict()
+                ref = OrderedDict()
                 ref['Ref'] = var_name
                 ref['__source'] = filename
                 if str(result.group(4)) == "#optional":
@@ -376,7 +377,7 @@ PARAM_NOT_AVAILABLE = "N/A"
 
 def _add_params(target, source, source_prop, use_value):
     if source_prop in source:
-        if isinstance(source[source_prop], collections.OrderedDict) or isinstance(source[source_prop], dict):
+        if isinstance(source[source_prop], OrderedDict) or isinstance(source[source_prop], dict):
             for k, val in list(source[source_prop].items()):
                 target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
         elif isinstance(source[source_prop], list):
@@ -385,18 +386,18 @@ def _add_params(target, source, source_prop, use_value):
                     target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
 
 def _get_params(data, template):
-    params = collections.OrderedDict()
+    params = OrderedDict()
 
     # first load defaults for all parameters in "Parameters"
     if 'Parameters' in data:
         _add_params(params, data, 'Parameters', True)
-        if 'Fn::Merge' in data['Parameters']:
-            _add_params(params, data['Parameters'], 'Fn::Merge', True)
+        if 'Fn::Merge' in data['Parameters'] and 'Result' in data['Parameters']['Fn::Merge']:
+            _add_params(params, data['Parameters']['Fn::Merge'], 'Result', True)
     if "resources" in data and 'Parameters' in data['resources']:
         params['ServerlessDeploymentBucket'] = PARAM_NOT_AVAILABLE
         _add_params(params, data['resources'], 'Parameters', True)
-        if 'Fn::Merge' in data['resources']['Parameters']:
-            _add_params(params, data['resources']['Parameters'], 'Fn::Merge', True)
+        if 'Fn::Merge' in data['resources']['Parameters'] and 'Results' in data['resources']['Parameters']['Fn::Merge']:
+            _add_params(params, data['resources']['Parameters']['Fn::Merge'], 'Results', True)
 
     params['STACK_NAME'] = PARAM_NOT_AVAILABLE
 
@@ -443,7 +444,7 @@ def _get_params(data, template):
 
 
 def apply_source(data, filename, optional, default):
-    if isinstance(data, collections.OrderedDict):
+    if isinstance(data, OrderedDict):
         if 'Ref' in data:
             data['__source'] = filename
             if optional == "#optional":
@@ -457,9 +458,10 @@ def apply_source(data, filename, optional, default):
 
 
 def import_scripts_pass1(data, root, basefile, path, templateParams):
-    templateParams.update(_get_params(root, basefile))
+    param_refresh_callback = lambda: templateParams.update(_get_params(root, basefile))
+    param_refresh_callback()
     global gotImportErrors
-    if isinstance(data, collections.OrderedDict):
+    if isinstance(data, OrderedDict):
         if 'Fn::ImportFile' in data:
             val = data['Fn::ImportFile']
             script_import = resolve_file(val, basefile, templateParams)
@@ -478,11 +480,12 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
             yaml_file = resolve_file(val, basefile, templateParams)
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
-                params = collections.OrderedDict(templateParams.items())
+                params = OrderedDict(templateParams.items())
                 params.update(data)
                 contents = expand_vars(contents, params, None, [])
+                param_refresh_callback()
                 data.clear()
-                if isinstance(contents, collections.OrderedDict):
+                if isinstance(contents, OrderedDict):
                     for k, val in list(contents.items()):
                         data[k] = import_scripts_pass1(val, root, yaml_file, path +
                                                        k + "_", templateParams)
@@ -508,37 +511,44 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
             if "optional" in data:
                 del data["optional"]
         elif 'Fn::Merge' in data:
-            merge_list = data['Fn::Merge']
+            merge_list = data['Fn::Merge']['Source'] if 'Source' in data['Fn::Merge'] else data['Fn::Merge']
+            result = data['Fn::Merge']['Result'] if 'Result' in data['Fn::Merge'] else OrderedDict()
+            data['Fn::Merge'] = OrderedDict([('Source', merge_list), ('Result', result)])
             if not isinstance(merge_list, list):
                 print("ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile)
                 gotImportErrors = True
                 return data
-            data = import_scripts_pass1(merge_list[0], root, basefile, path + "0_", templateParams)
-            for i in range(1, len(merge_list)):
-                merge = import_scripts_pass1(merge_list[i], root, basefile, path + str(i) + "_", templateParams)
-                if isinstance(data, collections.OrderedDict):
-                    if not isinstance(merge, collections.OrderedDict):
-                        print("ERROR: " + path + ": First Fn::Merge entry " +
-                              "was an object, but entry " + str(i) + " was " +
-                              "not an object: " + str(merge) + " in file " +
-                              basefile)
-                        gotImportErrors = True
-                    else:
-                        for k, val in list(merge.items()):
-                            data[k] = val
-                elif isinstance(data, list):
-                    if not isinstance(merge, list):
-                        print("ERROR: " + path + ": First Fn::Merge entry " +
-                              "was a list, but entry " + str(i) + " was not" +
-                              " a list: " + str(merge))
-                        gotImportErrors = True
-                    else:
-                        for k in range(0, len(merge)):
-                            data.append(merge[k])
-                else:
-                    print("ERROR: " + path + ": Unsupported " + str(type(data)))
-                    gotImportErrors = True
+            merge = import_scripts_pass1(expand_vars(merge_list.pop(0), templateParams, None, []), root, basefile,
+                                         path + "/", templateParams)
+            if not result:
+                result = merge
+                data['Fn::Merge'] = OrderedDict([('Source', merge_list), ('Result', result)])
+            elif not isinstance(merge, type(result)):
+                print("ERROR: " + path + ": First Fn::Merge entries " +
+                        "were of type " + type(result) + ", but the following entry was not: \n" + \
+                        json.dumps(merge, indent=2) + "\nIn file " + basefile)
+                gotImportErrors = True
+            elif isinstance(merge, OrderedDict):
+                result.update(merge)
+            elif isinstance(merge, list):
+                result.extend(merge)
+            else:
+                print("ERROR: " + path + ": Unsupported " + str(type(merge)))
+                gotImportErrors = True
+            param_refresh_callback()
+            while True:
+                expanded_result = expand_vars(result, templateParams, None, [])
+                if expanded_result == result:
                     break
+                else:
+                    result.clear()
+                    result.update(expanded_result)
+                    param_refresh_callback()
+            if not merge_list:
+                del data['Fn::Merge']
+                return result
+            else:
+                return import_scripts_pass1(data, root, basefile, path + "/", templateParams)
         elif 'Ref' in data:
             data['__source'] = basefile
         else:
@@ -554,7 +564,7 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
 
 def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
     global gotImportErrors
-    if isinstance(data, collections.OrderedDict):
+    if isinstance(data, OrderedDict):
         if 'Ref' in data:
             var_name = data['Ref']
             if '__source' in data:
@@ -649,10 +659,10 @@ def extract_script(prefix, path, join_args):
     # print prefix, path
     # "before" and "after" code blocks, placed before and after var declarations
     code = ["", ""]
-    var_decls = collections.OrderedDict()
+    var_decls = OrderedDict()
     code_idx = 0
     for element in join_args:
-        if isinstance(element, collections.OrderedDict):
+        if isinstance(element, OrderedDict):
             if 'Ref' not in element:
                 print("Dict with no ref")
                 json_save(element)
@@ -687,7 +697,7 @@ def extract_script(prefix, path, join_args):
 
 
 def extract_scripts(data, prefix, path=""):
-    if not isinstance(data, collections.OrderedDict):
+    if not isinstance(data, OrderedDict):
         return
     for k, val in list(data.items()):
         extract_scripts(val, prefix, path + k + "_")
@@ -766,7 +776,7 @@ def reset_launchconf_userdata(data, lc_userdata):
 def get_refs(data, reflist=None):
     if not reflist:
         reflist = []
-    if isinstance(data, collections.OrderedDict):
+    if isinstance(data, OrderedDict):
         if "Ref" in data:
             reflist.append(data["Ref"])
         for val in list(data.values()):

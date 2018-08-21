@@ -1,2 +1,20 @@
 paramTest2:
-  Default: ${paramTest}
+  Default: ${paramTest^^}
+paramTest8:
+  Default: ${paramTest7/tE/aaabbb}
+paramTest9:
+  Default: ${paramTest8#a}
+paramTest10:
+  Default: ${paramTest14#*/}
+paramTest11:
+  Default: ${paramTest14##*/}
+paramTest12:
+  Default: ${paramTest14%/*}
+paramTest13:
+  Default: ${paramTest14%%/*}
+paramTest14:
+  Default: a/b/c/d/e/f
+paramTest15:
+  Default: ${paramTest14:2:4}
+paramTest16:
+  Default: ${paramNone:-foo}

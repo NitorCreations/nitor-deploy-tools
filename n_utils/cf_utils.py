@@ -762,9 +762,12 @@ def expand_vars(line, params, vault, vault_keys):
     if isinstance(line, OrderedDict) or isinstance(line, dict):
         ret = OrderedDict(line.items())
         for key, value in line.items():
-            new_key = expand_vars(key, params, vault, vault_keys)
-            new_value = expand_vars(value, params, vault, vault_keys)
-            ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in ret.items()])
+            if key.startswith("Fn::") and not key != "Fn::ImportYaml" and not key != "Fn::ImportJson":
+                continue
+            else:
+                new_key = expand_vars(key, params, vault, vault_keys)
+                new_value = expand_vars(value, params, vault, vault_keys)
+                ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in ret.items()])
         return ret
     if isinstance(line, list):
         return [expand_vars(x, params, vault, vault_keys) for x in line]
@@ -785,13 +788,13 @@ def _process_line(line, params, vault, vault_keys):
     match = PARAM_RE.search(line)
     while match is not None:
         param_value = None
-        param_match = match.group(1)
-        param_name = param_match
+        param_name = match.group(1)
         name_arg = None
         for transform in list(VAR_OPERATIONS.keys()):
             if transform in param_name:
                 name_arg = param_name.split(transform, 1)
-                param_name = name_arg[0]
+                param_match = name_arg[0]
+                param_name = param_match
                 name_arg.append(transform)
                 break
         if param_name in vault_keys:
@@ -801,7 +804,11 @@ def _process_line(line, params, vault, vault_keys):
         else:
             next_start = match.end()
         if name_arg:
-            param_value = VAR_OPERATIONS[name_arg[2]](param_value, name_arg[1])
+            if param_value and (PARAM_RE.search(param_value) or SIMPLE_PARAM_RE.search(param_value)):
+                param_value = None
+                next_start = match.end()
+            else:
+                param_value = VAR_OPERATIONS[name_arg[2]](param_value, name_arg[1])
         if not isinstance(param_value, NoneType):
             ret = ret[:match.start()] + param_value + ret[match.end():]
         match = PARAM_RE.search(ret, next_start)
@@ -871,7 +878,7 @@ def _var_offset(value, arg):
         ind_len = arg.split(":")
         if len(ind_len) == 2:
             start = int(ind_len[0])
-            end = start + (ind_len[1])
+            end = start + (int(ind_len[1]))
             return value[start:end]
     return value
 

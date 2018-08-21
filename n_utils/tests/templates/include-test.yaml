@@ -1,2 +1,14 @@
 paramTest:
   Default: test2
+paramTest3:
+  Default: $paramTest
+paramTest4:
+  Default: ((paramTest3))
+paramTestA:
+  Default: ${paramTest,,}
+paramTest5:
+  Default: ${paramTestA^^}
+paramTest6:
+  Default: ${paramTest^^}
+paramTest7:
+  Default: ${paramTest6,}
