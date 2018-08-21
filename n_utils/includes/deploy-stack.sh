@@ -112,6 +112,7 @@ for DOCKER in $(get_dockers $image); do
   if [ -n "$BAKE_IMAGE_BRANCH" ] && [ "${GIT_BRANCH}" != "$BAKE_IMAGE_BRANCH" ]; then
     checkout_branch "$BAKE_IMAGE_BRANCH"
     cd "$BAKE_IMAGE_BRANCH-checkout"
+    unset DOCKER_NAME paramEnvId
     eval "$(ndt load-parameters -b "$BAKE_IMAGE_BRANCH" "$image" -d "$DOCKER" -e | egrep '^DOCKER_NAME=')"
     cd ..
     rm -rf "$BAKE_IMAGE_BRANCH-checkout"
@@ -120,7 +121,8 @@ for DOCKER in $(get_dockers $image); do
   URI="$(ndt ecr-repo-uri $DOCKER_NAME)"
   [ "$URI" ] && eval "$DOCKER_PARAM_NAME=$URI"
 done
-export $(set | egrep -o '^param[a-zA-Z0-9_]+=' | tr -d '=') # export any param* variable defined in the infra-<branch>.properties files
+# Re-export everything
+eval "$(ndt load-parameters "$image" -s "$stackName" -e)"
 
 export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
 
