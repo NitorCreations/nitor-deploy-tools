@@ -78,6 +78,13 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
+#If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
+if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval $(ndt assume-role $DEPLOY_ROLE_ARN)
+elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval $(assume-deploy-role.sh)
+fi
+
 eval "$(ndt load-parameters "$image" -l "$serverless" -e)"
 
 ndt load-parameters "$image" -l "$serverless" -y > "$image/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
@@ -92,12 +99,6 @@ npm i
 
 if [ -n "$DRYRUN" ]; then
   exit 0
-fi
-#If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
-if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
-  eval $(ndt assume-role $DEPLOY_ROLE_ARN)
-elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
-  eval $(assume-deploy-role.sh)
 fi
 
 sls deploy -s $paramEnvId

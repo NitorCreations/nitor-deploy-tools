@@ -52,7 +52,7 @@ checkout_branch() {
   local BRANCH=$1
   mkdir -p "$BRANCH-checkout" > /dev/null 2>&1
   git archive "origin/$BRANCH" | tar -xC "$BRANCH-checkout" > /dev/null 2>&1
-  if [ -r "infra-$BRANCH.properties" ]; then
+  if [ -r "$BRANCH-checkout/infra.properties" ] || [ -r "$BRANCH-checkout/infra-$BRANCH.properties" ]; then
     echo $BRANCH
   else
     rm -rf "$BRANCH-checkout" > /dev/null 2>&1

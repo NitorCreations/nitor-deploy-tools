@@ -27,9 +27,11 @@ import six
 from collections import OrderedDict
 from glob import glob
 from yaml import ScalarNode, SequenceNode, MappingNode
+from botocore.exceptions import ClientError
 from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
 from n_utils.ndt import find_include
+from n_utils.ecr_utils import repo_uri
 
 stacks = dict()
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
@@ -208,7 +210,6 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         else:
             branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     branch = branch.strip().split("/")[-1:][0]
-    os.environ["GIT_BRANCH"] = branch
     files = ["infra.properties", "infra-" + branch + ".properties"]
     if component:
         files.append(component + os.sep + "infra.properties")
@@ -223,6 +224,19 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
     for file in files:
         if os.path.exists(file):
             import_parameter_file(file, ret)
+    if serverless or stack:
+        if 'BAKE_IMAGE_BRANCH' in ret:
+            dockerbranch = ret['BAKE_IMAGE_BRANCH']
+        else:
+            dockerbranch = branch
+        for docker in [dockerdir.split("/docker-")[1] for dockerdir in glob(component + os.sep + "docker-*")]:
+            docker_params = load_parameters(component=component, docker=docker, branch=dockerbranch)
+            try:
+                ret['paramDockerUri' + docker] = repo_uri(docker_params['DOCKER_NAME'])
+            except ClientError:
+                # Best effor to load docker uris, but ignore errors since the repo might not
+                # actually be in use. Missing and used uris will result in an error later.
+                pass
     if "REGION" not in ret:
         ret["REGION"] = region()
     if "ACCOUNT_ID" not in ret:
@@ -230,9 +244,9 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         if account:
             ret["ACCOUNT_ID"] = account
     if "GIT_BRANCH" not in ret:
-        ret["GIT_BRANCH"] = os.environ["GIT_BRANCH"]
+        ret["GIT_BRANCH"] = branch
     if "paramEnvId" not in ret:
-        ret["paramEnvId"] = os.environ["GIT_BRANCH"]
+        ret["paramEnvId"] = branch
     if "ORIG_STACK_NAME" in os.environ:
         ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
         if "STACK_NAME" not in ret:
