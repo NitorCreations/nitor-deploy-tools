@@ -67,3 +67,18 @@ sourced in your ndt project by calling `git config ndt.source.env my-admin-role`
 that needs that role and assuming you've set up command completion as above, every time you
 change directory into the project, your credentials get set up automatically for you to work and
 checked every time you give a command.
+
+`nitor-dt-register-complete` uses `nitor-dt-load-project-env` as a prompt command that is run
+every time the shell prompt is created. By default that will be a python script and will have
+the usual python startup slowness attached. On some systems you can work around this by compiling
+that command into a native binary with [nuitka](http://nuitka.net/). The process of replacing
+that python script with a binary version is as follows: 
+
+```bash
+sudo -H pip install -U nuitka
+ENV_SCRIPT="$(dirname $(dirname $(n-include hook.sh)))/nitor-dt-load-project-env.py"
+python -m nuitka --recurse-to=n_utils.project_util $ENV_SCRIPT
+sudo cp nitor-dt-load-project-env.exe $(which nitor-dt-load-project-env)
+```
+
+Doing this on a machine that has the right tooling will give you a much snappier prompt.
