@@ -100,12 +100,12 @@ def wait_net_service(server, port, timeout=None):
             # this exception occurs only if timeout is set
             if timeout:
                 return False
+        except ConnectionRefusedError:
+            s.close()
+            return False
         except socket.error as err:
             # catch timeout exception from underlying network library
             # this one is different from socket.timeout
-            if isinstance(err, ConnectionRefusedError):
-                s.close()
-                return False
             if not isinstance(err.args, tuple) or err[0] != errno.ETIMEDOUT or err[0] != errno.ECONNREFUSED:
                 raise
             elif err[0] == errno.ECONNREFUSED:
