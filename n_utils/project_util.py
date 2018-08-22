@@ -1,6 +1,8 @@
 from __future__ import print_function
 from os import linesep
 from sys import argv
+
+import locale
 import subprocess
 
 
@@ -13,7 +15,7 @@ def load_project_env():
     if proc.returncode:
         return
     vars = {}
-    for line in out[0].split("\n"):
+    for line in out[0].decode(locale.getpreferredencoding()).split("\n"):
         if line:
             next = line.split("=", 1)
             vars[next[0]] = next[1]
