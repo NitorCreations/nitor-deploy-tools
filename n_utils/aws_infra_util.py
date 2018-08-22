@@ -407,11 +407,15 @@ def _get_params(data, template):
         _add_params(params, data, 'Parameters', True)
         if 'Fn::Merge' in data['Parameters'] and 'Result' in data['Parameters']['Fn::Merge']:
             _add_params(params, data['Parameters']['Fn::Merge'], 'Result', True)
+        if 'Fn::ImportYaml' in data['Parameters'] and 'Result' in data['Parameters']['Fn::ImportYaml']:
+            _add_params(params, data['Parameters']['Fn::ImportYaml'], 'Result', True)
     if "resources" in data and 'Parameters' in data['resources']:
         params['ServerlessDeploymentBucket'] = PARAM_NOT_AVAILABLE
         _add_params(params, data['resources'], 'Parameters', True)
-        if 'Fn::Merge' in data['resources']['Parameters'] and 'Results' in data['resources']['Parameters']['Fn::Merge']:
-            _add_params(params, data['resources']['Parameters']['Fn::Merge'], 'Results', True)
+        if 'Fn::Merge' in data['resources']['Parameters'] and 'Result' in data['resources']['Parameters']['Fn::Merge']:
+            _add_params(params, data['resources']['Parameters']['Fn::Merge'], 'Result', True)
+        if 'Fn::ImportYaml' in data['resources']['Parameters'] and 'Result' in data['resources']['Parameters']['Fn::ImportYaml']:
+            _add_params(params, data['resources']['Parameters']['Fn::ImportYaml'], 'Result', True)
 
     params['STACK_NAME'] = PARAM_NOT_AVAILABLE
 
@@ -493,14 +497,24 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
                 gotImportErrors = True
         elif 'Fn::ImportYaml' in data:
             val = data['Fn::ImportYaml']
-            del data['Fn::ImportYaml']
             yaml_file = resolve_file(val, basefile, templateParams)
+            del data['Fn::ImportYaml']
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
                 params = OrderedDict(templateParams.items())
                 params.update(data)
                 contents = expand_vars(contents, params, None, [])
+                data['Fn::ImportYaml'] = OrderedDict()
+                data['Fn::ImportYaml']['Result'] = contents
                 param_refresh_callback()
+                while True:
+                    expanded_result = expand_vars(contents, templateParams, None, [])
+                    if expanded_result == contents:
+                        break
+                    else:
+                        contents.clear()
+                        contents.update(expanded_result)
+                        param_refresh_callback()
                 data.clear()
                 if isinstance(contents, OrderedDict):
                     for k, val in list(contents.items()):

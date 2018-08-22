@@ -1,0 +1,2 @@
+Parameters:
+  'Fn::ImportYaml': include-test.yaml

@@ -765,7 +765,7 @@ def expand_vars(line, params, vault, vault_keys):
     if isinstance(line, OrderedDict) or isinstance(line, dict):
         ret = OrderedDict(line.items())
         for key, value in line.items():
-            if key.startswith("Fn::") and not key != "Fn::ImportYaml" and not key != "Fn::ImportJson":
+            if key.startswith("Fn::") and not key != "Fn::ImportYaml":
                 continue
             else:
                 new_key = expand_vars(key, params, vault, vault_keys)
