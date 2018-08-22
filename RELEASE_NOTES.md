@@ -7,5 +7,4 @@
 * Parameter expansions in tempolate pre-processing with multiple syntaxes ($param, ${param} or ((param)))
 * Project env setting via git config to make working with multiple ndt repositories a breeze
 * MFA handling - import, export and code generation for MFA tokens and integration into `assume-role`
-
-
+* Stack tags: add a top level element "Tags" to a cloudformation stack and they will be given to CloudFormation as separate stack tags
