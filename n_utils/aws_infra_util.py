@@ -203,13 +203,18 @@ def _add_subcomponent_file(component, branch, type, name, files):
 
 
 def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, branch=None):
-    ret = {}
     if not branch:
         if "GIT_BRANCH" in os.environ:
             branch = os.environ["GIT_BRANCH"]
         else:
             branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     branch = branch.strip().split("/")[-1:][0]
+    ret = {
+        "GIT_BRANCH": branch
+    }
+    account = resolve_account()
+    if account:
+        ret["ACCOUNT_ID"] = account
     files = ["infra.properties", "infra-" + branch + ".properties"]
     if component:
         files.append(component + os.sep + "infra.properties")
@@ -239,12 +244,6 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
                 pass
     if "REGION" not in ret:
         ret["REGION"] = region()
-    if "ACCOUNT_ID" not in ret:
-        account = resolve_account()
-        if account:
-            ret["ACCOUNT_ID"] = account
-    if "GIT_BRANCH" not in ret:
-        ret["GIT_BRANCH"] = branch
     if "paramEnvId" not in ret:
         ret["paramEnvId"] = branch
     if "ORIG_STACK_NAME" in os.environ:
