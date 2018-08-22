@@ -365,18 +365,17 @@ def import_script(filename):
     return arr
 
 
-def resolve_file(filename, basefile, templateParams):
-    resolved = filename % templateParams
+def resolve_file(filename, basefile):
     if filename[0] == "/":
-        return existing(resolved)
-    if re.match(r"^(\.\./\.\./|\.\./|\./)?aws-utils/.*", resolved):
-        return existing(find_include(re.sub(r"^(\.\./\.\./|\.\./|\./)?aws-utils/", "", resolved)))
+        return existing(filename)
+    if re.match(r"^(\.\./\.\./|\.\./|\./)?aws-utils/.*", filename):
+        return existing(find_include(re.sub(r"^(\.\./\.\./|\.\./|\./)?aws-utils/", "", filename)))
     if re.match(r"^\(\(\s?includes\s?\)\)/.*", filename):
-        return existing(find_include(re.sub(r"^\(\(\s?includes\s?\)\)/", "", resolved)))
+        return existing(find_include(re.sub(r"^\(\(\s?includes\s?\)\)/", "", filename)))
     base = os.path.dirname(basefile)
     if len(base) == 0:
         base = "."
-    return existing(base + "/" + resolved)
+    return existing(base + "/" + filename)
 
 
 def existing(filename):
@@ -485,7 +484,8 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
     if isinstance(data, OrderedDict):
         if 'Fn::ImportFile' in data:
             val = data['Fn::ImportFile']
-            script_import = resolve_file(val, basefile, templateParams)
+            file = expand_vars(val, templateParams, None, [])
+            script_import = resolve_file(file, basefile)
             if script_import:
                 data.clear()
                 contents = import_script(script_import)
@@ -497,7 +497,8 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
                 gotImportErrors = True
         elif 'Fn::ImportYaml' in data:
             val = data['Fn::ImportYaml']
-            yaml_file = resolve_file(val, basefile, templateParams)
+            file = expand_vars(val, templateParams, None, [])
+            yaml_file = resolve_file(file, basefile)
             del data['Fn::ImportYaml']
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
