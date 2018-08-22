@@ -79,6 +79,10 @@ def wait_net_service(server, port, timeout=None):
     import socket
     import errno
     s = socket.socket()
+    if sys.version < "3":
+        # Just make this something that will not be throwns since python 2
+        # just has socket.error
+        ConnectionRefusedError = EndpointConnectionError
     if timeout:
         from time import time as now
         # time module is needed to calc timeout shared between two exceptions
@@ -99,6 +103,9 @@ def wait_net_service(server, port, timeout=None):
         except socket.error as err:
             # catch timeout exception from underlying network library
             # this one is different from socket.timeout
+            if isinstance(err, ConnectionRefusedError):
+                s.close()
+                return False
             if not isinstance(err.args, tuple) or err[0] != errno.ETIMEDOUT or err[0] != errno.ECONNREFUSED:
                 raise
             elif err[0] == errno.ECONNREFUSED:
