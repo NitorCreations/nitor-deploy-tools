@@ -17,6 +17,9 @@
 """ Utilities to work with instances made by nitor-deploy-tools stacks
 """
 from __future__ import print_function
+
+from numpy.ma import isin
+
 from builtins import str
 from builtins import range
 from builtins import object
@@ -44,7 +47,8 @@ from requests.exceptions import ConnectionError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from n_vault import Vault
-from .mfa_utils import mfa_read_token, mfa_generate_code
+from n_utils.mfa_utils import mfa_read_token, mfa_generate_code
+from n_utils import ParamNotAvailable
 
 NoneType = type(None)
 ACCOUNT_ID = None
@@ -819,7 +823,9 @@ def _process_line(line, params, vault, vault_keys):
                 next_start = match.end()
             else:
                 param_value = VAR_OPERATIONS[name_arg[2]](param_value, name_arg[1])
-        if not isinstance(param_value, NoneType):
+        if isinstance(param_value, NoneType) or isinstance(param_value, ParamNotAvailable):
+            next_start = match.end()
+        else:
             ret = ret[:match.start()] + param_value + ret[match.end():]
         match = PARAM_RE.search(ret, next_start)
     return ret

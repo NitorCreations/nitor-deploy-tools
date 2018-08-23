@@ -32,7 +32,7 @@ from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
 from n_utils.ndt import find_include
 from n_utils.ecr_utils import repo_uri
-
+from n_utils import ParamNotAvailable
 stacks = dict()
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
 
@@ -215,6 +215,8 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
     account = resolve_account()
     if account:
         ret["ACCOUNT_ID"] = account
+    if component:
+        ret["COMPONENT"] = component
     files = ["infra.properties", "infra-" + branch + ".properties"]
     if component:
         files.append(component + os.sep + "infra.properties")
@@ -383,8 +385,7 @@ def existing(filename):
     else:
         return None
 
-
-PARAM_NOT_AVAILABLE = "N/A"
+PARAM_NOT_AVAILABLE = ParamNotAvailable()
 
 
 def _add_params(target, source, source_prop, use_value):
