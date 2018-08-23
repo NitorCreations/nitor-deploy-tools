@@ -14,14 +14,14 @@ def do_call(command):
 for command in sorted(COMMAND_MAPPINGS.keys()):
     if command in CONSOLE_PREFERRED:
         continue
-    print("### `ndt " + command + "`")
+    print("## `ndt " + command + "`")
     print("")
     print("```bash")
     print(do_call(["ndt", command, "-h"]))
     print("```\n")
 
 for command in CONSOLE_PREFERRED:
-    print("### `[ndt ]" + command + "`")
+    print("## `[ndt ]" + command + "`")
     print("")
     print("```bash")
     print(do_call([command, "-h"]))
@@ -29,7 +29,7 @@ for command in CONSOLE_PREFERRED:
 
 for script in sorted(PATH_COMMANDS):
     name = script.split("/")[-1]
-    print("### `" + name + "`")
+    print("## `" + name + "`")
     print("")
     print("```bash")
     print(do_call([name, "-h"]))

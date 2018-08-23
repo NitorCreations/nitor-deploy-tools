@@ -65,3 +65,14 @@ For full list of commands see [here](docs/commands.md)
 - [Command Completion Support](docs/completion.md)
 - [Template Pre-Processing](docs/template-processing.md)
 - [Multifactor Authetication](docs/mfa.md)
+- [Recommended parameters and workflow](docs/workflow.md)
+
+## Versioning
+
+This library uses a simplified semantic versioning scheme: major version change for changes
+that are not backwards compatible (not expecting these) and the minor
+version for all backwards compatible changes. We won't make the distinction between
+new functionality and bugfixes, since we don't think it matters and is not a thing
+worth wasting time on. We will release often and if we need changes that are not comptatible,
+we will fork the next major version and release alphas versions of that until we are
+happy to release the next major version and try and have a painless upgrade path.

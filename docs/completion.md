@@ -1,4 +1,4 @@
-## Command completion
+# Command completion
 
 Most things have decent bash command completion, even for things like AMI Ids in AWS. To make it work, the things
 outputted by `nitor-dt-register-complete` need to be in your environment. So put the following somewhere

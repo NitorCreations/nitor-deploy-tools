@@ -1,4 +1,4 @@
-## Template pre-processing
+# Template pre-processing
 
 For `ndt deploy-stack`, `ndt deploy-serverless`, `ndt yaml-to-json` and `ndt yaml-to-yaml` there
 is a template pre-processing step that is fairly important. The pre-processing implements some
@@ -15,11 +15,11 @@ serverless projects. The flow of the prosessing is roughly as follows:
 
 Easiest way to test your parameter processing is to run `ndt yaml-to-yaml my/stack-awesome/template.yaml`
 
-### Pre-processing functions
+## Pre-processing functions
 
 There are a few usefull fuction you can insert and use in the pre-processing phase
 
-#### `Fn::ImportYaml`
+### `Fn::ImportYaml`
 
 Imports an external yaml file into the place occupied with this function. Here is an example:
 
@@ -58,7 +58,7 @@ paramInstanceType:
 The filename of the import may contain parameters in the form `${parameter}` and that will be resolved
 before include.
 
-#### `Fn::Merge`
+### `Fn::Merge`
 
 Often you will want to merge an imported yaml snippet into an existing list and this function does that.
 Here is an example:
@@ -77,7 +77,7 @@ Parameters:
       Type: String
       Default: ''
 ```
-#### `Fn::ImportFile`
+### `Fn::ImportFile`
 
 Imports a file in place of the function. Useful for files you want to manage externally to the
 template as for example userdata shell scripts or AppSync schemas or the like. Importing
@@ -86,7 +86,7 @@ does a few useful tricks:
 * Resolves parameter references with a few different notations to fit into different scripting files
 * Encodes the result into a list of json strings, one string per line and adds in the appropriate escapes
 
-##### Parameter notations
+#### Parameter notations
 
 Shell scripts usually most simply can define environment variables with the prefix `CF_` and the
 rest of the name will be the name of the parameter that will be inserted as a reference to the value.

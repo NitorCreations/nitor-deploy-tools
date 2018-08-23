@@ -1,10 +1,10 @@
-## Working with TOTP MFA tokens
+# Working with TOTP MFA tokens
 
 NDT includes tools to import, use and backup TOTP MFA tokens. Notably the `ndt assume-role` command
 can use as an argument a name of an MFA token to make it easy to assume roles that require TOTP
 MFA authentication.
 
-### Importing
+## Importing
 
 It is recommended that you import MFA codes from whatever place offers them to NDT first and then
 use that to import the code to whatever other device that needs it. Importing is done with `ndt mfa-add-code`.
@@ -26,7 +26,7 @@ Ndt saves the token in `~/.ndt/mfa_mytokenname` and the secret is encrypted with
 derived from your computers uuid. This means that those files are only usable on the machine
 that you added the codes on.
 
-### Using
+## Using
 
 The simplest use of the code is getting a TOTP code from the command line by calling `ndt mfa-code mytokenname`
 The code printed can then be copied into whatever place is requesting it. Another very
@@ -47,7 +47,7 @@ unset AWS_PROFILE AWS_DEFAULT_PROFILE
 Then assuming that role would simply be typing `. extadmin` in the terminal. That would also
 be protected by the mfa codes that are only usable on your computer.
 
-### Backing up
+## Backing up
 
 There are two ways to back up your tokens. The tokens will not be usable directly on any
 other computer and that includes a re-installed OS on the same computer.

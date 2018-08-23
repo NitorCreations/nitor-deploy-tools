@@ -1,6 +1,6 @@
 # NDT Command Reference
 
-### `ndt account-id`
+## `ndt account-id`
 
 ```bash
 usage: ndt account-id [-h]
@@ -12,7 +12,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt add-deployer-server`
+## `ndt add-deployer-server`
 
 ```bash
 usage: ndt add-deployer-server [-h] [--id ID] file username
@@ -30,7 +30,7 @@ optional arguments:
               this id is added and another with \'-release\' appended
 ```
 
-### `ndt assume-role`
+## `ndt assume-role`
 
 ```bash
 usage: ndt assume-role [-h] [-t TOKEN_NAME] [-d DURATION] role_arn
@@ -50,7 +50,7 @@ optional arguments:
                         Duration for the session in minutes
 ```
 
-### `ndt bake-docker`
+## `ndt bake-docker`
 
 ```bash
 usage: ndt bake-docker [-h] [-i] component docker-name
@@ -70,7 +70,7 @@ optional arguments:
   -i, --imagedefinitions  create imagedefinitions.json for AWS CodePipeline
 ```
 
-### `ndt bake-image`
+## `ndt bake-image`
 
 ```bash
 usage: ndt bake-image [-h] component
@@ -85,7 +85,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt cf-delete-stack`
+## `ndt cf-delete-stack`
 
 ```bash
 usage: ndt cf-delete-stack [-h] stack_name region
@@ -100,7 +100,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt cf-follow-logs`
+## `ndt cf-follow-logs`
 
 ```bash
 usage: ndt cf-follow-logs [-h] [-s START] stack_name
@@ -116,7 +116,7 @@ optional arguments:
                         Start time in seconds since epoc
 ```
 
-### `ndt cf-get-parameter`
+## `ndt cf-get-parameter`
 
 ```bash
 usage: ndt cf-get-parameter [-h] parameter
@@ -130,7 +130,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt cf-logical-id`
+## `ndt cf-logical-id`
 
 ```bash
 usage: ndt cf-logical-id [-h]
@@ -141,7 +141,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt cf-region`
+## `ndt cf-region`
 
 ```bash
 usage: ndt cf-region [-h]
@@ -152,7 +152,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt cf-signal-status`
+## `ndt cf-signal-status`
 
 ```bash
 usage: ndt cf-signal-status [-h] [-r RESOURCE] status
@@ -170,7 +170,7 @@ optional arguments:
                         cloudformation tags by default
 ```
 
-### `ndt cf-stack-id`
+## `ndt cf-stack-id`
 
 ```bash
 usage: ndt cf-stack-id [-h]
@@ -181,7 +181,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt cf-stack-name`
+## `ndt cf-stack-name`
 
 ```bash
 usage: ndt cf-stack-name [-h]
@@ -192,7 +192,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt create-account`
+## `ndt create-account`
 
 ```bash
 usage: ndt create-account [-h] [-d] [-o ORGANIZATION_ROLE_NAME]
@@ -220,7 +220,7 @@ optional arguments:
                         Name of MFA token to use
 ```
 
-### `ndt create-stack`
+## `ndt create-stack`
 
 ```bash
 usage: ndt create-stack [-h] [-y] [template]
@@ -235,7 +235,7 @@ optional arguments:
   -y, --yes   Answer yes or use default to all questions
 ```
 
-### `ndt deploy-serverless`
+## `ndt deploy-serverless`
 
 ```bash
 usage: ndt deploy-serverless [-d] [-h] component serverless-name
@@ -254,7 +254,7 @@ optional arguments:
   -h, --help    show this help message and exit
 ```
 
-### `ndt deploy-stack`
+## `ndt deploy-stack`
 
 ```bash
 ami that is tagged with the bake-job name
@@ -274,7 +274,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt detach-volume`
+## `ndt detach-volume`
 
 ```bash
 usage: ndt detach-volume [-h] mount_path
@@ -288,7 +288,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt ec2-clean-snapshots`
+## `ndt ec2-clean-snapshots`
 
 ```bash
 usage: ndt ec2-clean-snapshots [-h] [-r REGION] [-d DAYS] tags [tags ...]
@@ -309,7 +309,7 @@ optional arguments:
                         snapshots to be deleted
 ```
 
-### `ndt ec2-get-tag`
+## `ndt ec2-get-tag`
 
 ```bash
 usage: ndt ec2-get-tag [-h] name
@@ -323,7 +323,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt ec2-get-userdata`
+## `ndt ec2-get-userdata`
 
 ```bash
 usage: ndt ec2-get-userdata [-h] file
@@ -337,7 +337,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt ec2-instance-id`
+## `ndt ec2-instance-id`
 
 ```bash
 usage: ndt ec2-instance-id [-h]
@@ -348,7 +348,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt ec2-region`
+## `ndt ec2-region`
 
 ```bash
 usage: ndt ec2-region [-h]
@@ -359,7 +359,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt ecr-ensure-repo`
+## `ndt ecr-ensure-repo`
 
 ```bash
 usage: ndt ecr-ensure-repo [-h] name
@@ -373,7 +373,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt ecr-repo-uri`
+## `ndt ecr-repo-uri`
 
 ```bash
 usage: ndt ecr-repo-uri [-h] name
@@ -387,7 +387,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt get-images`
+## `ndt get-images`
 
 ```bash
 usage: ndt get-images [-h] job_name
@@ -401,7 +401,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt interpolate-file`
+## `ndt interpolate-file`
 
 ```bash
 usage: ndt interpolate-file [-h] [-s STACK] [-v] [-o OUTPUT] [-e ENCODING]
@@ -426,7 +426,7 @@ optional arguments:
                         Encoding to use for the file. Defaults to utf-8
 ```
 
-### `ndt json-to-yaml`
+## `ndt json-to-yaml`
 
 ```bash
 usage: ndt json-to-yaml [-h] [--colorize] file
@@ -442,7 +442,7 @@ optional arguments:
   --colorize, -c  Colorize output
 ```
 
-### `ndt latest-snapshot`
+## `ndt latest-snapshot`
 
 ```bash
 usage: ndt latest-snapshot [-h] tag
@@ -456,7 +456,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt list-file-to-json`
+## `ndt list-file-to-json`
 
 ```bash
 usage: ndt list-file-to-json [-h] arrayname file
@@ -472,7 +472,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt list-jobs`
+## `ndt list-jobs`
 
 ```bash
 usage: ndt list-jobs  [-h]
@@ -484,7 +484,7 @@ optional arguments:
   -h, --help  show this help message and exit exit 1
 ```
 
-### `ndt load-parameters`
+## `ndt load-parameters`
 
 ```bash
 usage: ndt load-parameters [-h] [--branch BRANCH]
@@ -544,7 +544,7 @@ optional arguments:
                         Output as eval-able export statements
 ```
 
-### `ndt logs`
+## `ndt logs`
 
 ```bash
 usage: ndt logs [-h] [-f FILTER] [-s START [START ...]] [-e END [END ...]]
@@ -568,7 +568,7 @@ optional arguments:
   -o, --order           Best effort ordering of log entries
 ```
 
-### `ndt mfa-add-token`
+## `ndt mfa-add-token`
 
 ```bash
 usage: ndt mfa-add-token [-h] [-i] [-a TOKEN_ARN] [-s TOKEN_SECRET] [-f]
@@ -592,7 +592,7 @@ optional arguments:
   -f, --force           Force an overwrite if the token already exists.
 ```
 
-### `ndt mfa-backup`
+## `ndt mfa-backup`
 
 ```bash
 usage: ndt mfa-backup [-h] [-d FILE] backup_secret
@@ -610,7 +610,7 @@ optional arguments:
                         Outputs a decrypted token backup read from given file.
 ```
 
-### `ndt mfa-code`
+## `ndt mfa-code`
 
 ```bash
 usage: ndt mfa-code [-h] token_name
@@ -624,7 +624,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt mfa-delete-token`
+## `ndt mfa-delete-token`
 
 ```bash
 usage: ndt mfa-delete-token [-h] token_name
@@ -639,7 +639,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt mfa-qrcode`
+## `ndt mfa-qrcode`
 
 ```bash
 usage: ndt mfa-qrcode [-h] token_name
@@ -653,7 +653,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt print-create-instructions`
+## `ndt print-create-instructions`
 
 ```bash
 Prints out the instructions to create and deploy the resources in a stack
@@ -670,7 +670,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt promote-image`
+## `ndt promote-image`
 
 ```bash
 usage: ndt promote-image [-h] image_id target_job
@@ -685,7 +685,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt pytail`
+## `ndt pytail`
 
 ```bash
 usage: ndt pytail [-h] file
@@ -699,7 +699,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt region`
+## `ndt region`
 
 ```bash
 usage: ndt region [-h]
@@ -710,7 +710,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt register-private-dns`
+## `ndt register-private-dns`
 
 ```bash
 usage: ndt register-private-dns [-h] dns_name hosted_zone
@@ -725,7 +725,7 @@ optional arguments:
   -h, --help   show this help message and exit
 ```
 
-### `ndt setup-cli`
+## `ndt setup-cli`
 
 ```bash
 usage: ndt setup-cli [-h] [-n NAME] [-k KEY_ID] [-s SECRET] [-r REGION]
@@ -745,7 +745,7 @@ optional arguments:
                         Default region for the profile
 ```
 
-### `ndt share-to-another-region`
+## `ndt share-to-another-region`
 
 ```bash
 usage: ndt share-to-another-region [-h]
@@ -764,7 +764,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt show-stack-params-and-outputs`
+## `ndt show-stack-params-and-outputs`
 
 ```bash
 usage: ndt show-stack-params-and-outputs [-h] [-r REGION] [-p PARAMETER]
@@ -783,7 +783,7 @@ optional arguments:
                         Name of paremeter if only one parameter required
 ```
 
-### `ndt snapshot-from-volume`
+## `ndt snapshot-from-volume`
 
 ```bash
 usage: ndt snapshot-from-volume [-h] [-w] tag_key tag_value mount_path
@@ -800,7 +800,7 @@ optional arguments:
   -w, --wait  Wait for the snapshot to finish before returning
 ```
 
-### `ndt undeploy-stack`
+## `ndt undeploy-stack`
 
 ```bash
 usage: ndt undeploy-stack [-h] [-f] <component> <stack-name>
@@ -818,7 +818,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ndt upsert-cloudfront-records`
+## `ndt upsert-cloudfront-records`
 
 ```bash
 usage: ndt upsert-cloudfront-records [-h]
@@ -836,7 +836,7 @@ optional arguments:
   -w, --wait            Wait for request to sync
 ```
 
-### `ndt volume-from-snapshot`
+## `ndt volume-from-snapshot`
 
 ```bash
 usage: ndt volume-from-snapshot [-h] [-n]
@@ -844,7 +844,7 @@ usage: ndt volume-from-snapshot [-h] [-n]
 ndt volume-from-snapshot: error: Only makes sense on an EC2 instance
 ```
 
-### `ndt yaml-to-json`
+## `ndt yaml-to-json`
 
 ```bash
 usage: ndt yaml-to-json [-h] [--colorize] file
@@ -860,7 +860,7 @@ optional arguments:
   --colorize, -c  Colorize output
 ```
 
-### `ndt yaml-to-yaml`
+## `ndt yaml-to-yaml`
 
 ```bash
 usage: ndt yaml-to-yaml [-h] [--colorize] file
@@ -875,7 +875,7 @@ optional arguments:
   --colorize, -c  Colorize output
 ```
 
-### `[ndt ]associate-eip`
+## `[ndt ]associate-eip`
 
 ```bash
 usage: associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
@@ -899,7 +899,7 @@ optional arguments:
                         the stack - default is paramEipAllocationId
 ```
 
-### `[ndt ]cf-logs-to-cloudwatch`
+## `[ndt ]cf-logs-to-cloudwatch`
 
 ```bash
 usage: cf-logs-to-cloudwatch [-h] file
@@ -915,7 +915,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `[ndt ]ec2-associate-eip`
+## `[ndt ]ec2-associate-eip`
 
 ```bash
 usage: ec2-associate-eip [-h] [-i IP] [-a ALLOCATIONID] [-e EIPPARAM]
@@ -939,7 +939,7 @@ optional arguments:
                         the stack - default is paramEipAllocationId
 ```
 
-### `[ndt ]logs-to-cloudwatch`
+## `[ndt ]logs-to-cloudwatch`
 
 ```bash
 usage: logs-to-cloudwatch [-h] file
@@ -955,7 +955,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `[ndt ]n-include`
+## `[ndt ]n-include`
 
 ```bash
 usage: n-include [-h] file
@@ -969,7 +969,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `[ndt ]n-include-all`
+## `[ndt ]n-include-all`
 
 ```bash
 usage: n-include-all [-h] pattern
@@ -983,7 +983,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `[ndt ]signal-cf-status`
+## `[ndt ]signal-cf-status`
 
 ```bash
 usage: signal-cf-status [-h] [-r RESOURCE] status
@@ -1001,7 +1001,7 @@ optional arguments:
                         cloudformation tags by default
 ```
 
-### `create-shell-archive.sh`
+## `create-shell-archive.sh`
 
 ```bash
 file  one or more files to package into the archive
@@ -1014,7 +1014,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `encrypt-and-mount.sh`
+## `encrypt-and-mount.sh`
 
 ```bash
 Mounts a local block device as an encrypted volume. Handy for things like local database installs.
@@ -1029,7 +1029,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `ensure-letsencrypt-certs.sh`
+## `ensure-letsencrypt-certs.sh`
 
 ```bash
 usage: ensure-letsencrypt-certs.sh [-h] domain-name [domain-name ...]
@@ -1045,7 +1045,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `lastpass-fetch-notes.sh`
+## `lastpass-fetch-notes.sh`
 
 ```bash
 --optional  marks that following files will not fail and exit the script in they do not exist
@@ -1062,7 +1062,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `lpssh`
+## `lpssh`
 
 ```bash
 usage: lpssh [-h] [-k key-name] user@example.com
@@ -1079,7 +1079,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-### `setup-fetch-secrets.sh`
+## `setup-fetch-secrets.sh`
 
 ```bash
 Please run as root
@@ -1094,7 +1094,7 @@ optional arguments:
   -h, --help  show this help message and exit exit 1
 ```
 
-### `ssh-hostkeys-collect.sh`
+## `ssh-hostkeys-collect.sh`
 
 ```bash
 usage: ssh-hostkeys-collect.sh [-h] hostname
