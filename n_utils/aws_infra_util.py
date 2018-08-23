@@ -477,7 +477,7 @@ def apply_source(data, filename, optional, default):
 # returns new data
 
 
-def import_scripts_pass1(data, root, basefile, path, templateParams):
+def _preprocess_template(data, root, basefile, path, templateParams):
     param_refresh_callback = lambda: templateParams.update(_get_params(root, basefile))
     param_refresh_callback()
     global gotImportErrors
@@ -519,12 +519,12 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
                 data.clear()
                 if isinstance(contents, OrderedDict):
                     for k, val in list(contents.items()):
-                        data[k] = import_scripts_pass1(val, root, yaml_file, path +
+                        data[k] = _preprocess_template(val, root, yaml_file, path +
                                                        k + "_", templateParams)
                 elif isinstance(contents, list):
                     data = contents
                     for i in range(0, len(data)):
-                        data[i] = import_scripts_pass1(data[i], root, yaml_file,
+                        data[i] = _preprocess_template(data[i], root, yaml_file,
                                                        path + str(i) + "_", templateParams)
                 else:
                     print("ERROR: " + path + ": Can't import yaml file \"" +
@@ -550,7 +550,7 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
                 print("ERROR: " + path + ": Fn::Merge must associate to a list in file " + basefile)
                 gotImportErrors = True
                 return data
-            merge = import_scripts_pass1(expand_vars(merge_list.pop(0), templateParams, None, []), root, basefile,
+            merge = _preprocess_template(expand_vars(merge_list.pop(0), templateParams, None, []), root, basefile,
                                          path + "/", templateParams)
             if not result:
                 result = merge
@@ -580,21 +580,46 @@ def import_scripts_pass1(data, root, basefile, path, templateParams):
                 del data['Fn::Merge']
                 return result
             else:
-                return import_scripts_pass1(data, root, basefile, path + "/", templateParams)
+                return _preprocess_template(data, root, basefile, path + "/", templateParams)
+        elif 'StackRef' in data:
+            stack_var = expand_vars(data['StackRef'], templateParams, None, [])
+            stack_var = _check_refs(stack_var, basefile,
+                                    path + "StackRef_", templateParams,
+                                    True)
+            data.clear()
+            region = stack_var['region']
+            stack_name = stack_var['stackName']
+            stack_param = stack_var['paramName']
+            stack_key = region + "." + stack_name
+            if stack_key in stacks:
+                stack_params = stacks[stack_key]
+            else:
+                stack_params = stack_params_and_outputs(region, stack_name)
+                stacks[stack_key] = stack_params
+            if stack_param not in stack_params:
+                sys.exit("Did not find value for: " + stack_param + " in stack " + stack_name)
+            param_refresh_callback()
+            return stack_params[stack_param]
         elif 'Ref' in data:
             data['__source'] = basefile
         else:
+            if 'Parameters' in data:
+                data['Parameters'] = _preprocess_template(data['Parameters'], root, basefile, path + "Parameters_",
+                                                          templateParams)
+                param_refresh_callback()
             for k, val in list(data.items()):
-                data[k] = import_scripts_pass1(val, root, basefile, path + k + "_", templateParams)
+                if k != 'Parameters':
+                    data[k] = expand_vars(_preprocess_template(val, root, basefile, path + k + "_", templateParams),
+                                          templateParams, None, [])
     elif isinstance(data, list):
         for i in range(0, len(data)):
-            data[i] = import_scripts_pass1(data[i], root, basefile, path + str(i) + "_", templateParams)
+            data[i] = _preprocess_template(data[i], root, basefile, path + str(i) + "_", templateParams)
     return data
 
 # returns new data
 
 
-def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
+def _check_refs(data, templateFile, path, templateParams, resolveRefs):
     global gotImportErrors
     if isinstance(data, OrderedDict):
         if 'Ref' in data:
@@ -626,31 +651,13 @@ def import_scripts_pass2(data, templateFile, path, templateParams, resolveRefs):
                 del data['__optional']
             if '__default' in data:
                 del data['__default']
-        elif 'StackRef' in data:
-            stack_var = import_scripts_pass2(data['StackRef'], templateFile,
-                                             path + "StackRef_", templateParams,
-                                             True)
-            data.clear()
-            region = stack_var['region']
-            stack_name = stack_var['stackName']
-            stack_param = stack_var['paramName']
-            stack_key = region + "." + stack_name
-            if stack_key in stacks:
-                stack_params = stacks[stack_key]
-            else:
-                stack_params = stack_params_and_outputs(region, stack_name)
-                stacks[stack_key] = stack_params
-            if stack_param not in stack_params:
-                sys.exit("Did not find value for: " + stack_param +
-                         " in stack " + stack_name)
-            data = stack_params[stack_param]
         else:
             for k, val in list(data.items()):
-                data[k] = import_scripts_pass2(val, templateFile, path + k +
+                data[k] = _check_refs(val, templateFile, path + k +
                                                "_", templateParams, resolveRefs)
     elif isinstance(data, list):
         for i in range(0, len(data)):
-            data[i] = import_scripts_pass2(data[i], templateFile, path +
+            data[i] = _check_refs(data[i], templateFile, path +
                                            str(i) + "_", templateParams,
                                            resolveRefs)
     return data
@@ -661,8 +668,8 @@ def import_scripts(data, basefile):
     gotImportErrors = False
 
     data = expand_vars(data, _get_params(data, basefile), None, [])
-    data = import_scripts_pass1(data, data, basefile, "", _get_params(data, basefile))
-    data = import_scripts_pass2(data, basefile, "", _get_params(data, basefile), False)
+    data = _preprocess_template(data, data, basefile, "", _get_params(data, basefile))
+    data = _check_refs(data, basefile, "", _get_params(data, basefile), False)
     if gotImportErrors:
         sys.exit(1)
     return data

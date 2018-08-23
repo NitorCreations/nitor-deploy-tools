@@ -18,8 +18,6 @@
 """
 from __future__ import print_function
 
-from numpy.ma import isin
-
 from builtins import str
 from builtins import range
 from builtins import object
@@ -745,9 +743,9 @@ def interpolate_file(file_name, destination=None, stack_name=None,
     os.unlink(dstfile.name)
 
 
-PARAM_RE = re.compile(r"\$\{([^\$\{\}]*)\}")
-SIMPLE_PARAM_RE = re.compile(r"\$([a-zA-Z0-9_]*)")
-PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)')
+PARAM_RE = re.compile(r"\$\{([^\$\{\}]*)\}", re.M)
+SIMPLE_PARAM_RE = re.compile(r"\$([a-zA-Z0-9_]*)", re.M)
+PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)', re.M)
 
 
 def _apply_simple_regex(RE, line, params, vault, vault_keys):

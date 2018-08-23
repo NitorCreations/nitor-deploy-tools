@@ -122,3 +122,6 @@ def ndt():
             sys.argv = sys.argv[1:]
             sys.argv[0] = "ndt " + sys.argv[0]
             my_func()
+
+if __name__ == "__main__":
+    ndt()
