@@ -73,7 +73,7 @@ fi
 # Delete will fail if S3 buckets have data - so delete those...
 for BUCKET in $(aws --region $REGION cloudformation list-stack-resources --stack-name ${STACK_NAME} \
  --query "StackResourceSummaries[*]" \
- | python -c "import sys, json; print '\n'.join([bucket['PhysicalResourceId'] for bucket in json.load(sys.stdin) if bucket['ResourceType'] == 'AWS::S3::Bucket'])"); do
+ | python -c "import sys, json; print('\n'.join([bucket['PhysicalResourceId'] for bucket in json.load(sys.stdin) if bucket['ResourceType'] == 'AWS::S3::Bucket']))"); do
    if [ -n "$FORCE" ]; then
      echo "force flag defined - deleting content of bucket $BUCKET"
      aws s3 rm s3://$BUCKET --recursive ||:
