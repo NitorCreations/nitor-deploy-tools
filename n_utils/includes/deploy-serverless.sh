@@ -66,8 +66,8 @@ die () {
 }
 set -xe
 
-image="$1" ; shift
-[ "${image}" ] || die "You must give the image name as argument"
+component="$1" ; shift
+[ "${component}" ] || die "You must give the component name as argument"
 serverless="$1"; shift
 [ "${serverless}" ] || die "You must give the serverless name as argument"
 
@@ -85,12 +85,12 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$image" -l "$serverless" -e)"
+eval "$(ndt load-parameters "$component" -l "$serverless" -e)"
 
-ndt load-parameters "$image" -l "$serverless" -y > "$image/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
-ndt yaml-to-yaml "$image/serverless-$ORIG_SERVERLESS_NAME/template.yaml" > "$image/serverless-$ORIG_SERVERLESS_NAME/serverless.yml"
+ndt load-parameters "$component" -l "$serverless" -y > "$component/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
+ndt yaml-to-yaml "$component/serverless-$ORIG_SERVERLESS_NAME/template.yaml" > "$component/serverless-$ORIG_SERVERLESS_NAME/serverless.yml"
 
-cd "$image/serverless-$ORIG_SERVERLESS_NAME"
+cd "$component/serverless-$ORIG_SERVERLESS_NAME"
 if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
 fi
