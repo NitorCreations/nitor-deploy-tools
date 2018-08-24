@@ -86,7 +86,7 @@ if [ "$1" = "-d" ]; then
   DRY_RUN="--dry-run"
   shift
 fi
-image="$1" ; shift
+component="$1" ; shift
 stackName="$1" ; shift
 AMI_ID="$1"
 shift ||:
@@ -100,7 +100,7 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$image" -s "$stackName" -e)"
+eval "$(ndt load-parameters "$component" -s "$stackName" -e)"
 
 if [ -z "$AMI_ID" ]; then
   AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"
@@ -108,4 +108,4 @@ fi
 
 export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
 
-cf-update-stack "${STACK_NAME}" "${image}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN
+cf-update-stack "${STACK_NAME}" "${component}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN
