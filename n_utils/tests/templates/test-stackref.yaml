@@ -162,7 +162,7 @@ Resources:
                 Resource: !Ref paramSitesBucketArn
               - Effect: "Allow"
                 Action: "s3:GetObject"
-                Resource: !Sub "${paramSitesBucketArn}/"
+                Resource: "${paramSitesBucketArn}/"
 
   resBackendLogGroup:
     Type: AWS::Logs::LogGroup

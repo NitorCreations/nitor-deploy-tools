@@ -280,27 +280,9 @@ CALLER_IDENTITY = {
 
 STACK_PARAMS = {
   "paramEnvId": "dev",
-  "paramSecretsUser": "webmaster@nitorcreations.com",
-  "paramHostedZoneName": "((zone))",
-  "paramEip": "((eip))",
-  "paramVPCId": "vpc-f3bd9896",
-  "paramSecretsFolder": "Certs",
-  "paramInfraName": "dev",
-  "resSitesBucket": "dev-sitesbucket-ressitesbucket-1k42h51y1y57",
-  "paramSubnetInfraC": "subnet-7278372b",
-  "paramSubnetInfraB": "subnet-70112607",
-  "paramSubnetInfraA": "subnet-abe2edce",
-  "BucketWebsiteURL": "http://dev-sitesbucket-ressitesbucket-1k42h51y1y57.s3-website-eu-west-1.amazonaws.com",
-  "paramSecretsBucket": "nitor-infra-secure",
-  "paramSshKeyName": "((ssh-key))",
-  "BucketDualStackDomainName": "dev-sitesbucket-ressitesbucket-1k42h51y1y57.s3.dualstack.eu-west-1.amazonaws.com",
-  "paramAmiName": "",
-  "paramDnsName": "((dns))",
-  "paramAmi": "ami-7abd0209",
-  "BucketArn": "arn:aws:s3:::dev-sitesbucket-ressitesbucket-1k42h51y1y57",
-  "paramInstanceType": "((instance))",
-  "BucketDomainName": "dev-sitesbucket-ressitesbucket-1k42h51y1y57.s3.amazonaws.com",
-  "BucketName": "dev-sitesbucket-ressitesbucket-1k42h51y1y57",
+  "BucketArn": "arn:aws:s3:::dev-my-test-bucket",
+  "BucketDomainName": "dev-my-test-bucket.s3.amazonaws.com",
+  "BucketName": "dev-my-test-bucket",
   "paramDeployToolsVersion": "alpha"
 }
 
@@ -345,4 +327,6 @@ def test_stackref_order(mocker, boto3_client):
     mocker.patch(target, side_effect=stack_params_and_outputs)
     result = yaml_to_dict('n_utils/tests/templates/test-stackref.yaml')
     assert result["Resources"]["resTaskDefinition"]["Properties"]["ContainerDefinitions"][0]["Environment"][0]["Value"] == \
-           "{\n  \"s3\": [{\n    \"path\": \"/${x-forwarded-for}/*\",\n    \"bucket\": \"dev-sitesbucket-ressitesbucket-1k42h51y1y57\",\n    \"basePath\": \"\",\n    \"region\": \"${AWS::Region}\"\n  }]\n}\n"
+           "{\n  \"s3\": [{\n    \"path\": \"/${x-forwarded-for}/*\",\n    \"bucket\": \"dev-my-test-bucket\",\n    \"basePath\": \"\",\n    \"region\": \"${AWS::Region}\"\n  }]\n}\n"
+    assert result["Resources"]["resBackendRole"]["Properties"]["Policies"][0]["PolicyDocument"]["Statement"][1]["Resource"] == \
+           "arn:aws:s3:::dev-my-test-bucket/"
