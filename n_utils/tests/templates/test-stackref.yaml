@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Infrastructure to expose S3 bucket prefixes as websites
+
+Parameters:
+  'Fn::Merge':
+  - paramContainerPort:
+      Type: Number
+      Default: 8088
+      Description: What port number the application inside the docker container is binding to
+    paramContainerCpu:
+      Type: Number
+      Default: 1024
+      Description: How much CPU to give the container. 1024 is 1 CPU
+    paramContainerMemory:
+      Type: Number
+      Default: 2048
+      Description: How much memory in megabytes to give the container
+    paramDesiredCount:
+      Type: Number
+      Default: 2
+      Description: How many copies of the service task to run
+    paramDockerTagToDeploy:
+      Type: String
+      Default: latest
+      Description: Docker image tag to use for deployment
+    paramServiceName:
+      Type: String
+      Default: Nitor-Backend-S3-Sites-Proxy
+      Description: Container service name
+    paramSitesBucketArn:
+      Description: Sites Bucket ARN
+      Type: String
+      Default:
+        StackRef: {region: {Ref: 'AWS::Region'}, stackName: "${paramEnvId}-sitesbucket", paramName: BucketArn}
+    paramSitesBucketName:
+      Description: Sites Bucket Name
+      Type: String
+      Default:
+        StackRef: {region: {Ref: 'AWS::Region'}, stackName: "${paramEnvId}-sitesbucket", paramName: BucketName}
+    paramDockerUribackend:
+      Description: Backend docker image uri
+      Type: String
+      Default: ""
+
+Resources:
+
+  resTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref paramServiceName
+      Cpu: !Ref paramContainerCpu
+      Memory: !Ref paramContainerMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue:
+          !Sub "${paramEnvId}-ecscluster:TaskExecutionRole"
+      TaskRoleArn: !Ref resBackendRole
+      ContainerDefinitions:
+        - Name: !Ref paramServiceName
+          Cpu: !Ref paramContainerCpu
+          Memory: !Ref paramContainerMemory
+          Image: !Sub "nitor/nitor-backend:latest"
+          Environment:
+            - Name: CONFIG
+              Value: |
+                {
+                  "s3": [{
+                    "path": "/${x-forwarded-for}/*",
+                    "bucket": "${paramSitesBucketName}",
+                    "basePath": "",
+                    "region": "${AWS::Region}"
+                  }]
+                }
+          PortMappings:
+            - ContainerPort: !Ref paramContainerPort
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+               awslogs-group: !Ref resBackendLogGroup
+               awslogs-region: !Ref AWS::Region
+               awslogs-stream-prefix: "proxycontainer"
+
+  resService:
+    Type: AWS::ECS::Service
+    DependsOn: resLoadBalancerRule
+    Properties:
+      ServiceName: !Ref paramServiceName
+      Cluster:
+        Fn::ImportValue:
+          !Sub "${paramEnvId}-ecscluster:Cluster"
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 75
+      DesiredCount: !Ref paramDesiredCount
+      TaskDefinition: !Ref resTaskDefinition
+      LoadBalancers:
+        - ContainerName: !Ref paramServiceName
+          ContainerPort: !Ref paramContainerPort
+          TargetGroupArn: !Ref resTargetGroup
+      HealthCheckGracePeriodSeconds: 30
+
+  # A target group. This is used for keeping track of all the tasks, and
+  # what IP addresses / port numbers they have. You can query it yourself,
+  # to use the addresses yourself, but most often this target group is just
+  # connected to an application load balancer, or network load balancer, so
+  # it can automatically distribute traffic across all the targets.
+  resTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 6
+      HealthCheckPath: /healthCheck
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      TargetType: ip
+      Name: !Ref paramServiceName
+      Port: !Ref paramContainerPort
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+
+  # Create a rule on the load balancer for routing traffic to the target group
+  resLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref resTargetGroup
+          Type: forward
+      Conditions:
+        - Field: host-header
+          Values:
+            - '*.nitor.zone'
+      ListenerArn:
+        Fn::ImportValue:
+          !Sub "${paramEnvId}-albnitorzone:Listener443"
+      Priority: 50000
+
+  resBackendRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        -
+          PolicyName: "AllowS3BucketRead"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "s3:ListBucket"
+                Resource: !Ref paramSitesBucketArn
+              - Effect: "Allow"
+                Action: "s3:GetObject"
+                Resource: !Sub "${paramSitesBucketArn}/"
+
+  resBackendLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref AWS::StackName
+      RetentionInDays: 120

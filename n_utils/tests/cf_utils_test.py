@@ -1,4 +1,5 @@
 from n_utils.cf_utils import InstanceInfo, get_images, INSTANCE_IDENTITY_URL, resolve_account
+from n_utils.aws_infra_util import yaml_to_dict
 from dateutil.parser import parse
 
 
@@ -277,6 +278,32 @@ CALLER_IDENTITY = {
     }
 }
 
+STACK_PARAMS = {
+  "paramEnvId": "dev",
+  "paramSecretsUser": "webmaster@nitorcreations.com",
+  "paramHostedZoneName": "((zone))",
+  "paramEip": "((eip))",
+  "paramVPCId": "vpc-f3bd9896",
+  "paramSecretsFolder": "Certs",
+  "paramInfraName": "dev",
+  "resSitesBucket": "dev-sitesbucket-ressitesbucket-1k42h51y1y57",
+  "paramSubnetInfraC": "subnet-7278372b",
+  "paramSubnetInfraB": "subnet-70112607",
+  "paramSubnetInfraA": "subnet-abe2edce",
+  "BucketWebsiteURL": "http://dev-sitesbucket-ressitesbucket-1k42h51y1y57.s3-website-eu-west-1.amazonaws.com",
+  "paramSecretsBucket": "nitor-infra-secure",
+  "paramSshKeyName": "((ssh-key))",
+  "BucketDualStackDomainName": "dev-sitesbucket-ressitesbucket-1k42h51y1y57.s3.dualstack.eu-west-1.amazonaws.com",
+  "paramAmiName": "",
+  "paramDnsName": "((dns))",
+  "paramAmi": "ami-7abd0209",
+  "BucketArn": "arn:aws:s3:::dev-sitesbucket-ressitesbucket-1k42h51y1y57",
+  "paramInstanceType": "((instance))",
+  "BucketDomainName": "dev-sitesbucket-ressitesbucket-1k42h51y1y57.s3.amazonaws.com",
+  "BucketName": "dev-sitesbucket-ressitesbucket-1k42h51y1y57",
+  "paramDeployToolsVersion": "alpha"
+}
+
 
 def test_instance_info(mocker, boto3_client):
     boto3_client.describe_tags = describe_tags
@@ -311,3 +338,11 @@ def test_resolve_account(mocker, boto3_client):
     boto3_client.get_caller_identity = mocker.MagicMock(return_value=CALLER_IDENTITY)
 
     assert resolve_account() == '377074220690'
+
+def test_stackref_order(mocker, boto3_client):
+    target = "n_utils.aws_infra_util.stack_params_and_outputs"
+    stack_params_and_outputs = lambda a, b: STACK_PARAMS
+    mocker.patch(target, side_effect=stack_params_and_outputs)
+    result = yaml_to_dict('n_utils/tests/templates/test-stackref.yaml')
+    assert result["Resources"]["resTaskDefinition"]["Properties"]["ContainerDefinitions"][0]["Environment"][0]["Value"] == \
+           "{\n  \"s3\": [{\n    \"path\": \"/${x-forwarded-for}/*\",\n    \"bucket\": \"dev-sitesbucket-ressitesbucket-1k42h51y1y57\",\n    \"basePath\": \"\",\n    \"region\": \"${AWS::Region}\"\n  }]\n}\n"
