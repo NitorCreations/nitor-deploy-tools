@@ -57,10 +57,10 @@ die () {
 }
 set -xe
 
-image="$1" ; shift
-[ "${image}" ] || die "You must give the image name as argument"
+component="$1" ; shift
+[ "${component}" ] || die "You must give the component name as argument"
 
-eval "$(ndt load-parameters "$image" -i "$1" -e)"
+eval "$(ndt load-parameters "$component" -i "$1" -e)"
 
 [ ! -d .cache ] || rm -rf .cache
 mkdir .cache
@@ -125,7 +125,7 @@ for var in IMAGETYPE APP_USER APP_HOME SSH_USER; do
   [ "${!var}" ] || die "Please set ${var} in ${infrapropfile}"
 done
 
-imagedir=${image}/image
+imagedir=${component}/image
 
 VAR_AMI="AMIID_${IMAGETYPE}"
 AMI="${!VAR_AMI}"
@@ -174,7 +174,7 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 if [ -z "$JOB_NAME" ]; then
-  JOB_NAME="${JENKINS_JOB_PREFIX}-${image}-bake"
+  JOB_NAME="${JENKINS_JOB_PREFIX}-${component}-bake"
 fi
 if [ "$IMAGETYPE" != "windows" ]; then
   if ! [ -r $imagedir/pre_install.sh ]; then
