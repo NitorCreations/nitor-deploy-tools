@@ -68,8 +68,8 @@ if [ "$1" = "--imagedefinitions" -o "$1" = "-i" ]; then
   OUTPUT_DEFINITION=1
 fi
 
-image="$1" ; shift
-[ "${image}" ] || die "You must give the image name as argument"
+component="$1" ; shift
+[ "${component}" ] || die "You must give the component name as argument"
 docker="$1"; shift
 [ "${docker}" ] || die "You must give the docker name as argument"
 
@@ -80,17 +80,17 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
-eval "$(ndt load-parameters "$image" -d "$docker" -e)"
+eval "$(ndt load-parameters "$component" -d "$docker" -e)"
 
-if [ -x "$image/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
-  cd "$image/docker-$ORIG_DOCKER_NAME"
+if [ -x "$component/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
+  cd "$component/docker-$ORIG_DOCKER_NAME"
   "./pre_build.sh"
   cd ../..
 fi
 if which sudo && sudo docker -h > /dev/null 2>&1; then
   SUDO=sudo
 fi
-$SUDO docker build -t "$DOCKER_NAME" "$image/docker-$ORIG_DOCKER_NAME"
+$SUDO docker build -t "$DOCKER_NAME" "$component/docker-$ORIG_DOCKER_NAME"
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
