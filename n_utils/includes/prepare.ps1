@@ -4,5 +4,5 @@ $output = "C:\nitor\VCForPython27.msi"
 Start-Process msiexec -ArgumentList @("/i", "C:\nitor\VCForPython27.msi", "/passive", "/quiet") -NoNewWindow -Wait
 
 python.exe -m pip install -U pip
-python.exe -m pip install -U setuptools
+python.exe -m pip install -U setuptools certifi
 pip install -U awscli boto3 nitor-deploy-tools
