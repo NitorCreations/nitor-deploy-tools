@@ -86,6 +86,7 @@ NDT_ONLY_SCRIPT = [
     'deploy-stack.sh',
     'undeploy-stack.sh',
     'deploy-serverless.sh',
+    'undeploy-serverless.sh',
     'list-jobs.sh',
     'print-create-instructions.sh'
 ]
