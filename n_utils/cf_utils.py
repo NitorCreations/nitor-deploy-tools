@@ -222,6 +222,8 @@ class InstanceInfo(object):
                         retry = retry + 1
                         time.sleep(1)
                         continue
+                    except ClientError:
+                        tag_response = { 'Tags': [] }
                 for tag in tag_response['Tags']:
                     tags[tag['Key']] = tag['Value']
                 self._info['Tags'] = tags
@@ -518,6 +520,10 @@ def is_ec2():
             with open("/sys/hypervisor/uuid") as uuid:
                 uuid_str = uuid.read()
                 return uuid_str.startswith("ec2")
+        elif os.path.isfile("/sys/class/dmi/id/product_uuid"):
+            with open("/sys/class/dmi/id/product_uuid") as uuid:
+                uuid_str = uuid.read()
+                return uuid_str.startswith("EC2")
         else:
             return False
 
