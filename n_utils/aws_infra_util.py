@@ -557,7 +557,7 @@ def _preprocess_template(data, root, basefile, path, templateParams):
                 data['Fn::Merge'] = OrderedDict([('Source', merge_list), ('Result', result)])
             elif not isinstance(merge, type(result)):
                 print("ERROR: " + path + ": First Fn::Merge entries " +
-                        "were of type " + type(result) + ", but the following entry was not: \n" + \
+                        "were of type " + str(type(result)) + ", but the following entry was not: \n" + \
                         json.dumps(merge, indent=2) + "\nIn file " + basefile)
                 gotImportErrors = True
             elif isinstance(merge, OrderedDict):
@@ -753,15 +753,25 @@ def extract_scripts(data, prefix, path=""):
 # simple apis
 
 
-def yaml_to_dict(yaml_file_to_convert):
-    data = yaml_load(open(yaml_file_to_convert))
+def yaml_to_dict(yaml_file_to_convert, merge=[]):
+    data = OrderedDict()
+    with open(yaml_file_to_convert) as yaml_file:
+        data = yaml_load(yaml_file)
+    if merge:
+        for i in range(0, len(merge)):
+            with open(merge[i]) as yaml_file:
+                merge[i] = yaml_load(yaml_file)
+        merge.append(data)
+        merge_data = OrderedDict()
+        merge_data['Fn::Merge'] = merge
+        data = merge_data
     data = import_scripts(data, yaml_file_to_convert)
     _patch_launchconf(data)
     return data
 
 
-def yaml_to_json(yaml_file_to_convert):
-    data = yaml_to_dict(yaml_file_to_convert)
+def yaml_to_json(yaml_file_to_convert, merge=[]):
+    data = yaml_to_dict(yaml_file_to_convert, merge)
     return json_save(data)
 
 

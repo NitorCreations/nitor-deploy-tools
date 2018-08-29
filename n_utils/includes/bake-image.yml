@@ -43,7 +43,7 @@
     - local_action:
         module: ec2
         region: "{{ aws_region }}"
-        instance_tags: { "environment": "nitor", "Name": "{{ job_name }} prototype" }
+        instance_tags: "{{ bake_tags }}"
         count_tag:     { "environment": "nitor", "Name": "{{ job_name }} prototype" }
         exact_count: 1
         instance_type: "{{ instance_type }}"

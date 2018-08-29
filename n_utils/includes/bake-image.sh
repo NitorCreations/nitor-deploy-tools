@@ -195,6 +195,11 @@ touch $imagedir/packages.txt
 PACKAGES="$(ndt list-file-to-json packages $imagedir/packages.txt)"
 touch $imagedir/files.txt
 FILES="$(ndt list-file-to-json files $imagedir/files.txt)"
+if [ -r "$imagedir/tags.yaml" ]; then
+  TAGS="$(ndt yaml-to-json $imagedir/tags.yaml -m $(n-include bake-tags.yaml) -s)"
+else
+  TAGS=="$(ndt yaml-to-json -m $(n-include bake-tags.yaml) -s)"
+fi
 if [ "$IMAGETYPE" = "ubuntu" ]; then
   touch $imagedir/repos.txt $imagedir/keys.txt
   REPOS="$(ndt list-file-to-json repos $imagedir/repos.txt)"
@@ -270,6 +275,7 @@ if python -u $(which ansible-playbook) \
   -e private_subnet=$PRIVATE_SUBNET \
   -e "$PACKAGES" \
   -e "$FILES" \
+  -e "{\"bake_tags\": $TAGS }" \
   "${extra_args[@]}" \
   -e root_ami=$AMI \
   -e tstamp=$TSTAMP \

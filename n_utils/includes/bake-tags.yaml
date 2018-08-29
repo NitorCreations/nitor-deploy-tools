@@ -1,0 +1,2 @@
+environment: "nitor"
+Name: "{{ job_name }} prototype"

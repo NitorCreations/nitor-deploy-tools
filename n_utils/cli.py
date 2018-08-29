@@ -156,16 +156,22 @@ def yaml_to_json():
     """
     parser = get_parser()
     parser.add_argument("--colorize", "-c", help="Colorize output", action="store_true")
+    parser.add_argument("--merge", "-m", help="Merge other yaml files to the main file", nargs="*")
+    parser.add_argument("--small", "-s", help="Compact representration of json", action="store_true")
     parser.add_argument("file", help="File to parse").completer = FilesCompleter()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if not os.path.isfile(args.file):
         parser.error(args.file + " not found")
-    doc = aws_infra_util.yaml_to_json(args.file)
-    if args.colorize:
-        colorprint(doc)
+    doc = aws_infra_util.yaml_to_dict(args.file, merge=args.merge)
+    if args.small:
+        dump = lambda out_doc: json.dumps(out_doc)
     else:
-        print(doc)
+        dump = lambda out_doc: json.dumps(out_doc, indent=2)
+    if args.colorize:
+        colorprint(dump(doc), output_format="json")
+    else:
+        print(dump(doc))
 
 
 def yaml_to_yaml():
