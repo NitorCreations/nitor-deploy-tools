@@ -24,7 +24,9 @@ I will go through some parameters that effect how stacks work.
 ### `paramEnvId`
 
 This parameter will be a part of default value for stack names, docker
-repository urls and tags that mark baked images. The default value is the branch name if not set.
+repository urls and tags that mark baked images. This paremeter sets also
+the value for the `stage` parameter on serverless projects. 
+The default value is the branch name if not set.
 
 ### `STACK_NAME`
 
