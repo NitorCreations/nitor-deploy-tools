@@ -516,17 +516,28 @@ def is_ec2():
         systeminfo = wmi.WMI().Win32_ComputerSystem()[0]
         return "EC2" == systeminfo.PrimaryOwnerName
     elif sys.platform.startswith("linux"):
-        if os.path.isfile("/sys/hypervisor/uuid"):
-            with open("/sys/hypervisor/uuid") as uuid:
-                uuid_str = uuid.read()
-                return uuid_str.startswith("ec2")
-        elif os.path.isfile("/sys/class/dmi/id/product_uuid"):
-            with open("/sys/class/dmi/id/product_uuid") as uuid:
-                uuid_str = uuid.read()
-                return uuid_str.startswith("EC2")
+        if read_if_readable("/sys/hypervisor/uuid").startswith("ec2"):
+            return True
+        elif read_if_readable("/sys/class/dmi/id/product_uuid").startswith("EC2"):
+            return True
+        elif read_if_readable("/sys/devices/virtual/dmi/id/board_vendor").startswith("Amazon EC2"):
+            return True
+        elif read_if_readable("/sys/devices/virtual/dmi/id/sys_vendor").startswith("Amazon EC2"):
+            return True
+        elif read_if_readable("/sys/devices/virtual/dmi/id/sys_vendor").startswith("Amazon EC2"):
+            return True
+        elif read_if_readable("/sys/devices/virtual/dmi/id/bios_vendor").startswith("Amazon EC2"):
+            return True
+        elif read_if_readable("/sys/devices/virtual/dmi/id/chassis_vendor").startswith("Amazon EC2"):
+            return True
+        elif read_if_readable("/sys/devices/virtual/dmi/id/chassis_asset_tag").startswith("Amazon EC2"):
+            return True
+        elif "AmazonEC2" in read_if_readable("/sys/devices/virtual/dmi/id/modalias"):
+            return True 
+        elif "AmazonEC2" in read_if_readable("/sys/devices/virtual/dmi/id/uevent"):
+            return True
         else:
             return False
-
 
 def region():
     """ Get default region - the region of the instance if run in an EC2 instance
@@ -943,3 +954,13 @@ def select_stacks(selector):
             if selected:
                 ret.append(selected)
     return ret
+
+def read_if_readable(filename):
+    try:
+        if os.path.isfile(filename):
+            with open(filename) as read_file:
+                return read_file.read()
+        else:
+            return ""
+    except:
+        return ""
