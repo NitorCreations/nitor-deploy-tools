@@ -800,6 +800,24 @@ optional arguments:
   -w, --wait  Wait for the snapshot to finish before returning
 ```
 
+## `ndt undeploy-serverless`
+
+```bash
+usage: ndt undeploy-serverless [-h] component serverless-name
+
+Exports ndt parameters into component/serverless-name/variables.yml
+and runs sls remove -s $paramEnvId for the same
+
+positional arguments:
+  component   the component directory where the serverless directory is
+  serverless-name the name of the serverless directory that has the template
+                  For example for lambda/serverless-sender/template.yaml
+                  you would give sender
+
+optional arguments:
+  -h, --help    show this help message and exit
+```
+
 ## `ndt undeploy-stack`
 
 ```bash
@@ -847,17 +865,22 @@ ndt volume-from-snapshot: error: Only makes sense on an EC2 instance
 ## `ndt yaml-to-json`
 
 ```bash
-usage: ndt yaml-to-json [-h] [--colorize] file
+usage: ndt yaml-to-json [-h] [--colorize] [--merge [MERGE [MERGE ...]]]
+                        [--small]
+                        file
 
 Convert Nitor CloudFormation yaml to CloudFormation json with some
 preprosessing
 
 positional arguments:
-  file            File to parse
+  file                  File to parse
 
 optional arguments:
-  -h, --help      show this help message and exit
-  --colorize, -c  Colorize output
+  -h, --help            show this help message and exit
+  --colorize, -c        Colorize output
+  --merge [MERGE [MERGE ...]], -m [MERGE [MERGE ...]]
+                        Merge other yaml files to the main file
+  --small, -s           Compact representration of json
 ```
 
 ## `ndt yaml-to-yaml`
