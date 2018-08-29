@@ -120,6 +120,7 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
     device = first_free_device()
     print("Attaching volume " + volume + " to " + device)
     attach_volume(volume, device)
+    local_device = map_local_device(volume, device)
     if del_on_termination:
         delete_on_termination(device)
     if not snapshot:
@@ -143,8 +144,8 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                    "NTFS", "-Force", "-Confirm:$False"])
         else:
             # linux format
-            print("Formatting " + device)
-            subprocess.check_call(["mkfs.ext4", device])
+            print("Formatting " + local_device)
+            subprocess.check_call(["mkfs.ext4", local_device])
     else:
         if sys.platform.startswith('win'):
             target_id = letter_to_target_id(device[-1:])
@@ -177,19 +178,19 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                                        max_size])
         else:
             if size_gb and not size_gb == snapshot.volume_size:
-                print("Resizing " + device + " from " +
+                print("Resizing " + local_device + " from " +
                       str(snapshot.volume_size) + "GB to " + str(size_gb))
                 try:
-                    subprocess.check_call(["e2fsck", "-f", "-p", device])
+                    subprocess.check_call(["e2fsck", "-f", "-p", local_device])
                 except CalledProcessError as e:
                     print("Filesystem check returned " + str(e.returncode))
                     if e.returncode > 1:
                         raise Exception("Uncorrected filesystem errors - please fix manually")
-                subprocess.check_call(["resize2fs", device])
+                subprocess.check_call(["resize2fs", local_device])
     if not sys.platform.startswith('win'):
         if not os.path.isdir(mount_path):
             os.makedirs(mount_path)
-        subprocess.check_call(["mount", device, mount_path])
+        subprocess.check_call(["mount", local_device, mount_path])
 
 
 def first_free_device():
@@ -200,7 +201,7 @@ def first_free_device():
         else:
             return "/dev/xvd" + target_id_to_letter(max_target + 1)
     else:
-        devices = [x.device for x in psutil.disk_partitions()]
+        devices = attached_devices()
         print(devices)
         for letter in "fghijklmnopqrstuvxyz":
             device = "/dev/xvd" + letter
@@ -208,6 +209,18 @@ def first_free_device():
                 return device
     return None
 
+def attached_devices():
+    set_region()
+    ec2 = boto3.client("ec2")
+    volumes = ec2.describe_volumes(Filters=[{"Name": "attachment.instance-id",
+                                             "Values": [ InstanceInfo().instance_id() ]},
+                                            {"Name": "attachment.status",
+                                             "Values": [ "attached" ]}])
+    ret = []
+    for volume in volumes['Volumes']:
+        for attachment in volume['Attachments']:
+            ret.append(attachment['Device'])
+    return ret
 
 def get_latest_snapshot(tag_name, tag_value):
     """Get the latest snapshot with a given tag
@@ -359,6 +372,21 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False):
     if wait:
         wait_for_snapshot_complete(snap['SnapshotId'])
     return snap['SnapshotId']
+
+def map_local_device(volume, device):
+    if os.path.exists(device):
+	return device
+    vol2 = volume.replace("-", "")
+    proc = Popen(["lsblk", "-lnpo", "NAME"], stdout=PIPE, stderr=PIPE)
+    output = proc.communicate()[0]
+    for line in output.split("\n"):
+        proc = Popen(["nvme", "id-ctrl", line], stdout=PIPE, stderr=PIPE)
+        out = proc.communicate()[0]
+        for nvme_line in out.split("\n"):
+            if nvme_line.startswith("sn"):
+                if nvme_line.split()[2] == volume or nvme_line.split()[2] == vol2:
+                    return line
+    return None
 
 
 def device_from_mount_path(mount_path):
