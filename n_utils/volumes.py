@@ -21,26 +21,14 @@ import psutil
 from n_utils.cf_utils import set_region, resolve_account, InstanceInfo
 from n_utils.ndt import find_include
 
-
 def letter_to_target_id(letter):
     return ord(letter) - ord("f") + 5
-
 
 def target_id_to_letter(target_id):
     return str(chr(target_id - 5 + ord("f")))
 
-
-def wmic_partition_get():
-    return wmic_get("partition")
-
-
 def wmic_diskdrive_get():
     return wmic_get("diskdrive")
-
-
-def wmic_volume_get():
-    return wmic_get("volume")
-
 
 def wmic_get(command):
     ret = []
@@ -63,13 +51,29 @@ def wmic_get(command):
 
 
 def wmic_disk_with_target_id(target_id):
-    return [x for x in wmic_diskdrive_get() if x['SCSITargetId'] == target_id][0]
+    ret = [x for x in wmic_diskdrive_get() if x['SCSITargetId'] == target_id]
+    if ret:
+        return ret[0]
+    else:
+        return None
 
+def wmic_disk_with_volume_id(volume_id):
+    vol2 = volume_id.replace("-", "")
+    ret = [x for x in wmic_diskdrive_get() \
+        if x['SerialNumber'].startswith(volume_id) or \
+           x['SerialNumber'].startswith(vol2)]
+    if ret:
+        return ret[0]
+    else:
+        return None
 
-def wmic_max_target_id():
-    return sorted([x['SCSITargetId'] for x in wmic_diskdrive_get()],
-                  reverse=True)[0]
-
+def wmic_disk_with_disk_number(disk_number):
+    ret = [x for x in wmic_diskdrive_get() \
+        if x['Index'] == disk_number]
+    if ret:
+        return ret[0]
+    else:
+        return None
 
 def disk_by_drive_letter(drive_letter):
     ret = {}
@@ -87,7 +91,6 @@ def disk_by_drive_letter(drive_letter):
                 continue
     return ret
 
-
 def latest_snapshot():
     """Get the latest snapshot with a given tag
     """
@@ -101,7 +104,6 @@ def latest_snapshot():
         print(snapshot.id)
     else:
         sys.exit(1)
-
 
 def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
                          size_gb=None, del_on_termination=True):
@@ -127,8 +129,10 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
         # empty device
         if sys.platform.startswith('win'):
             # Windows format
-            disk = wmic_disk_with_target_id(letter_to_target_id(device[-1:]))
             drive_letter = mount_path[0].upper()
+            disk = wmic_disk_with_target_id(letter_to_target_id(device[-1:]))
+            if not disk:
+                disk = wmic_disk_with_volume_id(volume)
             disk_number = str(disk['Index'])
             subprocess.check_call(["powershell.exe", "Get-Disk", disk_number,
                                    "|", "Set-Disk", "-IsOffline", "$False"])
@@ -149,8 +153,10 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
     else:
         if sys.platform.startswith('win'):
             target_id = letter_to_target_id(device[-1:])
-            disk = wmic_disk_with_target_id(target_id)
             drive_letter = mount_path[0].upper()
+            disk = wmic_disk_with_target_id(target_id)
+            if not disk:
+                disk = wmic_disk_with_volume_id(volume)
             disk_number = str(disk['Index'])
             with open(os.devnull, 'w') as devnull:
                 subprocess.call(["powershell.exe", "Initialize-Disk",
@@ -192,24 +198,16 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
             os.makedirs(mount_path)
         subprocess.check_call(["mount", local_device, mount_path])
 
-
 def first_free_device():
-    if sys.platform.startswith('win'):
-        max_target = wmic_max_target_id()
-        if max_target == 0:
-            return "/dev/xvdf"
-        else:
-            return "/dev/xvd" + target_id_to_letter(max_target + 1)
-    else:
-        devices = attached_devices()
-        print(devices)
-        for letter in "fghijklmnopqrstuvxyz":
-            device = "/dev/xvd" + letter
-            if device not in devices and not os.path.exists(device):
-                return device
+    devices = attached_devices()
+    print(devices)
+    for letter in "fghijklmnopqrstuvxyz":
+        device = "/dev/xvd" + letter
+        if device not in devices and not os.path.exists(device):
+            return device
     return None
 
-def attached_devices():
+def attached_devices(volume_id=None):
     set_region()
     ec2 = boto3.client("ec2")
     volumes = ec2.describe_volumes(Filters=[{"Name": "attachment.instance-id",
@@ -219,7 +217,8 @@ def attached_devices():
     ret = []
     for volume in volumes['Volumes']:
         for attachment in volume['Attachments']:
-            ret.append(attachment['Device'])
+            if (not volume_id) or volume['VolumeId'] == volume_id:
+                ret.append(attachment['Device'])
     return ret
 
 def get_latest_snapshot(tag_name, tag_value):
@@ -237,8 +236,6 @@ def get_latest_snapshot(tag_name, tag_value):
         return None
 
 # Usage: create_volume snapshot-id [size_gb]
-
-
 def create_volume(snapshot_id, availability_zone=None, size_gb=None):
     set_region()
     ec2 = boto3.client("ec2")
@@ -254,8 +251,6 @@ def create_volume(snapshot_id, availability_zone=None, size_gb=None):
     return resp['VolumeId']
 
 # Usage: create_empty_volume size_gb
-
-
 def create_empty_volume(size_gb, availability_zone=None):
     set_region()
     ec2 = boto3.client("ec2")
@@ -283,7 +278,6 @@ def wait_for_volume_status(volume_id, status, timeout_sec=300):
         if "Volumes" in resp:
             volume = resp['Volumes'][0]
 
-
 def match_volume_state(volume, status):
     if not volume:
         return False
@@ -292,7 +286,6 @@ def match_volume_state(volume, status):
                volume['Attachments'][0]['State'] == "attached"
     else:
         return volume['State'] == status
-
 
 def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
     set_region()
@@ -308,14 +301,11 @@ def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
         if "Snapshots" in resp:
             snapshot = resp['Snapshots'][0]
 
-
 def is_snapshot_complete(snapshot):
     return snapshot is not None and 'State' in snapshot and \
         snapshot['State'] == 'completed'
 
 # Usage: attach_volume volume-id device-path
-
-
 def attach_volume(volume_id, device_path):
     set_region()
     ec2 = boto3.client("ec2")
@@ -325,8 +315,6 @@ def attach_volume(volume_id, device_path):
     wait_for_volume_status(volume_id, "attached")
 
 # Usage: delete_on_termination device-path
-
-
 def delete_on_termination(device_path):
     set_region()
     ec2 = boto3.client("ec2")
@@ -335,7 +323,6 @@ def delete_on_termination(device_path):
                                   BlockDeviceMappings=[{
                                       "DeviceName": device_path,
                                       "Ebs": {"DeleteOnTermination": True}}])
-
 
 def detach_volume(mount_path):
     set_region()
@@ -360,8 +347,6 @@ def detach_volume(mount_path):
     ec2.detach_volume(VolumeId=volume_id, InstanceId=instance_id)
 
 # Usage: create_snapshot volume_id tag_key tag_value
-
-
 def create_snapshot(tag_key, tag_value, mount_path, wait=False):
     set_region()
     device = device_from_mount_path(mount_path)
@@ -394,8 +379,8 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False):
     return snap['SnapshotId']
 
 def map_local_device(volume, device):
-    if os.path.exists(device):
-	return device
+    if os.path.exists(device) or sys.platform.startswith('win'):
+        return device
     vol2 = volume.replace("-", "")
     proc = Popen(["lsblk", "-lnpo", "NAME"], stdout=PIPE, stderr=PIPE)
     output = proc.communicate()[0]
@@ -408,16 +393,20 @@ def map_local_device(volume, device):
                     return line
     return None
 
-
 def device_from_mount_path(mount_path):
     if sys.platform.startswith('win'):
-        return "/dev/xvd" + \
-            target_id_to_letter(disk_by_drive_letter(
-                mount_path[0])['TargetId'])
+        disk = disk_by_drive_letter(mount_path[0])
+        if disk['TargetId'] != 0:
+            return "/dev/xvd" + target_id_to_letter(disk['TargetId'])
+        else:
+            disk = wmic_disk_with_disk_number(disk['DiskNumber'])
+            volume = disk['SerialNumber'].split("_")[0]
+            if "-" not in volume:
+                volume = volume.replace("vol", "vol-")
+            return attached_devices(volume)[0]
     else:
         return [x for x in psutil.disk_partitions()
                 if x.mountpoint == mount_path][0].device
-
 
 def clean_snapshots(days, tags):
     set_region()
