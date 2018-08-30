@@ -198,7 +198,7 @@ FILES="$(ndt list-file-to-json files $imagedir/files.txt)"
 if [ -r "$imagedir/tags.yaml" ]; then
   TAGS="$(ndt yaml-to-json $imagedir/tags.yaml -m $(n-include bake-tags.yaml) -s)"
 else
-  TAGS=="$(ndt yaml-to-json -m $(n-include bake-tags.yaml) -s)"
+  TAGS="$(ndt yaml-to-json $(n-include bake-tags.yaml) -s)"
 fi
 if [ "$IMAGETYPE" = "ubuntu" ]; then
   touch $imagedir/repos.txt $imagedir/keys.txt
