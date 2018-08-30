@@ -30,7 +30,8 @@ if [ "$OS_TYPE" = "ubuntu" ]; then
   locale-gen --purge en_US.UTF-8
   echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
 fi
-pip install -U pip setuptools awscli boto3
+python -m pip install -U pip --ignore-installed
+pip install -U setuptools awscli boto3
 # If alpha, get first all non-alpha dependencies
 pip install -U "nitor-deploy-tools$DEPLOYTOOLS_VERSION"
 if [ "$1" = "alpha" ]; then
