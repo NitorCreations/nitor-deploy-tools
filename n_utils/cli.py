@@ -547,7 +547,7 @@ def volume_from_snapshot():
         for tag in args.tags:
             try:
                 key, value = tag.split('=', 1)
-                ret[key] = value
+                tags[key] = value
             except ValueError:
                 parser.error("Invalid tag/value input: " + tag)
     if is_ec2():
@@ -578,7 +578,7 @@ def snapshot_from_volume():
         for tag in args.tags:
             try:
                 key, value = tag.split('=', 1)
-                ret[key] = value
+                tags[key] = value
             except ValueError:
                 parser.error("Invalid tag/value input: " + tag)
     if is_ec2():

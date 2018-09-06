@@ -405,10 +405,11 @@ def _create_tag_array(tag_key, tag_value, tags={}, copytags=[]):
     for tag in copytags:
         tags[tag] = info.tag(tag)
     create_tags = []
-    for key, value in tags.items():
-        create_tags.append({'Key': key, 'Value': value})
     tags[tag_key] = tag_value
     tags['Name'] = tag_value
+    for key, value in tags.items():
+        if not key.startswith("aws:"):
+            create_tags.append({'Key': key, 'Value': value})
     return create_tags
 
 
