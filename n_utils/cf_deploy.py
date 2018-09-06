@@ -308,14 +308,14 @@ class Unbuffered(object):
     def __init__(self, stream):
         self.stream = stream
         self.SYS_ENCODING = locale.getpreferredencoding(False)
-        if self.SYS_ENCODING == "ascii":
+        if self.SYS_ENCODING == "ascii" or self.SYS_ENCODING == "US-ASCII":
             self.SYS_ENCODING = "ISO8859-15"
 
     def write(self, data):
-        if isinstance(data, bytes):
-            self.stream.write(data.decode(self.SYS_ENCODING))
-        elif isinstance(data, six.string_types):
+        if isinstance(data, six.string_types):
             self.stream.write(data)
+        elif isinstance(data, bytes):
+            self.stream.write(data.decode(self.SYS_ENCODING))
         else:
             self.stream.write(str(data))
         self.stream.flush()
