@@ -21,14 +21,18 @@ import psutil
 from n_utils.cf_utils import set_region, resolve_account, InstanceInfo
 from n_utils.ndt import find_include
 
+
 def letter_to_target_id(letter):
     return ord(letter) - ord("f") + 5
+
 
 def target_id_to_letter(target_id):
     return str(chr(target_id - 5 + ord("f")))
 
+
 def wmic_diskdrive_get():
     return wmic_get("diskdrive")
+
 
 def wmic_get(command):
     ret = []
@@ -57,6 +61,7 @@ def wmic_disk_with_target_id(target_id):
     else:
         return None
 
+
 def wmic_disk_with_volume_id(volume_id):
     vol2 = volume_id.replace("-", "")
     ret = [x for x in wmic_diskdrive_get() \
@@ -67,6 +72,7 @@ def wmic_disk_with_volume_id(volume_id):
     else:
         return None
 
+
 def wmic_disk_with_disk_number(disk_number):
     ret = [x for x in wmic_diskdrive_get() \
         if x['Index'] == disk_number]
@@ -74,6 +80,7 @@ def wmic_disk_with_disk_number(disk_number):
         return ret[0]
     else:
         return None
+
 
 def disk_by_drive_letter(drive_letter):
     ret = {}
@@ -91,6 +98,7 @@ def disk_by_drive_letter(drive_letter):
                 continue
     return ret
 
+
 def latest_snapshot():
     """Get the latest snapshot with a given tag
     """
@@ -105,8 +113,9 @@ def latest_snapshot():
     else:
         sys.exit(1)
 
+
 def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
-                         size_gb=None, del_on_termination=True):
+                         size_gb=None, del_on_termination=True, tags=[], copytags=[]):
     set_region()
     snapshot = get_latest_snapshot(tag_key, tag_value)
     if snapshot:
@@ -119,6 +128,7 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
         print("Creating empty volyme of size " + str(size_gb))
         volume = create_empty_volume(size_gb,
                                      availability_zone=availability_zone)
+    tag_volume(volume, tag_key, tag_value, tags, copytags)
     device = first_free_device()
     print("Attaching volume " + volume + " to " + device)
     attach_volume(volume, device)
@@ -198,6 +208,7 @@ def volume_from_snapshot(tag_key, tag_value, mount_path, availability_zone=None,
             os.makedirs(mount_path)
         subprocess.check_call(["mount", local_device, mount_path])
 
+
 def first_free_device():
     devices = attached_devices()
     print(devices)
@@ -206,6 +217,7 @@ def first_free_device():
         if device not in devices and not os.path.exists(device):
             return device
     return None
+
 
 def attached_devices(volume_id=None):
     set_region()
@@ -235,7 +247,7 @@ def get_latest_snapshot(tag_name, tag_value):
     else:
         return None
 
-# Usage: create_volume snapshot-id [size_gb]
+
 def create_volume(snapshot_id, availability_zone=None, size_gb=None):
     set_region()
     ec2 = boto3.client("ec2")
@@ -250,7 +262,7 @@ def create_volume(snapshot_id, availability_zone=None, size_gb=None):
     wait_for_volume_status(resp['VolumeId'], "available")
     return resp['VolumeId']
 
-# Usage: create_empty_volume size_gb
+
 def create_empty_volume(size_gb, availability_zone=None):
     set_region()
     ec2 = boto3.client("ec2")
@@ -278,6 +290,7 @@ def wait_for_volume_status(volume_id, status, timeout_sec=300):
         if "Volumes" in resp:
             volume = resp['Volumes'][0]
 
+
 def match_volume_state(volume, status):
     if not volume:
         return False
@@ -286,6 +299,7 @@ def match_volume_state(volume, status):
                volume['Attachments'][0]['State'] == "attached"
     else:
         return volume['State'] == status
+
 
 def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
     set_region()
@@ -301,11 +315,12 @@ def wait_for_snapshot_complete(snapshot_id, timeout_sec=900):
         if "Snapshots" in resp:
             snapshot = resp['Snapshots'][0]
 
+
 def is_snapshot_complete(snapshot):
     return snapshot is not None and 'State' in snapshot and \
         snapshot['State'] == 'completed'
 
-# Usage: attach_volume volume-id device-path
+
 def attach_volume(volume_id, device_path):
     set_region()
     ec2 = boto3.client("ec2")
@@ -314,7 +329,7 @@ def attach_volume(volume_id, device_path):
                       Device=device_path)
     wait_for_volume_status(volume_id, "attached")
 
-# Usage: delete_on_termination device-path
+
 def delete_on_termination(device_path):
     set_region()
     ec2 = boto3.client("ec2")
@@ -323,6 +338,7 @@ def delete_on_termination(device_path):
                                   BlockDeviceMappings=[{
                                       "DeviceName": device_path,
                                       "Ebs": {"DeleteOnTermination": True}}])
+
 
 def detach_volume(mount_path):
     set_region()
@@ -346,9 +362,10 @@ def detach_volume(mount_path):
         volume_id = volume['Volumes'][0]['VolumeId']
     ec2.detach_volume(VolumeId=volume_id, InstanceId=instance_id)
 
-# Usage: create_snapshot volume_id tag_key tag_value
-def create_snapshot(tag_key, tag_value, mount_path, wait=False):
+
+def create_snapshot(tag_key, tag_value, mount_path, wait=False, tags={}, copytags=[]):
     set_region()
+    create_tags = _create_tag_array(tag_key, tag_value, tags, copytags)
     device = device_from_mount_path(mount_path)
     with open(os.devnull, 'w') as devnull:
         subprocess.call(["sync", mount_path[0]], stdout=devnull,
@@ -371,12 +388,29 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False):
                                                 "Values": [instance_id]}])
         volume_id = volume['Volumes'][0]['VolumeId']
     snap = ec2.create_snapshot(VolumeId=volume_id)
-    ec2.create_tags(Resources=[snap['SnapshotId']],
-                    Tags=[{'Key': tag_key, 'Value': tag_value},
-                          {'Key': 'Name', 'Value': tag_value}])
+    ec2.create_tags(Resources=[snap['SnapshotId']], Tags=create_tags)
     if wait:
         wait_for_snapshot_complete(snap['SnapshotId'])
     return snap['SnapshotId']
+
+
+def tag_volume(volume, tag_key, tag_value, tags, copytags):
+    tag_array = _create_tag_array(tag_key, tag_value, tags, copytags)
+    ec2 = boto3.client("ec2")
+    ec2.create_tags(Resources=[volume], Tags=tag_array)
+
+
+def _create_tag_array(tag_key, tag_value, tags={}, copytags=[]):
+    info = InstanceInfo()
+    for tag in copytags:
+        tags[tag] = info.tag(tag)
+    create_tags = []
+    for key, value in tags.items():
+        create_tags.append({'Key': key, 'Value': value})
+    tags[tag_key] = tag_value
+    tags['Name'] = tag_value
+    return create_tags
+
 
 def map_local_device(volume, device):
     if os.path.exists(device) or sys.platform.startswith('win'):
@@ -393,6 +427,7 @@ def map_local_device(volume, device):
                     return line
     return None
 
+
 def device_from_mount_path(mount_path):
     if sys.platform.startswith('win'):
         disk = disk_by_drive_letter(mount_path[0])
@@ -407,6 +442,7 @@ def device_from_mount_path(mount_path):
     else:
         return [x for x in psutil.disk_partitions()
                 if x.mountpoint == mount_path][0].device
+
 
 def clean_snapshots(days, tags):
     set_region()

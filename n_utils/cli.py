@@ -538,12 +538,23 @@ def volume_from_snapshot():
     parser.add_argument("-n", "--no_delete_on_termination",
                         help="Whether to skip deleting the volume on termi" +
                              "nation, defaults to false", action="store_true")
+    parser.add_argument("-c", "--copytags", nargs="*", help="Tag to copy to the volume from instance. Multiple values allowed.")
+    parser.add_argument("-t", "--tags", nargs="*", help="Tag to add to the volume in the format name=value. Multiple values allowed.")
     argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    tags = {}
+    if args.tags:
+        for tag in args.tags:
+            try:
+                key, value = tag.split('=', 1)
+                ret[key] = value
+            except ValueError:
+                parser.error("Invalid tag/value input: " + tag)
     if is_ec2():
-        args = parser.parse_args()
         volumes.volume_from_snapshot(args.tag_key, args.tag_value, args.mount_path,
                                      size_gb=args.size_gb,
-                                     del_on_termination=not args.no_delete_on_termination)
+                                     del_on_termination=not args.no_delete_on_termination,
+                                     copytags=args.copytags, tags=tags)
     else:
         parser.error("Only makes sense on an EC2 instance")
 
@@ -558,11 +569,21 @@ def snapshot_from_volume():
     parser.add_argument("tag_key", help="Key of the tag to find volume with")
     parser.add_argument("tag_value", help="Value of the tag to find volume with")
     parser.add_argument("mount_path", help="Where to mount the volume")
+    parser.add_argument("-c", "--copytags", nargs="*", help="Tag to copy to the snapshot from instance. Multiple values allowed.")
+    parser.add_argument("-t", "--tags", nargs="*", help="Tag to add to the snapshot in the format name=value. Multiple values allowed.")
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
+    tags = {}
+    if args.tags:
+        for tag in args.tags:
+            try:
+                key, value = tag.split('=', 1)
+                ret[key] = value
+            except ValueError:
+                parser.error("Invalid tag/value input: " + tag)
     if is_ec2():
         print(volumes.create_snapshot(args.tag_key, args.tag_value,
-                                      args.mount_path, wait=args.wait))
+                                      args.mount_path, wait=args.wait, tags=tags, copytags=args.copytags))
     else:
         parser.error("Only makes sense on an EC2 instance")
 
