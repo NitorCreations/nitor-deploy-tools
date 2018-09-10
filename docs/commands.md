@@ -786,18 +786,26 @@ optional arguments:
 ## `ndt snapshot-from-volume`
 
 ```bash
-usage: ndt snapshot-from-volume [-h] [-w] tag_key tag_value mount_path
+usage: ndt snapshot-from-volume [-h] [-w] [-c [COPYTAGS [COPYTAGS ...]]]
+                                [-t [TAGS [TAGS ...]]]
+                                tag_key tag_value mount_path
 
 Create a snapshot of a volume identified by it\'s mount path
 
 positional arguments:
-  tag_key     Key of the tag to find volume with
-  tag_value   Value of the tag to find volume with
-  mount_path  Where to mount the volume
+  tag_key               Key of the tag to find volume with
+  tag_value             Value of the tag to find volume with
+  mount_path            Where to mount the volume
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -w, --wait  Wait for the snapshot to finish before returning
+  -h, --help            show this help message and exit
+  -w, --wait            Wait for the snapshot to finish before returning
+  -c [COPYTAGS [COPYTAGS ...]], --copytags [COPYTAGS [COPYTAGS ...]]
+                        Tag to copy to the snapshot from instance. Multiple
+                        values allowed.
+  -t [TAGS [TAGS ...]], --tags [TAGS [TAGS ...]]
+                        Tag to add to the snapshot in the format name=value.
+                        Multiple values allowed.
 ```
 
 ## `ndt undeploy-serverless`
@@ -857,9 +865,32 @@ optional arguments:
 ## `ndt volume-from-snapshot`
 
 ```bash
-usage: ndt volume-from-snapshot [-h] [-n]
+usage: ndt volume-from-snapshot [-h] [-n] [-c [COPYTAGS [COPYTAGS ...]]]
+                                [-t [TAGS [TAGS ...]]]
                                 tag_key tag_value mount_path [size_gb]
-ndt volume-from-snapshot: error: Only makes sense on an EC2 instance
+
+Create a volume from an existing snapshot and mount it on the given path. The
+snapshot is identified by a tag key and value. If no tag is found, an empty
+volume is created, attached, formatted and mounted.
+
+positional arguments:
+  tag_key               Key of the tag to find volume with
+  tag_value             Value of the tag to find volume with
+  mount_path            Where to mount the volume
+  size_gb               Size in GB for the volume. If different from snapshot
+                        size, volume and filesystem are resized
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n, --no_delete_on_termination
+                        Whether to skip deleting the volume on termination,
+                        defaults to false
+  -c [COPYTAGS [COPYTAGS ...]], --copytags [COPYTAGS [COPYTAGS ...]]
+                        Tag to copy to the volume from instance. Multiple
+                        values allowed.
+  -t [TAGS [TAGS ...]], --tags [TAGS [TAGS ...]]
+                        Tag to add to the volume in the format name=value.
+                        Multiple values allowed.
 ```
 
 ## `ndt yaml-to-json`
