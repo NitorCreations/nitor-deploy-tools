@@ -401,10 +401,13 @@ def tag_volume(volume, tag_key, tag_value, tags, copytags):
 
 
 def _create_tag_array(tag_key, tag_value, tags={}, copytags=[]):
-    info = InstanceInfo()
-    for tag in copytags:
-        tags[tag] = info.tag(tag)
+    if copytags:
+        info = InstanceInfo()
+        for tag in copytags:
+            tags[tag] = info.tag(tag)
     create_tags = []
+    if not tags:
+        tags = {}
     tags[tag_key] = tag_value
     tags['Name'] = tag_value
     for key, value in tags.items():
