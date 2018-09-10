@@ -382,13 +382,15 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False, tags={}, copytag
     else:
         ec2 = boto3.client("ec2")
         instance_id = InstanceInfo().instance_id()
-        volume = ec2.describe_volumes(Filters=[{"Name": "attachment.device",
-                                                "Values": [device]},
-                                            {"Name": "attachment.instance-id",
-                                                "Values": [instance_id]}])
-        volume_id = volume['Volumes'][0]['VolumeId']
-    snap = ec2.create_snapshot(VolumeId=volume_id)
-    ec2.create_tags(Resources=[snap['SnapshotId']], Tags=create_tags)
+        volume = ec2.describe_volumes(Filters=[{"Name": "attachment.instance-id", "Values": [instance_id]}])
+        for volume in volume['Volumes']:
+            if volume['Attachments'][0]['Device'] == device:
+                volume_id = volume['VolumeId']
+    if volume_id:
+        snap = ec2.create_snapshot(VolumeId=volume_id)
+        ec2.create_tags(Resources=[snap['SnapshotId']], Tags=create_tags)
+    else:
+        raise Exception("Could not find volume for " + mount_path + "(" + device + ")")
     if wait:
         wait_for_snapshot_complete(snap['SnapshotId'])
     return snap['SnapshotId']
