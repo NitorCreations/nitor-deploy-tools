@@ -359,6 +359,21 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+## `ndt ec2-wait-for-metadata`
+
+```bash
+usage: ndt ec2-wait-for-metadata [-h] [--timeout TIMEOUT]
+
+Waits for metadata service to be available. All errors are ignored until time
+expires or a socket can be established to the metadata service
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --timeout TIMEOUT, -t TIMEOUT
+                        Maximum time to wait in seconds for the metadata
+                        service to be available
+```
+
 ## `ndt ecr-ensure-repo`
 
 ```bash
