@@ -26,9 +26,11 @@ import sys
 import time
 import re
 import inspect
+from datetime import datetime, timedelta
 from inspect import trace, getframeinfo
 from subprocess import PIPE, Popen
 import argcomplete
+import pytz
 import yaml
 from argcomplete.completers import ChoicesCompleter, FilesCompleter
 from pygments import highlight, lexers, formatters
@@ -982,3 +984,25 @@ def map_to_properties(map):
         key = re.sub("[^a-zA-Z0-9_]", "", key)
         ret += key + "=" + val + os.linesep
     return ret
+
+def wait_for_metadata():
+    """ Waits for metadata service to be available. All errors are ignored until
+    time expires or a socket can be established to the metadata service """
+    parser = get_parser()
+    parser.add_argument('--timeout', '-t', type=int, help="Maximum time to wait in seconds for the metadata service to be available", default=300)
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    start = datetime.utcnow().replace(tzinfo=pytz.utc)
+    cutoff = start + timedelta(seconds=args.timeout)
+    timeout = args.timeout
+    connected = False
+    while not connected:
+        try:
+            connected = cf_utils.wait_net_service("169.254.169.254", 80, timeout)
+        except:
+            pass
+        if datetime.utcnow().replace(tzinfo=pytz.utc) >= cutoff:
+            print("Timed out waiting for metadata service")
+            sys.exit(1)
+        time.sleep(1)
+        timeout = max(1, args.timeout - (datetime.utcnow().replace(tzinfo=pytz.utc) - start).total_seconds())

@@ -46,7 +46,8 @@ setup(name='nitor_deploy_tools',
           'Pygments',
           'pyotp',
           'pyqrcode',
-          'six'
+          'six',
+          'pytz'
       ] + ([
           'win-unicode-console',
           'wmi',

@@ -53,6 +53,7 @@ NDT_ONLY = [
     'ec2-clean-snapshots=n_utils.cli:clean_snapshots',
     'ec2-instance-id=n_utils.cli:instance_id',
     'ec2-region=n_utils.cli:ec2_region',
+    'ec2-wait-for-metadata=n_utils.cli:wait_for_metadata',
     'region=n_utils.cli:ec2_region',
     'ec2-get-tag=n_utils.cli:tag',
     'ec2-get-userdata=n_utils.cli:get_userdata',
