@@ -447,6 +447,7 @@ def get_logs():
     parser.add_argument("-s", "--start", help="Start time (x m|h|d|w ago | now | <seconds since epoc>)", nargs="+")
     parser.add_argument("-e", "--end", help="End time (x m|h|d|w ago | now | <seconds since epoc>)", nargs="+")
     parser.add_argument("-o", "--order", help="Best effort ordering of log entries", action="store_true")
+    parser.usage = "ndt logs log_group_pattern [-h] [-f FILTER] [-s START [START ...]] [-e END [END ...]] [-o]"
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     cwlogs_groups = CloudWatchLogsGroups(
