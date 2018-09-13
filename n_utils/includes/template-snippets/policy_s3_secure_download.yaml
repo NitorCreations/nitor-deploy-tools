@@ -22,4 +22,5 @@ PolicyDocument:
     Resource: {'Fn::Join': [ "", ['arn:aws:s3:::', '((bucket))', '/', '((file))']]}
     Action:
     - 's3:Get*'
+    - 's3:Head*'
     - 's3:List*'
