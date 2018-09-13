@@ -562,9 +562,7 @@ optional arguments:
 ## `ndt logs`
 
 ```bash
-usage: ndt logs [-h] [-f FILTER] [-s START [START ...]] [-e END [END ...]]
-                [-o]
-                log_group_pattern
+usage: ndt logs log_group_pattern [-h] [-f FILTER] [-s START [START ...]] [-e END [END ...]] [-o]
 
 Get logs from multiple CloudWatch log groups and possibly filter them.
 
