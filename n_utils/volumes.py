@@ -370,6 +370,7 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False, tags={}, copytag
     with open(os.devnull, 'w') as devnull:
         subprocess.call(["sync", mount_path[0]], stdout=devnull,
                         stderr=devnull)
+    ec2 = boto3.client("ec2")
     if "/nvme" in device:
         proc = Popen(["nvme", "id-ctrl", device], stdout=PIPE, stderr=PIPE)
         out = proc.communicate()[0]
@@ -380,7 +381,6 @@ def create_snapshot(tag_key, tag_value, mount_path, wait=False, tags={}, copytag
                     volume_id = volume_id.replace("vol", "vol-")
                 break
     else:
-        ec2 = boto3.client("ec2")
         instance_id = InstanceInfo().instance_id()
         volume = ec2.describe_volumes(Filters=[{"Name": "attachment.instance-id", "Values": [instance_id]}])
         for volume in volume['Volumes']:
