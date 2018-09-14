@@ -95,6 +95,9 @@ jenkins_mount_ebs_home () {
     fi
   fi
   cat > /etc/cron.d/${CF_paramEBSTag}-snapshot << MARKER
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+
 30 * * * * root ndt snapshot-from-volume -w ${CF_paramEBSTag} ${CF_paramEBSTag} $MOUNT_PATH >> /var/log/snapshots.log 2>&1
 MARKER
 }
