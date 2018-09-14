@@ -50,6 +50,7 @@ from n_utils import ParamNotAvailable
 
 NoneType = type(None)
 ACCOUNT_ID = None
+ROLE_NAME = None
 INSTANCE_IDENTITY_URL = 'http://169.254.169.254/latest/dynamic/instance-identity/document'
 USER_DATA_URL = 'http://169.254.169.254/latest/user-data'
 INSTANCE_DATA_LINUX = '/opt/nitor/instance-data.json'
@@ -508,6 +509,18 @@ def resolve_account():
         except BaseException:
             pass
     return ACCOUNT_ID
+
+def assumed_role_name():
+    global ROLE_NAME
+    if not ROLE_NAME:
+        try:
+            sts = boto3.client("sts")
+            roleArn = sts.get_caller_identity()['Arn']
+            if ":assumed-role/" in roleArn:
+                ROLE_NAME = roleArn.split("/")[1]
+        except BaseException:
+            pass
+    return ROLE_NAME
 
 
 def is_ec2():

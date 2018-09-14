@@ -42,7 +42,8 @@ from . import cf_utils
 from . import volumes
 from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
-    share_to_another_region, set_region, register_private_dns, interpolate_file
+    share_to_another_region, set_region, register_private_dns, interpolate_file, \
+    assumed_role_name
 from .cloudfront_utils import distributions, distribution_comments, \
     upsert_cloudfront_records
 from n_utils.ecr_utils import ensure_repo, repo_uri
@@ -54,6 +55,7 @@ from n_utils.mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code
 from n_utils.account_utils import list_created_accounts, create_account
 from n_utils.aws_infra_util import load_parameters
 from n_utils.ndt import find_include, find_all_includes, include_dirs
+from n_utils.project_util import read_profile_expiry, read_expiring_profiles
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -1007,3 +1009,20 @@ def wait_for_metadata():
             sys.exit(1)
         time.sleep(1)
         timeout = max(1, args.timeout - (datetime.utcnow().replace(tzinfo=pytz.utc) - start).total_seconds())
+
+def cli_read_profile_expiry():
+    """ Read expiry field from credentials file, which is there if the login happened
+    with aws-azure-login or another tool that implements the same logic (none currently known)."""
+    parser = get_parser()
+    parser.add_argument("profile", help="The profile to read expiry info from").completer = \
+        ChoicesCompleter(read_expiring_profiles())
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    print(read_profile_expiry(args.profile))
+
+def cli_assumed_role_name():
+    """ Read the name of the assumed role if currently defined """
+    parser = get_parser()
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    print(assumed_role_name())

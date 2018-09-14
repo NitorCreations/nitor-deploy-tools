@@ -79,7 +79,9 @@ NDT_ONLY = [
     'create-stack=n_utils.cf_bootstrap:create_stack',
     'latest-snapshot=n_utils.volumes:latest_snapshot',
     'create-account=n_utils.cli:cli_create_account',
-    'load-parameters=n_utils.cli:cli_load_parameters'
+    'load-parameters=n_utils.cli:cli_load_parameters',
+    'read-profile-expiry=n_utils.cli:cli_read_profile_expiry',
+    'assumed-role-name=n_utils.cli:cli_assumed_role_name'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',
