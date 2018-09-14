@@ -50,6 +50,17 @@ optional arguments:
                         Duration for the session in minutes
 ```
 
+## `ndt assumed-role-name`
+
+```bash
+usage: ndt assumed-role-name [-h]
+
+Read the name of the assumed role if currently defined
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
 ## `ndt bake-docker`
 
 ```bash
@@ -707,6 +718,22 @@ Read and print a file and keep following the end for new data
 
 positional arguments:
   file        File to follow
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+## `ndt read-profile-expiry`
+
+```bash
+usage: ndt read-profile-expiry [-h] profile
+
+Read expiry field from credentials file, which is there if the login happened
+with aws-azure-login or another tool that implements the same logic (none
+currently known).
+
+positional arguments:
+  profile     The profile to read expiry info from
 
 optional arguments:
   -h, --help  show this help message and exit
