@@ -636,7 +636,7 @@ def set_region():
         os.environ['AWS_DEFAULT_REGION'] = region()
 
 
-def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=600):
+def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=900):
     ec2 = boto3.client('ec2', region_name=regn)
     if not regn == region():
         resp = ec2.copy_image(SourceRegion=region(), SourceImageId=ami_id,
