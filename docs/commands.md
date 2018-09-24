@@ -694,6 +694,21 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+## `ndt profile-to-env`
+
+```bash
+usage: ndt profile-to-env [-h] profile
+
+Prints profile parameters from credentials file (~/.aws/credentials) as eval-
+able environment veriables
+
+positional arguments:
+  profile     The profile to read expiry info from
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
 ## `ndt promote-image`
 
 ```bash
