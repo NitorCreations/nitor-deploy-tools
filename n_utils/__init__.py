@@ -81,7 +81,8 @@ NDT_ONLY = [
     'create-account=n_utils.cli:cli_create_account',
     'load-parameters=n_utils.cli:cli_load_parameters',
     'read-profile-expiry=n_utils.cli:cli_read_profile_expiry',
-    'assumed-role-name=n_utils.cli:cli_assumed_role_name'
+    'assumed-role-name=n_utils.cli:cli_assumed_role_name',
+    'profile-to-env=n_utils.cli:profile_to_env'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',

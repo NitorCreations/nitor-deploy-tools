@@ -55,7 +55,7 @@ from n_utils.mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code
 from n_utils.account_utils import list_created_accounts, create_account
 from n_utils.aws_infra_util import load_parameters
 from n_utils.ndt import find_include, find_all_includes, include_dirs
-from n_utils.project_util import read_profile_expiry, read_expiring_profiles
+from n_utils.project_util import read_profile_expiry, read_expiring_profiles, get_profile
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -1024,5 +1024,22 @@ def cli_assumed_role_name():
     """ Read the name of the assumed role if currently defined """
     parser = get_parser()
     argcomplete.autocomplete(parser)
-    args = parser.parse_args()
+    _ = parser.parse_args()
     print(assumed_role_name())
+
+def profile_to_env():
+    """ Prints profile parameters from credentials file (~/.aws/credentials) as eval-able environment veriables """
+    parser = get_parser()
+    parser.add_argument("profile", help="The profile to read expiry info from").completer = \
+        ChoicesCompleter(read_expiring_profiles())
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    profile = get_profile(args.profile)
+    params = []
+    for key, value in profile.items():
+        upper_param = key.upper()
+        params.append(upper_param)
+        if value.startswith("\""):
+            value = value[1:-1]
+        print(upper_param + "=\"" + value + "\"")
+    print("export " + " ".join(params))

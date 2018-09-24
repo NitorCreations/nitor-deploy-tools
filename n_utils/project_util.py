@@ -99,3 +99,12 @@ def read_expiring_profiles():
             if "aws_session_expiration" in ini[profile]:
                 ret.append(profile)
     return ret
+
+def get_profile(profile):
+    home = expanduser("~")
+    credentials = join(home, ".aws", "credentials")
+    if exists(credentials):
+        ini = IniConfig(credentials)
+        if profile in ini:
+            return ini[profile]
+    return {}
