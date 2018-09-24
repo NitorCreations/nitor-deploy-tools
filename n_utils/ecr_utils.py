@@ -61,6 +61,6 @@ def repo_uri(name):
     repo_resp = ecr.describe_repositories(repositoryNames=[name])
     if 'repositories' in repo_resp and len(repo_resp['repositories']) > 0 and \
        'repositoryUri' in repo_resp['repositories'][0]:
-        return repo_resp['repositories'][0]['repositoryUri']
+        return str(repo_resp['repositories'][0]['repositoryUri'])
     else:
         return None
