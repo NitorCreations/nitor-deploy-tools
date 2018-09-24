@@ -185,11 +185,10 @@ def _append_cidr_param(public, letter, cidr, params):
     else:
         cidr_param = "paramPriv" + letter + "Cidr"
         description = "Private Subnet " + letter + " CIDR block"
-    params.update({cidr_param: {
-        "Description": description,
-        "Type": "String",
-        "Default": cidr
-    }})
+    params.update(OrderedDict([(cidr_param, OrderedDict([
+        ("Description", description),
+        ("Type", "String"),
+        ("Default", _nts(cidr))]))]))
 
 
 def _append_network_resources(public, letter, resources, availability_zone):
@@ -217,27 +216,30 @@ def _append_network_resources(public, letter, resources, availability_zone):
         route_table_dict = deepcopy(resources[route_table])
         route_table_dict['Properties']['Tags'][0]['Value']['Fn::Join'][1][1] = \
             " private route table " + letter
-        resources.update({route_table[:-1] + letter: route_table_dict})
+        resources.update(OrderedDict([(route_table[:-1] + letter, route_table_dict)]))
     route_table_assoc_dict = deepcopy(resources[route_table_assoc])
     if not public:
         route_table_assoc_dict['Properties']['RouteTableId']['Ref'] = \
             route_table[:-1] + letter
     route_table_assoc_dict['Properties']['SubnetId']['Ref'] = \
         subnet_to_create
-    resources.update({route_table_assoc[:-1] + letter: route_table_assoc_dict})
+    resources.update(OrderedDict([(route_table_assoc[:-1] + letter, route_table_assoc_dict)]))
 
-    resources[db_subnet]['Properties']['SubnetIds'].append({"Ref": subnet_to_create})
+    resources[db_subnet]['Properties']['SubnetIds'].append(OrderedDict([("Ref", subnet_to_create)]))
 
+
+def _nts(net):
+    return str(net).lower()
 
 def _get_network_yaml(network, vpc_cidr, subnet_prefixlen, subnet_base, network_yaml, common_yaml):
-    subnet_bits = 32 - subnet_prefixlen
+    subnet_bits = 32 - int(subnet_prefixlen)
     subnet_size = 2 ** subnet_bits
+    last_subnet = subnet_base - subnet_size
     ec2 = boto3.client("ec2")
     az_response = ec2.describe_availability_zones()
-    last_subnet = subnet_base - subnet_size
     az_names = sorted([az_data['ZoneName'] for az_data in
                        az_response['AvailabilityZones']])
-    network_yaml['Parameters']['paramVPCCidr']['Default'] = str(vpc_cidr)
+    network_yaml['Parameters']['paramVPCCidr']['Default'] = _nts(vpc_cidr)
     for az_name in az_names:
         zone_letter = az_name[-1:]
         zone_upper_letter = zone_letter.upper()
@@ -247,17 +249,15 @@ def _get_network_yaml(network, vpc_cidr, subnet_prefixlen, subnet_base, network_
         private_subnet = ipaddr.IPv4Network(str(private_subnet_addr) + "/" +
                                             str(subnet_prefixlen))
         if zone_letter == 'a':
-            network_yaml['Parameters']['paramPubACidr']['Default'] = \
-                str(subnet)
-            network_yaml['Parameters']['paramPrivACidr']['Default'] = \
-                str(private_subnet)
+            network_yaml['Parameters']['paramPubACidr']['Default'] = _nts(subnet)
+            network_yaml['Parameters']['paramPrivACidr']['Default'] = _nts(private_subnet)
             network_yaml['Resources']['resourcePubSubnetA']['Properties']['AvailabilityZone'] = az_name
             network_yaml['Resources']['resourcePrivSubnetA']['Properties']['AvailabilityZone'] = az_name
-            common_yaml['paramNetwork']['Default'] = network
+            common_yaml['paramNetwork']['Default'] = _nts(network)
         else:
-            _append_cidr_param(True, zone_upper_letter, str(subnet),
+            _append_cidr_param(True, zone_upper_letter, _nts(subnet),
                                network_yaml['Parameters'])
-            _append_cidr_param(False, zone_upper_letter, str(private_subnet),
+            _append_cidr_param(False, zone_upper_letter, _nts(private_subnet),
                                network_yaml['Parameters'])
             _append_network_resources(True, zone_upper_letter,
                                       network_yaml['Resources'], az_name)

@@ -33,6 +33,7 @@ from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, 
 from n_utils.ndt import find_include
 from n_utils.ecr_utils import repo_uri
 from n_utils import ParamNotAvailable
+
 stacks = dict()
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
 
@@ -290,6 +291,7 @@ def yaml_save(data):
         return dumper.represent_mapping(
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             list(data.items()))
+
     OrderedDumper.add_representer(OrderedDict, _dict_representer)
     return yaml.dump(data, None, OrderedDumper, default_flow_style=False)
 

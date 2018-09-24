@@ -11,7 +11,7 @@ Parameters:
     Type: String
     Default: 10.0.0.0/20
   paramPrivACidr:
-    Description: Public Subnet A CIDR block
+    Description: Private Subnet A CIDR block
     Type: String
     Default: 10.0.10.0/20
 Description: Setup VPC with public and private subnets for all AZs in region.
@@ -33,7 +33,7 @@ Resources:
         - ""
         - - {Ref: 'AWS::Region'}
           - "."
-          - {Ref: paramInfraName}
+          - {Ref: 'AWS::StackName'}
           - "-compute.internal"
       DomainNameServers: [AmazonProvidedDNS]
   resourceDHCPAssoc:
