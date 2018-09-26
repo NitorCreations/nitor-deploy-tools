@@ -27,10 +27,11 @@ import time
 import re
 import inspect
 from datetime import datetime, timedelta
+from dateutil.parser import parse
+from dateutil.tz import tzutc
 from inspect import trace, getframeinfo
 from subprocess import PIPE, Popen
 import argcomplete
-import pytz
 import yaml
 from argcomplete.completers import ChoicesCompleter, FilesCompleter
 from pygments import highlight, lexers, formatters
@@ -995,7 +996,7 @@ def wait_for_metadata():
     parser.add_argument('--timeout', '-t', type=int, help="Maximum time to wait in seconds for the metadata service to be available", default=300)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    start = datetime.utcnow().replace(tzinfo=pytz.utc)
+    start = datetime.utcnow().replace(tzinfo=tzutc())
     cutoff = start + timedelta(seconds=args.timeout)
     timeout = args.timeout
     connected = False
@@ -1004,11 +1005,11 @@ def wait_for_metadata():
             connected = cf_utils.wait_net_service("169.254.169.254", 80, timeout)
         except:
             pass
-        if datetime.utcnow().replace(tzinfo=pytz.utc) >= cutoff:
+        if datetime.utcnow().replace(tzinfo=tzutc()) >= cutoff:
             print("Timed out waiting for metadata service")
             sys.exit(1)
         time.sleep(1)
-        timeout = max(1, args.timeout - (datetime.utcnow().replace(tzinfo=pytz.utc) - start).total_seconds())
+        timeout = max(1, args.timeout - (datetime.utcnow().replace(tzinfo=tzutc()) - start).total_seconds())
 
 def cli_read_profile_expiry():
     """ Read expiry field from credentials file, which is there if the login happened
@@ -1038,6 +1039,11 @@ def profile_to_env():
     params = []
     for key, value in profile.items():
         upper_param = key.upper()
+        if key == "aws_session_expiration":
+            d = parse(value)
+            epoc = int((d - datetime.utcfromtimestamp(0).replace(tzinfo=tzutc())).total_seconds())
+            print("AWS_SESSION_EXPIRATION_EPOC=\"" + str(epoc) + "\"")
+            params.append("AWS_SESSION_EXPIRATION_EPOC")
         params.append(upper_param)
         if value.startswith("\""):
             value = value[1:-1]

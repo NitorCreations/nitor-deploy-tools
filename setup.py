@@ -46,8 +46,8 @@ setup(name='nitor_deploy_tools',
           'pyotp',
           'pyqrcode',
           'six',
-          'pytz',
-          'iniconfig'
+          'iniconfig',
+          'dateutil'
       ] + ([
           'win-unicode-console',
           'wmi',
