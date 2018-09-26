@@ -56,6 +56,7 @@ USER_DATA_URL = 'http://169.254.169.254/latest/user-data'
 INSTANCE_DATA_LINUX = '/opt/nitor/instance-data.json'
 INSTANCE_DATA_WIN = 'C:/nitor/instance-data.json'
 
+dthandler = lambda obj: obj.isoformat() if hasattr(obj, 'isoformat') else json.JSONEncoder().default(obj)
 
 def get_retry(url, retries=5, backoff_factor=0.3,
               status_forcelist=(500, 502, 504), session=None, timeout=5):
@@ -257,7 +258,7 @@ class InstanceInfo(object):
             if os.access(info_file_dir, os.W_OK):
                 info_file = info_file_dir + '/instance-data.json'
                 with open(info_file, 'w') as outf:
-                    outf.write(json.dumps(self._info, skipkeys=True, indent=2))
+                    outf.write(json.dumps(self._info, skipkeys=True, indent=2, default=dthandler))
                 try:
                     os.chmod(info_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP |
                              stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
