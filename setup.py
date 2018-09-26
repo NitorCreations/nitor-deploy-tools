@@ -47,7 +47,7 @@ setup(name='nitor_deploy_tools',
           'pyqrcode',
           'six',
           'iniconfig',
-          'dateutil'
+          'python-dateutil'
       ] + ([
           'win-unicode-console',
           'wmi',
