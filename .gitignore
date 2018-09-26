@@ -96,3 +96,4 @@ ENV/
 # Pytest
 .pytest_cache
 .idea
+.vscode
