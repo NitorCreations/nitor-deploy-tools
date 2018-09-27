@@ -47,7 +47,8 @@ setup(name='nitor_deploy_tools',
           'pyqrcode',
           'six',
           'iniconfig',
-          'python-dateutil'
+          'python-dateutil',
+          'pycryptodomex'
       ] + ([
           'win-unicode-console',
           'wmi',
