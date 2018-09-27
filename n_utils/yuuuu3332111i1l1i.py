@@ -27,9 +27,9 @@ import os
 from sys import platform
 if 65 - 65:
     O0 / iIii1I11I1II1 % OoooooooOO - i1IIi
-from Crypto . Hash import SHA256
-from Crypto . Cipher import AES
-from Crypto . Util import Counter
+from Cryptodome . Hash import SHA256
+from Cryptodome . Cipher import AES
+from Cryptodome . Util import Counter
 import sys
 if 73 - 73:
     II111iiii

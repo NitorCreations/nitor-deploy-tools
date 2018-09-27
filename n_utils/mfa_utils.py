@@ -23,9 +23,9 @@ from .yuuuu3332111i1l1i import IiII1IiiIiI1, I11iIi1I
 import json
 import base64
 import pyqrcode
-from Crypto . Cipher import AES
-from Crypto . Util import Counter
-from Crypto . Hash import SHA256
+from Cryptodome . Cipher import AES
+from Cryptodome . Util import Counter
+from Cryptodome . Hash import SHA256
 
 
 def mfa_add_token(args):
