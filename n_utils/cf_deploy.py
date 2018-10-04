@@ -52,6 +52,7 @@ def log_data(data, output_format="yaml"):
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
 
+
 def log(message):
     os.write(1, (colored(fmttime(datetime.now()), 'yellow') + " "
                  + message + os.linesep).encode(locale.getpreferredencoding()))
@@ -71,15 +72,24 @@ def update_stack(stack_name, template, params, dry_run=False, session=None, tags
     chset_id = clf.create_change_set(**params)['Id']
     chset_data = clf.describe_change_set(ChangeSetName=chset_id)
     status = chset_data['Status']
+    failed_for_real = True
     while "_COMPLETE" not in status and status != "FAILED":
         time.sleep(5)
         chset_data = clf.describe_change_set(ChangeSetName=chset_id)
         status = chset_data['Status']
     if status == "FAILED":
         clf.delete_change_set(ChangeSetName=chset_id)
+        if 'StatusReason' in chset_data \
+                and "The submitted information didn't contain changes" in chset_data['StatusReason']:
+            failed_for_real = False
         if 'StatusReason' in chset_data:
-            log("\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m")
-        raise Exception("Creating changeset failed")
+            if failed_for_real:
+                log_str = "\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m"
+            else:
+                log_str = chset_data['StatusReason']
+            log(log_str)
+        if failed_for_real:
+            raise Exception("Creating changeset failed")
     else:
         chset_data['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
                                                    chset_data['CreationTime'].timetuple())
