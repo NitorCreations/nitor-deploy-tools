@@ -52,7 +52,6 @@ def log_data(data, output_format="yaml"):
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
 
-
 def log(message):
     os.write(1, (colored(fmttime(datetime.now()), 'yellow') + " "
                  + message + os.linesep).encode(locale.getpreferredencoding()))
@@ -72,7 +71,6 @@ def update_stack(stack_name, template, params, dry_run=False, session=None, tags
     chset_id = clf.create_change_set(**params)['Id']
     chset_data = clf.describe_change_set(ChangeSetName=chset_id)
     status = chset_data['Status']
-    failed_for_real = True
     while "_COMPLETE" not in status and status != "FAILED":
         time.sleep(5)
         chset_data = clf.describe_change_set(ChangeSetName=chset_id)
@@ -82,6 +80,8 @@ def update_stack(stack_name, template, params, dry_run=False, session=None, tags
         if 'StatusReason' in chset_data \
                 and "The submitted information didn't contain changes" in chset_data['StatusReason']:
             failed_for_real = False
+        else:
+            failed_for_real = True
         if 'StatusReason' in chset_data:
             if failed_for_real:
                 log_str = "\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m"
