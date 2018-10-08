@@ -71,6 +71,7 @@ usage() {
   echo "              ami that is tagged with the bake-job name"
   echo "" >&2
   echo "optional arguments:" >&2
+  echo "  -d, --dryrun  dry-run - show only the change set without actually deploying it" >&2
   echo "  -h, --help  show this help message and exit" >&2
   exit 1
 }

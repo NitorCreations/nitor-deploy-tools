@@ -282,6 +282,7 @@ positional arguments:
   bake-job    If an ami-id is not given, the ami id is resolved by getting the latest
 
 optional arguments:
+  -d, --dryrun  dry-run - show only the change set without actually deploying it
   -h, --help  show this help message and exit
 ```
 
