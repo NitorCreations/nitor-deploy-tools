@@ -78,33 +78,3 @@ if ! [[ "$PROMPT_COMMAND" =~ _projectenv_hook ]]; then
   PROMPT_COMMAND="_projectenv_hook;$PROMPT_COMMAND";
 fi
 """, end="")
-
-def read_profile_expiry(profile):
-    home = expanduser("~")
-    credentials = join(home, ".aws", "credentials")
-    if exists(credentials):
-        ini = IniConfig(credentials)
-        if profile in ini.sections:
-            if "aws_session_expiration" in ini[profile]:
-                return ini[profile]["aws_session_expiration"]
-    return ""
-
-def read_expiring_profiles():
-    ret = []
-    home = expanduser("~")
-    credentials = join(home, ".aws", "credentials")
-    if exists(credentials):
-        ini = IniConfig(credentials)
-        for profile in ini.sections.keys():
-            if "aws_session_expiration" in ini[profile]:
-                ret.append(profile)
-    return ret
-
-def get_profile(profile):
-    home = expanduser("~")
-    credentials = join(home, ".aws", "credentials")
-    if exists(credentials):
-        ini = IniConfig(credentials)
-        if profile in ini:
-            return ini[profile]
-    return {}
