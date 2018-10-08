@@ -698,16 +698,17 @@ optional arguments:
 ## `ndt profile-to-env`
 
 ```bash
-usage: ndt profile-to-env [-h] profile
+usage: ndt profile-to-env [-h] [-t] profile
 
 Prints profile parameters from credentials file (~/.aws/credentials) as eval-
-able environment veriables
+able environment variables
 
 positional arguments:
-  profile     The profile to read expiry info from
+  profile            The profile to read expiry info from
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help         show this help message and exit
+  -t, --target-role  Output also azure_default_role_arn
 ```
 
 ## `ndt promote-image`
