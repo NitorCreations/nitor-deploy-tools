@@ -77,9 +77,19 @@ def update_stack(stack_name, template, params, dry_run=False, session=None, tags
         status = chset_data['Status']
     if status == "FAILED":
         clf.delete_change_set(ChangeSetName=chset_id)
+        if 'StatusReason' in chset_data \
+                and "The submitted information didn't contain changes" in chset_data['StatusReason']:
+            failed_for_real = False
+        else:
+            failed_for_real = True
         if 'StatusReason' in chset_data:
-            log("\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m")
-        raise Exception("Creating changeset failed")
+            if failed_for_real:
+                log_str = "\033[31;1mFAILED: " + chset_data['StatusReason'] + "\033[m"
+            else:
+                log_str = chset_data['StatusReason']
+            log(log_str)
+        if failed_for_real:
+            raise Exception("Creating changeset failed")
     else:
         chset_data['CreationTime'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
                                                    chset_data['CreationTime'].timetuple())
