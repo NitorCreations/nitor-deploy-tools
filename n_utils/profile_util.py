@@ -52,8 +52,9 @@ def profile_to_env():
     parser.add_argument("-t", "--target-role", action="store_true", help="Output also azure_default_role_arn")
     args = parser.parse_args()
     params = []
+    safe_profile = re.sub("[^A-Z0-9]", "_", args.profile.upper())
     if args.target_role:
-        role_param = "AWS_TARGET_ROLE_ARN_" + re.sub("[^A-Z0-9]", "_", args.profile.upper())
+        role_param = "AWS_TARGET_ROLE_ARN_" + safe_profile
         profile_entry = "profile " + args.profile
         home = expanduser("~")
         config = join(home, ".aws", "config")
@@ -67,8 +68,8 @@ def profile_to_env():
         if key == "aws_session_expiration":
             d = parse(value)
             epoc = int((d - datetime.utcfromtimestamp(0).replace(tzinfo=tzutc())).total_seconds())
-            print("AWS_SESSION_EXPIRATION_EPOC=\"" + str(epoc) + "\"")
-            params.append("AWS_SESSION_EXPIRATION_EPOC")
+            print("AWS_SESSION_EXPIRATION_EPOC_" + safe_profile + "=\"" + str(epoc) + "\"")
+            params.append("AWS_SESSION_EXPIRATION_EPOC_" + safe_profile)
         params.append(upper_param)
         if value.startswith("\""):
             value = value[1:-1]
