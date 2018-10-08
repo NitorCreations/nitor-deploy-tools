@@ -12,4 +12,4 @@ install:
 script:
   - python setup.py test
 after_success:
-  - coveralls
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then coveralls; fi
