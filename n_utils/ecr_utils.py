@@ -45,15 +45,7 @@ def ensure_repo(name):
         full_token = base64.b64decode(auth_data['authorizationToken']).decode("utf-8").split(":")
         user = full_token[0]
         token = full_token[1]
-        sudo = ""
-        try:
-            FNULL = open(devnull, 'wb')
-            if check_call(["sudo", "docker", "--help"], stdout=FNULL, stderr=STDOUT, close_fds=True) == 0:
-                sudo = "sudo "
-        except BaseException:
-            pass
-        print(sudo + "docker login -u " + user + " -p " + token + " " +
-              auth_data['proxyEndpoint'])
+        print("docker login -u " + user + " -p " + token + " " + auth_data['proxyEndpoint'])
 
 
 def repo_uri(name):
