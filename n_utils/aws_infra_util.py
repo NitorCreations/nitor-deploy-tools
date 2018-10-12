@@ -322,7 +322,7 @@ def decode_parameter_name(name):
 def import_script(filename):
     # the "var " prefix is to support javascript as well
     var_decl_re = re.compile(
-        r'^(\s*var\s+)?CF_([^\s=]+)[\s="\']*([^#"\'\`]*)(?:["\'\s\`]*)(#optional)?')
+        r'^((\s*var\s+)|(\s*const\s+))?CF_([^\s=]+)[\s="\']*([^#"\'\`]*)(?:["\'\s\`]*)(#optional)?')
     embed_decl_re = re.compile(
         r'^(.*?=\s*)?(.*?)(?:(?:\`?#|//)CF([^#\`]*))[\"\`\s]*(#optional)?')
     arr = []
@@ -331,15 +331,15 @@ def import_script(filename):
             result = var_decl_re.match(line)
             if result:
                 js_prefix = result.group(1)
-                encoded_varname = result.group(2)
+                encoded_varname = result.group(4)
                 var_name = decode_parameter_name(encoded_varname)
                 ref = OrderedDict()
                 ref['Ref'] = var_name
                 ref['__source'] = filename
-                if str(result.group(4)) == "#optional":
+                if str(result.group(6)) == "#optional":
                     ref['__optional'] = "true"
-                    ref['__default'] = str(result.group(3)).strip(" \"'")
-                arr.append(line[0:result.end(2)] + "='")
+                    ref['__default'] = str(result.group(5)).strip(" \"'")
+                arr.append(line[0:result.end(4)] + "='")
                 arr.append(ref)
                 if js_prefix:
                     arr.append("';\n")
