@@ -804,8 +804,10 @@ def _apply_simple_regex(RE, line, params, vault, vault_keys):
 def expand_vars(line, params, vault, vault_keys):
     if isinstance(line, OrderedDict) or isinstance(line, dict):
         ret = OrderedDict(line.items())
+        if "Fn::" in [x[:4] for x in ret.keys()] and not "Fn::ImportYaml" in ret.keys():
+            return ret
         for key, value in line.items():
-            if key.startswith("Fn::") and not key != "Fn::ImportYaml":
+            if key.startswith("Fn::") and key != "Fn::ImportYaml":
                 continue
             else:
                 new_key = expand_vars(key, params, vault, vault_keys)
