@@ -87,10 +87,8 @@ if [ -x "$component/docker-$ORIG_DOCKER_NAME/pre_build.sh" ]; then
   "./pre_build.sh"
   cd ../..
 fi
-if which sudo && sudo docker -h > /dev/null 2>&1; then
-  SUDO=sudo
-fi
-$SUDO docker build -t "$DOCKER_NAME" "$component/docker-$ORIG_DOCKER_NAME"
+
+docker build -t "$DOCKER_NAME" "$component/docker-$ORIG_DOCKER_NAME"
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
@@ -100,11 +98,11 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
 fi
 
 eval "$(ndt ecr-ensure-repo "$DOCKER_NAME")"
-$SUDO docker tag $DOCKER_NAME:latest $DOCKER_NAME:$BUILD_NUMBER
-$SUDO docker tag $DOCKER_NAME:latest $REPO:latest
-$SUDO docker tag $DOCKER_NAME:$BUILD_NUMBER $REPO:$BUILD_NUMBER
-$SUDO docker push $REPO:latest
-$SUDO docker push $REPO:$BUILD_NUMBER
+docker tag $DOCKER_NAME:latest $DOCKER_NAME:$BUILD_NUMBER
+docker tag $DOCKER_NAME:latest $REPO:latest
+docker tag $DOCKER_NAME:$BUILD_NUMBER $REPO:$BUILD_NUMBER
+docker push $REPO:latest
+docker push $REPO:$BUILD_NUMBER
 
 if [ -n "$OUTPUT_DEFINITION" ]; then
   printf '[{"name":"%s","imageUri":"%s"}]' $docker $REPO:$BUILD_NUMBER > imagedefinitions.json

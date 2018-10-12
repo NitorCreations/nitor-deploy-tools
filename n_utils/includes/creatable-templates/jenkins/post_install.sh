@@ -37,9 +37,7 @@ systemctl stop jenkins ||:
 systemctl stop httpd ||:
 systemctl stop docker ||:
 
-groupadd -f dockerroot
-usermod -aG dockerroot jenkins
-echo "%dockerroot        ALL=(ALL)       NOPASSWD: /usr/bin/docker" > /etc/sudoers.d/95-dockerroot
+groupadd -aG docker jenkins
 
 apache_prepare_ssl_conf
 # Move jenkins installation away from default location & configure jenkins user
