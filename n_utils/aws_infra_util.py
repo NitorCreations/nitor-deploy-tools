@@ -611,8 +611,7 @@ def _preprocess_template(data, root, basefile, path, templateParams):
                 param_refresh_callback()
             for k, val in list(data.items()):
                 if k != 'Parameters':
-                    data[k] = expand_vars(_preprocess_template(val, root, basefile, path + k + "_", templateParams),
-                                          templateParams, None, [])
+                    data[k] = _preprocess_template(val, root, basefile, path + k + "_", templateParams)
     elif isinstance(data, list):
         for i in range(0, len(data)):
             data[i] = _preprocess_template(data[i], root, basefile, path + str(i) + "_", templateParams)
