@@ -216,3 +216,8 @@ provider:
   stackTags:
     Environment: $paramEnvId
 ```
+
+## Automatically resolved parameters
+
+There are some parameters that get resolved automatically for CloudFormation stacks and Serverless services.
+Please see [the parameters documentation](parameters.md#automatically-resolved-parameters) for details.
