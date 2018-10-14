@@ -91,7 +91,9 @@ fi
 docker build -t "$DOCKER_NAME" "$component/docker-$ORIG_DOCKER_NAME"
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
-if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
+if [ -n "$DOCKER_BAKE_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval "$(ndt assume-role "DOCKER_BAKE_ROLE_ARN")"
+elif [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval "$(ndt assume-role "$DEPLOY_ROLE_ARN")"
 elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval "$(assume-deploy-role.sh)"

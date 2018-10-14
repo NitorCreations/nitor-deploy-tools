@@ -65,7 +65,7 @@ For full list of commands see [here](docs/commands.md)
 - [Command Completion Support](docs/completion.md)
 - [Template Pre-Processing](docs/template-processing.md)
 - [Multifactor Authentication](docs/mfa.md)
-- [Recommended parameters and workflow](docs/workflow.md)
+- [Common parameters](docs/parameters.md)
 
 ## Versioning
 

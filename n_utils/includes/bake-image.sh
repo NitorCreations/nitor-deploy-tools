@@ -81,6 +81,8 @@ cache () {
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$BAKE_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(ndt assume-role $BAKE_ROLE_ARN)
+elif [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
+  eval "$(ndt assume-role "$DEPLOY_ROLE_ARN")"
 elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(assume-deploy-role.sh)
 fi
@@ -93,7 +95,7 @@ if ! [ "$SSH_USER" ]; then
     SSH_USER="$IMAGETYPE"
   fi
 fi
-[ "$NETWORK_STACK" ] || NETWORK_STACK=infra-network
+[ "$NETWORK_STACK" ] || NETWORK_STACK=network
 [ "$PRIVATE_SUBNET" ] || PRIVATE_SUBNET="no"
 if ! [ "$NETWORK_PARAMETER" ]; then
   if [ "$PRIVATE_SUBNET" = "yes" ]; then
@@ -102,16 +104,20 @@ if ! [ "$NETWORK_PARAMETER" ]; then
     NETWORK_PARAMETER=subnetB
   fi
 fi
-[ "$SUBNET" ] || SUBNET="$(cache ndt show-stack-params-and-outputs -r $REGION $NETWORK_STACK -p $NETWORK_PARAMETER)"
+[ "$SUBNET" ] || SUBNET="$(ndt show-stack-params-and-outputs -r $REGION $NETWORK_STACK -p $NETWORK_PARAMETER)"
+[ "$BAKERY_ROLES_STACK" ] || BAKERY_ROLES_STACK=bakery-roles
 if ! [ "$SECURITY_GROUP" ]; then
   if [ "$IMAGETYPE" != "windows" ]; then
-    SG_PARAM="bakeInstanceSg"
+    [ "$SG_PARAM" ] || SG_PARAM="bakeInstanceSg"
   else
-    SG_PARAM="bakeWinInstanceSg"
+    [ "$SG_PARAM" ] || SG_PARAM="bakeWinInstanceSg"
   fi
-  SECURITY_GROUP="$(cache ndt show-stack-params-and-outputs -r $REGION bakery-roles -p $SG_PARAM)"
+  SECURITY_GROUP="$(ndt show-stack-params-and-outputs -r $REGION $BAKERY_ROLES_STACK -p $SG_PARAM)"
 fi
-[ "$AMIBAKE_INSTANCEPROFILE" ] || AMIBAKE_INSTANCEPROFILE="$(cache ndt show-stack-params-and-outputs -r $REGION bakery-roles -p bakeInstanceInstanceprofile)"
+if ! [ "$AMIBAKE_INSTANCEPROFILE" ]; then 
+  [ "$INSTANCE_PROFILE_PARAM" ] || INSTANCE_PROFILE_PARAM="bakeInstanceInstanceprofile"
+  AMIBAKE_INSTANCEPROFILE="$(cache ndt show-stack-params-and-outputs -r $REGION $BAKERY_ROLES_STACK -p $INSTANCE_PROFILE_PARAM)"
+fi
 [ "$PAUSE_SECONDS" ] || PAUSE_SECONDS=15
 for var in REGION SUBNET SECURITY_GROUP AMIBAKE_INSTANCEPROFILE ; do
   [ "${!var}" ] || die "Could not determine $var automatically. Please set ${var} manually in ${infrapropfile}"
