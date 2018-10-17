@@ -18,3 +18,5 @@ paramTest15:
   Default: ${paramTest14:2:4}
 paramTest16:
   Default: ${paramNone:-foo}
+paramTest18:
+  Default: ((myTest))

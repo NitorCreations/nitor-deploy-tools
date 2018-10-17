@@ -20,6 +20,7 @@ def test_merge_import(mocker):
     assert result['Parameters']['paramTest15']['Default'] == 'b/c/'
     assert result['Parameters']['paramTest16']['Default'] == 'foo'
     assert result['Parameters']['paramTest17']['Default'] == 'foo'
+    assert result['Parameters']['paramTest18']['Default'] == 'bar'
 
 def test_just_import(mocker):
     result = yaml_to_dict('n_utils/tests/templates/test-param-import.yaml')

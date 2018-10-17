@@ -169,3 +169,10 @@ Resources:
     Properties:
       LogGroupName: !Ref AWS::StackName
       RetentionInDays: 120
+
+  myBucket:
+    Type: AWS::S3::Bucket
+
+  resInboxPolicy:
+    'Fn::ImportYaml': bucketpolicy.yaml
+    bucket: myBucket

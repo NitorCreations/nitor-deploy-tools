@@ -330,3 +330,4 @@ def test_stackref_order(mocker, boto3_client):
            "{\n  \"s3\": [{\n    \"path\": \"/${x-forwarded-for}/*\",\n    \"bucket\": \"dev-my-test-bucket\",\n    \"basePath\": \"\",\n    \"region\": \"${AWS::Region}\"\n  }]\n}\n"
     assert result["Resources"]["resBackendRole"]["Properties"]["Policies"][0]["PolicyDocument"]["Statement"][1]["Resource"] == \
            "arn:aws:s3:::dev-my-test-bucket/"
+    assert result["Resources"]["resInboxPolicy"]["Properties"]["Bucket"]["Ref"] == "myBucket"
