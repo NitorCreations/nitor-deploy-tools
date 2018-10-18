@@ -776,7 +776,7 @@ def interpolate_file(file_name, destination=None, stack_name=None,
 
 PARAM_RE = re.compile(r"\$\{([^\$\{\}]*)\}", re.M)
 SIMPLE_PARAM_RE = re.compile(r"\$([a-zA-Z0-9_]*)", re.M)
-PARAM_REF_RE = re.compile(r'\(\(([^)]+)\)\)', re.M)
+DOUBLE_PARANTHESIS_RE = re.compile(r'\(\(([^)]+)\)\)', re.M)
 
 
 def _apply_simple_regex(RE, line, params, vault, vault_keys):
@@ -804,11 +804,12 @@ def _apply_simple_regex(RE, line, params, vault, vault_keys):
 def expand_vars(line, params, vault, vault_keys):
     if isinstance(line, OrderedDict) or isinstance(line, dict):
         ret = OrderedDict(line.items())
-        if "Fn::" in [x[:4] for x in ret.keys()] and not "Fn::ImportYaml" in ret.keys():
-            return ret
+        if "Fn::" in [x[:4] for x in ret.keys()]:
+            return expand_only_double_paranthesis_params(ret, params, vault, vault_keys)
         for key, value in line.items():
-            if key.startswith("Fn::") and key != "Fn::ImportYaml":
-                continue
+            if key.startswith("Fn::"):
+                new_value = expand_only_double_paranthesis_params(value, params, vault, vault_keys)
+                ret = OrderedDict([(key, new_value) if k == key else (k, v) for k, v in ret.items()])
             else:
                 new_key = expand_vars(key, params, vault, vault_keys)
                 new_value = expand_vars(value, params, vault, vault_keys)
@@ -820,12 +821,28 @@ def expand_vars(line, params, vault, vault_keys):
         ret = _apply_simple_regex(SIMPLE_PARAM_RE, line, params, vault, vault_keys)
         if isinstance(ret, OrderedDict):
             return expand_vars(ret, params, vault, vault_keys)
-        ret = _apply_simple_regex(PARAM_REF_RE, ret, params, vault, vault_keys)
+        ret = _apply_simple_regex(DOUBLE_PARANTHESIS_RE, ret, params, vault, vault_keys)
         if isinstance(ret, OrderedDict):
             return expand_vars(ret, params, vault, vault_keys)
         return _process_line(ret, params, vault, vault_keys)
     return line
 
+def expand_only_double_paranthesis_params(line, params, vault, vault_keys):
+    if isinstance(line, OrderedDict) or isinstance(line, dict):
+        ret = OrderedDict(line.items())
+        for key, value in line.items():
+            new_key = expand_only_double_paranthesis_params(key, params, vault, vault_keys)
+            new_value = expand_only_double_paranthesis_params(value, params, vault, vault_keys)
+            ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in ret.items()])
+        return ret
+    if isinstance(line, list):
+        return [expand_only_double_paranthesis_params(x, params, vault, vault_keys) for x in line]
+    if isinstance(line, six.string_types):
+        ret = _apply_simple_regex(DOUBLE_PARANTHESIS_RE, line, params, vault, vault_keys)
+        if isinstance(ret, OrderedDict):
+            return expand_only_double_paranthesis_params(ret, params, vault, vault_keys)
+        return ret
+    return line
 
 def _process_line(line, params, vault, vault_keys):
     ret = line

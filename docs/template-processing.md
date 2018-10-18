@@ -12,7 +12,9 @@ serverless projects. The flow of the prosessing is roughly as follows:
 * All values that use a dynamic parameter notation will be filled in as the template is pre-procesed.
     * There are three types of dynamic parameter notation: `((parameter))`, `$parameter` and `${parameter}`
     * Parameter replacement will not go into CloudFormation function objects (things starting `Fn::`) to
-      avoid replacing runtime parameters in included scripts. `Fn::ImportYaml` is the exception to this.
+      avoid replacing runtime parameters in included scripts. The double paranthesis `((parameter))` notation
+      is the exception to this. Parameters in that notation will be replaced at any level of the template
+      including inside functions.
 * `Ref: parameter` references will be posted to CloudFormation as-is
 
 Easiest way to test your parameter processing is to run `ndt yaml-to-yaml my/stack-awesome/template.yaml`
