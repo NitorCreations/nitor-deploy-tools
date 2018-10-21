@@ -511,8 +511,10 @@ def assume_role():
     creds = cf_utils.assume_role(args.role_arn, mfa_token_name=args.mfa_token,
                                  duration_minutes=args.duration)
     if args.profile:
+        safe_profile = re.sub("[^A-Z0-9]", "_", args.profile.upper())
+        print("AWS_TARGET_ROLE_ARN_" + safe_profile + "=\"" + args.role_arn + "\"")
         update_profile(args.profile, creds)
-        print_profile(args.profile, [])
+        print_profile(args.profile, ["AWS_TARGET_ROLE_ARN_" + safe_profile])
     else:
         print("AWS_ROLE_ARN=\"" + args.role_arn + "\"")
         print("AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\"")
