@@ -5,8 +5,6 @@ from sys import argv
 
 import locale
 import subprocess
-from iniconfig import IniConfig
-
 
 def load_project_env():
     """ Print parameters set by git config variables to setup project environment with region and aws credentials

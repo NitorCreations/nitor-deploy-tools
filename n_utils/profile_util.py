@@ -3,41 +3,52 @@ import os
 import argparse
 import argcomplete
 import re
+import time
 from datetime import datetime
 from dateutil.parser import parse
 from dateutil.tz import tzutc
+from collections import OrderedDict
 from os.path import expanduser, join, exists
 from argcomplete.completers import ChoicesCompleter
-from iniconfig import IniConfig
+from ConfigParser import ConfigParser
 
 def read_expiring_profiles():
     ret = []
     home = expanduser("~")
     credentials = join(home, ".aws", "credentials")
     if exists(credentials):
-        ini = IniConfig(credentials)
-        for profile in ini.sections.keys():
-            if "aws_session_expiration" in ini[profile]:
-                ret.append(profile)
+        parser = ConfigParser()
+        with open(credentials) as credfile:
+            parser.readfp(credfile)
+            for profile in parser.sections():
+                if parser.has_option(profile, "aws_session_expiration"):
+                    ret.append(profile)
     return ret
 
 def get_profile(profile):
     home = expanduser("~")
     credentials = join(home, ".aws", "credentials")
     if exists(credentials):
-        ini = IniConfig(credentials)
-        if profile in ini:
-            return ini[profile]
+        parser = ConfigParser()
+        with open(credentials) as credfile:
+            parser.readfp(credfile)
+            ret = OrderedDict()
+            if profile in parser.sections():
+                for option in parser.options(profile):
+                    ret[option] = parser.get(profile, option)
+                return ret
     return {}
 
 def read_profile_expiry(profile):
     home = expanduser("~")
     credentials = join(home, ".aws", "credentials")
     if exists(credentials):
-        ini = IniConfig(credentials)
-        if profile in ini.sections:
-            if "aws_session_expiration" in ini[profile]:
-                return ini[profile]["aws_session_expiration"]
+        parser = ConfigParser()
+        with open(credentials) as credfile:
+            parser.readfp(credfile)
+            for profile in parser.sections():
+                if parser.has_option(profile, "aws_session_expiration"):
+                    return parser.get(profile, "aws_session_expiration")
     return ""
 
 def profile_to_env():
@@ -51,18 +62,25 @@ def profile_to_env():
         parser.add_argument("profile", help="The profile to read expiry info from")
     parser.add_argument("-t", "--target-role", action="store_true", help="Output also azure_default_role_arn")
     args = parser.parse_args()
-    params = []
     safe_profile = re.sub("[^A-Z0-9]", "_", args.profile.upper())
+    params = []
     if args.target_role:
         role_param = "AWS_TARGET_ROLE_ARN_" + safe_profile
         profile_entry = "profile " + args.profile
         home = expanduser("~")
         config = join(home, ".aws", "config")
-        ini = IniConfig(config)
-        if profile_entry in ini and "azure_default_role_arn" in ini[profile_entry]:
-            params.append(role_param)
-            print(role_param + "=\"" + ini[profile_entry]["azure_default_role_arn"] + "\"")
-    profile = get_profile(args.profile)
+        if exists(config):
+            parser = ConfigParser()
+            with open(config) as configfile:
+                parser.readfp(configfile)
+                if profile_entry in parser.sections() and parser.has_option(profile_entry, "azure_default_role_arn"):
+                    params.append(role_param)
+                    print(role_param + "=\"" + parser.get(profile_entry, "azure_default_role_arn") + "\"")
+    print_profile(args.profile, params)
+
+def print_profile(profile_name, params):
+    safe_profile = re.sub("[^A-Z0-9]", "_", profile_name.upper())
+    profile = get_profile(profile_name)
     for key, value in profile.items():
         upper_param = key.upper()
         if key == "aws_session_expiration":
@@ -85,3 +103,19 @@ def cli_read_profile_expiry():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     print(read_profile_expiry(args.profile))
+
+def update_profile(profile, creds):
+    home = expanduser("~")
+    credentials = join(home, ".aws", "credentials")
+    if exists(credentials):
+        parser = ConfigParser()
+        with open(credentials, 'rb') as credfile:
+            parser.readfp(credfile)
+            if profile not in parser.sections():
+                parser.add_section(profile)
+            parser.set(profile, "aws_access_key_id", creds['AccessKeyId'])
+            parser.set(profile, "aws_secret_access_key", creds['SecretAccessKey'])
+            parser.set(profile, "aws_session_token", creds['SessionToken'])
+            parser.set(profile, "aws_session_expiration", creds['Expiration'].strftime("%Y-%m-%dT%H:%M:%S.%fZ"))
+    with open(credentials, 'wb') as credfile:
+        parser.write(credfile)

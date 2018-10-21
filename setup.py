@@ -46,7 +46,6 @@ setup(name='nitor_deploy_tools',
           'pyotp',
           'pyqrcode',
           'six',
-          'iniconfig',
           'python-dateutil',
           'pycryptodomex'
       ] + ([

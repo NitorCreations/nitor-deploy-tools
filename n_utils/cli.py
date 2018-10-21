@@ -56,6 +56,7 @@ from n_utils.mfa_utils import mfa_add_token, mfa_delete_token, mfa_generate_code
 from n_utils.account_utils import list_created_accounts, create_account
 from n_utils.aws_infra_util import load_parameters
 from n_utils.ndt import find_include, find_all_includes, include_dirs
+from n_utils.profile_util import update_profile, print_profile
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -501,18 +502,24 @@ def assume_role():
     parser.add_argument("-t", "--mfa-token", metavar="TOKEN_NAME",
                         help="Name of MFA token to use", required=False)
     parser.add_argument("-d", "--duration", help="Duration for the session in minutes", 
-                        default="60", type=int)
+                        default="60", type=int, required=False)
+    parser.add_argument("-p", "--profile", help="Profile to edit in ~/.aws/credentials " + \
+                                                "to make role persist in that file for " + \
+                                                "the duration of the session.", required=False)
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     creds = cf_utils.assume_role(args.role_arn, mfa_token_name=args.mfa_token,
                                  duration_minutes=args.duration)
-    print("AWS_ROLE_ARN=\"" + args.role_arn + "\"")
-    print("AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\"")
-    print("AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\"")
-    print("AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\"")
-    print("AWS_SESSION_EXPIRATION=\"" + time.strftime("%a, %d %b %Y %H:%M:%S +0000",
-                                                      creds['Expiration'].timetuple()) + "\"")
-    print("export AWS_ROLE_ARN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SESSION_EXPIRATION")
+    if args.profile:
+        update_profile(args.profile, creds)
+        print_profile(args.profile, [])
+    else:
+        print("AWS_ROLE_ARN=\"" + args.role_arn + "\"")
+        print("AWS_ACCESS_KEY_ID=\"" + creds['AccessKeyId'] + "\"")
+        print("AWS_SECRET_ACCESS_KEY=\"" + creds['SecretAccessKey'] + "\"")
+        print("AWS_SESSION_TOKEN=\"" + creds['SessionToken'] + "\"")
+        print("AWS_SESSION_EXPIRATION=\"" + creds['Expiration'].strftime("%a, %d %b %Y %H:%M:%S +0000") + "\"")
+        print("export AWS_ROLE_ARN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SESSION_EXPIRATION")
 
 
 def get_parameter():
