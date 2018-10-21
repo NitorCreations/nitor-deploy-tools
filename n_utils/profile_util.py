@@ -54,18 +54,19 @@ def read_profile_expiry(profile):
 def profile_to_env():
     """ Prints profile parameters from credentials file (~/.aws/credentials) as eval-able environment variables """
     parser = argparse.ArgumentParser(description=profile_to_env.__doc__)
+    parser.add_argument("-t", "--target-role", action="store_true", help="Output also azure_default_role_arn")
+    parser.add_argument("-r", "--role-arn", help="Output also the role given here as the target role for the profile")
     if "_ARGCOMPLETE" in os.environ:
         parser.add_argument("profile", help="The profile to read expiry info from").completer = \
             ChoicesCompleter(read_expiring_profiles())
         argcomplete.autocomplete(parser)
     else:
         parser.add_argument("profile", help="The profile to read expiry info from")
-    parser.add_argument("-t", "--target-role", action="store_true", help="Output also azure_default_role_arn")
     args = parser.parse_args()
     safe_profile = re.sub("[^A-Z0-9]", "_", args.profile.upper())
     params = []
+    role_param = "AWS_TARGET_ROLE_ARN_" + safe_profile
     if args.target_role:
-        role_param = "AWS_TARGET_ROLE_ARN_" + safe_profile
         profile_entry = "profile " + args.profile
         home = expanduser("~")
         config = join(home, ".aws", "config")
@@ -76,6 +77,9 @@ def profile_to_env():
                 if profile_entry in parser.sections() and parser.has_option(profile_entry, "azure_default_role_arn"):
                     params.append(role_param)
                     print(role_param + "=\"" + parser.get(profile_entry, "azure_default_role_arn") + "\"")
+    if args.role_arn:
+        params.append(role_param)
+        print(role_param + "=\"" + args.role_arn + "\"")
     print_profile(args.profile, params)
 
 def print_profile(profile_name, params):
