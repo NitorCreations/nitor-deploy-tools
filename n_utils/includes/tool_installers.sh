@@ -94,6 +94,7 @@ Description=Sonatype Nexus
 [Service]
 Type=simple
 User=nexus
+LimitNOFILE=65536
 ExecStart=/opt/nexus/current/bin/nexus run
 
 [Install]
