@@ -82,6 +82,25 @@ WantedBy=default.target
 MARKER
   sed -i 's/nexus-webapp-context-path=.*/nexus-webapp-context-path=\//' /opt/nexus/current/conf/nexus.properties
 }
+install_nexus3() {
+  wget -O - https://sonatype-download.global.ssl.fastly.net/repository/repositoryManager/3/nexus-$NEXUS3_VERSION-unix.tar.gz | tar -xzf - -C /opt/nexus
+  chown -R nexus:nexus /opt/nexus
+  ln -snf /opt/nexus/nexus-* /opt/nexus/current
+  mv /opt/nexus/sonatype-work /opt/nexus/sonatype-work-initial
+  cat > /usr/lib/systemd/system/nexus.service << MARKER
+[Unit]
+Description=Sonatype Nexus
+
+[Service]
+Type=simple
+User=nexus
+ExecStart=/opt/nexus/current/bin/nexus run
+
+[Install]
+Alias=nexus
+WantedBy=default.target
+MARKER
+}
 install_fail2ban() {
   yum update -y selinux-policy*
   mkdir -p /var/run/fail2ban
@@ -119,7 +138,7 @@ update_deploytools() {
     DEPLOYTOOLS_VERSION="latest"
   fi
   echo "Updating nitor-deploy-tools to $DEPLOYTOOLS_VERSION"
-  bash "$(dirname "${BASH_SOURCE[0]}")/install_tools.sh" "${DEPLOYTOOLS_VERSION}"
+  bash "$(n-include install_tools.sh)" "${DEPLOYTOOLS_VERSION}"
 }
 update_aws_utils () {
   update_deploytools "$@"

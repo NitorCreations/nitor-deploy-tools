@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source "$(dirname "${BASH_SOURCE[0]}")/common_tools.sh"
+source "$(n-include common_tools.sh)"
 
 configure_and_start_nexus () {
   check_parameters CF_paramDnsName CF_paramSonatypeWorkSize
@@ -25,13 +25,15 @@ configure_and_start_nexus () {
     SECTMP=$(mktemp -d)
     mount tmpfs $SECTMP -t tmpfs -o size=32m
     chmod 700 $SECTMP
+    OLD_PWD=$(pwd)
+    cd $SECTMP
     touch .repo.pwd
     chown 600 .repo.pwd
     /opt/nitor/fetch-secrets.sh show ${CF_paramDnsName} | tr -d "\n" > .repo.pwd
     mkdir -p /opt/nexus/sonatype-work/nexus/conf
-    wget http://central.maven.org/maven2/org/apache/shiro/tools/shiro-tools-hasher/1.2.4/shiro-tools-hasher-1.2.4-cli.jar
-    ADMIN_HASH=$(java -jar shiro-tools-hasher-1.2.4-cli.jar -r .repo.pwd -a SHA-512 -f shiro1)
-    cd $HOME
+    wget http://central.maven.org/maven2/org/apache/shiro/tools/shiro-tools-hasher/1.2.4/shiro-tools-hasher-1.2.4-cli.jar -O /root/shiro-tools-hasher-1.2.4-cli.jar
+    ADMIN_HASH=$(java -jar /root/shiro-tools-hasher-1.2.4-cli.jar -r .repo.pwd -a SHA-512 -f shiro1)
+    cd $OLD_PWD
     umount -f $SECTMP
     if [ "$(set -o | grep xtrace | awk '{ print $2 }')" = "on" ]; then
       set +x
@@ -48,7 +50,16 @@ configure_and_start_nexus () {
   systemctl enable nexus
   systemctl start nexus
 }
-
+configure_and_start_nexus3 () {
+  ndt volume-from-snapshot nexus-data nexus-data /opt/nexus/sonatype-work ${CF_paramSonatypeWorkSize}
+  chown -R nexus:nexus /opt/nexus/sonatype-work
+  if ! [ -d /opt/nexus/sonatype-work/nexus3 ]; then
+    mv /opt/nexus/sonatype-work-initial/* /opt/nexus/sonatype-work/
+  fi
+  sed -i 's#localhost\:8080#localhost\:8081#' /etc/httpd/conf.d/ssl.conf
+  systemctl enable nexus
+  systemctl start nexus
+}
 nexus_wait_service_up () {
   # Tests to see if everything is OK
   COUNT=0
@@ -58,6 +69,17 @@ nexus_wait_service_up () {
     COUNT=$(($COUNT + 1))
   done
   if [ "$SERVER" != "Sonatype" ]; then
+    fail "Maven repository server not started"
+  fi
+}
+nexus3_wait_service_up() {
+  COUNT=0
+  while [ $COUNT -lt 300 ] && [ "$SERVER" != "Nexus" ]; do
+    sleep 1
+    SERVER=$(curl -v http://localhost:8081 2>&1 | grep Server | head -1 | awk -NF'[:/ ]' '{ print $4 }')
+    COUNT=$(($COUNT + 1))
+  done
+  if [ "$SERVER" != "Nexus" ]; then
     fail "Maven repository server not started"
   fi
 }
