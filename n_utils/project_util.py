@@ -2,7 +2,7 @@ from __future__ import print_function
 from os import linesep
 from os.path import expanduser, join, exists
 from sys import argv
-
+from n_utils.profile_util import enable_profile
 import locale
 import subprocess
 
@@ -21,6 +21,12 @@ def load_project_env():
             vars[next[0]] = next[1]
     do_print = False
     ret = ""
+    if "ndt.profile.azure" in vars:
+        enable_profile("azure", vars["ndt.profile.azure"])
+    if "ndt.profile.iam" in vars:
+        enable_profile("iam", vars["ndt.profile.iam"])
+    if "ndt.profile.ndt" in vars:
+        enable_profile("ndt", vars["ndt.profile.ndt"])
     if "ndt.source.env" in vars:
         do_print = True
         ret = ret + ". " + vars["ndt.source.env"] + linesep

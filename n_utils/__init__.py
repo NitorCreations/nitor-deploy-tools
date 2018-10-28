@@ -82,7 +82,9 @@ NDT_ONLY = [
     'load-parameters=n_utils.cli:cli_load_parameters',
     'read-profile-expiry=n_utils.profile_util:cli_read_profile_expiry',
     'assumed-role-name=n_utils.cli:cli_assumed_role_name',
-    'profile-to-env=n_utils.profile_util:profile_to_env'
+    'profile-to-env=n_utils.profile_util:profile_to_env',
+    'profile-expiry-to-env=n_utils.profile_util:profile_expiry_to_env',
+    'enable-profile=n_utils.profile_util:cli_enable_profile'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',
@@ -98,7 +100,8 @@ CONSOLE_ONLY = [
     'cf-update-stack=n_utils.cli:update_stack',
     'ndt=n_utils.ndt:ndt',
     'nitor-dt-register-complete=n_utils.project_util:ndt_register_complete',
-    'nitor-dt-load-project-env=n_utils.project_util:load_project_env'
+    'nitor-dt-load-project-env=n_utils.project_util:load_project_env',
+    'nitor-dt-enable-profile=n_utils.profile_util:cli_enable_profile'
 ]
 CONSOLESCRIPTS = CONSOLE_ONLY + NDT_AND_CONSOLE
 COMMAND_MAPPINGS = {}
