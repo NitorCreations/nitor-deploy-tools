@@ -93,11 +93,11 @@ def profile_to_env():
     parser.add_argument("-t", "--target-role", action="store_true", help="Output also azure_default_role_arn")
     parser.add_argument("-r", "--role-arn", help="Output also the role given here as the target role for the profile")
     if "_ARGCOMPLETE" in os.environ:
-        parser.add_argument("profile", help="The profile to read expiry info from").completer = \
+        parser.add_argument("profile", help="The profile to read profile info from").completer = \
             ChoicesCompleter(read_profiles())
         argcomplete.autocomplete(parser)
     else:
-        parser.add_argument("profile", help="The profile to read expiry info from")
+        parser.add_argument("profile", help="The profile to read profile info from")
     args = parser.parse_args()
     safe_profile = re.sub("[^A-Z0-9]", "_", args.profile.upper())
     params = []
@@ -192,7 +192,7 @@ def cli_enable_profile():
             ChoicesCompleter(read_profiles())
         argcomplete.autocomplete(parser)
     else:
-        parser.add_argument("profile", help="The profile to read expiry info from")
+        parser.add_argument("profile", help="The profile to enable")
     args = parser.parse_args()
     if args.iam:
         profile_type = "iam"

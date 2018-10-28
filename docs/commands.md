@@ -33,7 +33,8 @@ optional arguments:
 ## `ndt assume-role`
 
 ```bash
-usage: ndt assume-role [-h] [-t TOKEN_NAME] [-d DURATION] role_arn
+usage: ndt assume-role [-h] [-t TOKEN_NAME] [-d DURATION] [-p PROFILE]
+                       role_arn
 
 Assume a defined role. Prints out environment variables to be eval\'d to
 current context for use: eval $(ndt assume-role
@@ -48,6 +49,9 @@ optional arguments:
                         Name of MFA token to use
   -d DURATION, --duration DURATION
                         Duration for the session in minutes
+  -p PROFILE, --profile PROFILE
+                        Profile to edit in ~/.aws/credentials to make role
+                        persist in that file for the duration of the session.
 ```
 
 ## `ndt assumed-role-name`
@@ -414,6 +418,24 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+## `ndt enable-profile`
+
+```bash
+usage: ndt enable-profile [-h] [-i | -a | -n] profile
+
+Enable a configured profile. Simple IAM user, AzureAD and ndt assume-role
+profiles are supported
+
+positional arguments:
+  profile      The profile to enable
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -i, --iam    IAM user type profile
+  -a, --azure  Azure login type profile
+  -n, --ndt    NDT assume role type profile
+```
+
 ## `ndt get-images`
 
 ```bash
@@ -695,20 +717,38 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+## `ndt profile-expiry-to-env`
+
+```bash
+usage: ndt profile-expiry-to-env [-h] profile
+
+Prints profile expiry from credentials file (~/.aws/credentials) as eval-able
+environment variables
+
+positional arguments:
+  profile     The profile to read expiry info from
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
 ## `ndt profile-to-env`
 
 ```bash
-usage: ndt profile-to-env [-h] [-t] profile
+usage: ndt profile-to-env [-h] [-t] [-r ROLE_ARN] profile
 
 Prints profile parameters from credentials file (~/.aws/credentials) as eval-
 able environment variables
 
 positional arguments:
-  profile            The profile to read expiry info from
+  profile               The profile to read profile info from
 
 optional arguments:
-  -h, --help         show this help message and exit
-  -t, --target-role  Output also azure_default_role_arn
+  -h, --help            show this help message and exit
+  -t, --target-role     Output also azure_default_role_arn
+  -r ROLE_ARN, --role-arn ROLE_ARN
+                        Output also the role given here as the target role for
+                        the profile
 ```
 
 ## `ndt promote-image`
