@@ -62,7 +62,7 @@ For full list of commands see [here](docs/commands.md)
 ## Documentation
 
 - [Command Reference](docs/commands.md)
-- [Command Completion Support](docs/completion.md)
+- [ndt workspace tooling](docs/workspace.md)
 - [Template Pre-Processing](docs/template-processing.md)
 - [Multifactor Authentication](docs/mfa.md)
 - [Common parameters](docs/parameters.md)
