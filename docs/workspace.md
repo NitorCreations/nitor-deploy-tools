@@ -16,8 +16,8 @@ local variables to export a useful project environmnet that usually points to AW
 This could also be a script that does third a party login including some custom MFA. The script
 is run for every prompt though inside the project so you will want to make it check if the session is still
 valid before trying to assume the role. You can use then environment variable `AWS_SESSION_EXPIRATION` that
-is set by `ndt assume-role` to only assume role when the previous role has expired. See section about
-TOTP MFA codes below. An example of what a sourceable role script could be is below:
+is set by `ndt assume-role` to only assume role when the previous role has expired. See documentation about
+(TOTP MFA)[mfa.md] codes. An example of what a sourceable role script could be is below:
 
 ```bash
 #!/bin/bash
@@ -71,6 +71,13 @@ sourced in your ndt project by calling `git config ndt.source.env my-admin-role`
 that needs that role and assuming you've set up command completion as above, every time you
 change directory into the project, your credentials get set up automatically for you to work and
 checked every time you give a command.
+
+The simplest way to set up your working environment is to use a profile in `~/.aws/config` and
+set either `ndt.profile.azure`, `ndt.profile.iam` or `ndt.profile.ndt`. Examples of these
+profiles are below. That will run `nitor-dt-enable-profile` for every prompt command and that in
+turn checks session validity from environment variables and doesn't actually execute anything
+else if you have a valid session defined. You can also chain for example an azure profile and
+and assume role if that is how multi-account access is setup for you.
 
 `nitor-dt-register-complete` uses `nitor-dt-load-project-env` as a prompt command that is run
 every time the shell prompt is created. By default that will be a python script and will have
