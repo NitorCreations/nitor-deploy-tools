@@ -16,10 +16,10 @@ from setuptools import setup
 from n_utils import PATH_COMMANDS, CONSOLESCRIPTS
 
 setup(name='nitor_deploy_tools',
-      version='1.38',
+      version='1.39',
       description='Tools for deploying to AWS via CloudFormation and Serverless framework that support a pull request based workflow',
       url='http://github.com/NitorCreations/nitor-deploy-tools',
-      download_url='https://github.com/NitorCreations/nitor-deploy-tools/tarball/1.38',
+      download_url='https://github.com/NitorCreations/nitor-deploy-tools/tarball/1.39',
       author='Pasi Niemi',
       author_email='pasi@nitor.com',
       license='Apache 2.0',
@@ -47,7 +47,8 @@ setup(name='nitor_deploy_tools',
           'pyqrcode',
           'six',
           'python-dateutil',
-          'pycryptodomex'
+          'pycryptodomex',
+          'configparser'
       ] + ([
           'win-unicode-console',
           'wmi',
