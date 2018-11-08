@@ -94,7 +94,7 @@ sudo cp nitor-dt-load-project-env.exe $(which nitor-dt-load-project-env)
 
 Doing this on a machine that has the right tooling will give you a much snappier prompt.
 
-## Projecct session profile types
+## Project session profile types
 
 The following details the kinds of profiles that enable project sessions to work.
 
