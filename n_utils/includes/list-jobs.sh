@@ -19,7 +19,7 @@ fi
 source $(n-include autocomplete-helpers.sh)
 
 buildable_branches() {
-  for BRANCH in $(git branch -r | grep -v origin/HEAD | cut -d/ -f 2-); do
+  for BRANCH in $(git branch -r | grep -v origin/HEAD | grep -v feature/ | cut -d/ -f 2-); do
     checkout_branch $BRANCH
   done
 }
