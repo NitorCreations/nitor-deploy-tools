@@ -164,9 +164,9 @@ This is transformed into
 ```
 
 Note how CloudFormation internal parameters are avaible via `CF_AWS__StackName` to `"Ref": "AWS::StackName"`
-type transformation. Suffixing a paremter with `#optional` will result in no error being thrown if the
-parameter is not present in the stack and in that case the value will simply be empty instead of a
-reference.
+type transformation. Suffixing a parameter with `#optional` will result in no error being thrown if the
+parameter is not present in the stack and in that case the value will simply be empty or the value
+given in the script file instead of a reference.
 
 Raw cloudformation json can be inserted with the notation `#CF{ myContent }`. Here is an example:
 
@@ -177,6 +177,19 @@ NEW_RELIC_LICENSE_KEY=#CF{ "Ref": "paramNewRelicLicenseKey" }
 Also works with javascript type comments:
 ```javascript
 const stackName = //CF{ "Ref": "AWS::StackName" }
+```
+
+The third way to insert parameters is via a notation of the type `$CF{parameterName|defaultVal}#optional`. This
+references will simply be replaced with a reference to the parameter in place, leaving everything around
+it intact. This is handy for example when importing variables into json, where the above comment based
+syntax would break json syntax.
+
+An example would be:
+```json
+{
+  "Reference": "$CF{MyLambdaArn}",
+  "Name": "MyLambda
+}
 ```
 
 ### `StackRef`
