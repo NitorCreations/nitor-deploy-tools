@@ -318,53 +318,76 @@ gotImportErrors = False
 def decode_parameter_name(name):
     return re.sub('__', '::', name)
 
+# the "var " prefix is to support javascript as well
+VAR_DECL_RE = re.compile(
+    r'^((\s*var\s+)|(\s*const\s+))?CF_([^\s=]+)[\s="\']*([^#"\'\`]*)(?:["\'\s\`]*)(#optional)?')
+EMBED_DECL_RE = re.compile(
+    r'^(.*?=\s*)?(.*?)(?:(?:\`?#|//)CF([^#\`]*))[\"\`\s]*(#optional)?')
+IN_PLACE_RE = re.compile(r'^([^\$]*?)\$CF{([^}\|]*)(\|[^}]*)?}(#optional)?(.*)')
 
 def import_script(filename):
-    # the "var " prefix is to support javascript as well
-    var_decl_re = re.compile(
-        r'^((\s*var\s+)|(\s*const\s+))?CF_([^\s=]+)[\s="\']*([^#"\'\`]*)(?:["\'\s\`]*)(#optional)?')
-    embed_decl_re = re.compile(
-        r'^(.*?=\s*)?(.*?)(?:(?:\`?#|//)CF([^#\`]*))[\"\`\s]*(#optional)?')
     arr = []
     with open(filename) as fd:
         for line in fd:
-            result = var_decl_re.match(line)
+            next_arr = do_replace(line, filename)
+            arr = arr + next_arr
+    return arr
+
+def do_replace(line, filename):
+    arr = []
+    result = VAR_DECL_RE.match(line)
+    if result:
+        js_prefix = result.group(1)
+        encoded_varname = result.group(4)
+        var_name = decode_parameter_name(encoded_varname)
+        ref = OrderedDict()
+        ref['Ref'] = var_name
+        ref['__source'] = filename
+        if str(result.group(6)) == "#optional":
+            ref['__optional'] = "true"
+            ref['__default'] = str(result.group(5)).strip(" \"'")
+        arr.append(line[0:result.end(4)] + "='")
+        arr.append(ref)
+        if js_prefix:
+            arr.append("';\n")
+        else:
+            arr.append("'\n")
+    else:
+        result = EMBED_DECL_RE.match(line)
+        if result:
+            prefix = result.group(1)
+            if not prefix:
+                prefix = result.group(2)
+                default_val = ""
+            else:
+                default_val = str(result.group(2)).strip(" \"'")
+            arr.append(prefix + "'")
+            for entry in yaml_load("[" + result.group(3) + "]"):
+                apply_source(entry, filename, str(result.group(4)),
+                                default_val)
+                arr.append(entry)
+            if filename.endswith(".ps1"):
+                arr.append("'\r\n")
+            else:
+                arr.append("'\n")
+        else:
+            result = IN_PLACE_RE.match(line)
             if result:
-                js_prefix = result.group(1)
-                encoded_varname = result.group(4)
-                var_name = decode_parameter_name(encoded_varname)
+                arr.append(result.group(1))
+                var_name = decode_parameter_name(result.group(2))
                 ref = OrderedDict()
                 ref['Ref'] = var_name
                 ref['__source'] = filename
-                if str(result.group(6)) == "#optional":
+                if str(result.group(4)) == "#optional":
                     ref['__optional'] = "true"
-                    ref['__default'] = str(result.group(5)).strip(" \"'")
-                arr.append(line[0:result.end(4)] + "='")
+                    if result.group(3):
+                        ref['__default'] = str(result.group(3)[1:])
+                    else:
+                        ref['__default'] = ""
                 arr.append(ref)
-                if js_prefix:
-                    arr.append("';\n")
-                else:
-                    arr.append("'\n")
+                arr.append(result.group(5))
             else:
-                result = embed_decl_re.match(line)
-                if result:
-                    prefix = result.group(1)
-                    if not prefix:
-                        prefix = result.group(2)
-                        default_val = ""
-                    else:
-                        default_val = str(result.group(2)).strip(" \"'")
-                    arr.append(prefix + "'")
-                    for entry in yaml_load("[" + result.group(3) + "]"):
-                        apply_source(entry, filename, str(result.group(4)),
-                                     default_val)
-                        arr.append(entry)
-                    if filename.endswith(".ps1"):
-                        arr.append("'\r\n")
-                    else:
-                        arr.append("'\n")
-                else:
-                    arr.append(line)
+                arr.append(line)
     return arr
 
 
