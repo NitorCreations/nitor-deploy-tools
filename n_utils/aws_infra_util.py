@@ -385,7 +385,7 @@ def do_replace(line, filename):
                     else:
                         ref['__default'] = ""
                 arr.append(ref)
-                arr.append(result.group(5))
+                arr = arr + do_replace(result.group(5), filename)
             else:
                 arr.append(line)
     return arr
