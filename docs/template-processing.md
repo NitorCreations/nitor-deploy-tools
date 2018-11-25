@@ -188,10 +188,26 @@ An example would be:
 ```json
 {
   "Reference": "$CF{MyLambdaArn}",
-  "Name": "MyLambda
+  "Name": "MyLambda"
 }
 ```
 
+Which will be translated when imported into the stack into:
+```json
+"Fn::Join": [
+  "", 
+  [
+    "{\n", 
+    "    \"Reference\": \"", 
+    {
+      "Ref": "MyLambdaArn"
+    }, 
+    "\",", 
+    "    \"Name\": \"MyLambda\"\n", 
+    "}"
+  ]
+]
+```
 ### `StackRef`
 
 Gets either a input or output parameter or logical resource of another stack as the value to substitute the
