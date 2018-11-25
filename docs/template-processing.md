@@ -168,10 +168,24 @@ type transformation. Suffixing a parameter with `#optional` will result in no er
 parameter is not present in the stack and in that case the value will simply be empty or the value
 given in the script file instead of a reference.
 
-Raw cloudformation json can be inserted with the notation `#CF{ myContent }`. Here is an example:
+Raw cloudformation json can be inserted with the notation `#CF{ myContent }`. Here is a powershell example:
 
-```bash
-NEW_RELIC_LICENSE_KEY=#CF{ "Ref": "paramNewRelicLicenseKey" }
+```powershell
+$Env = #CF{ Ref: paramEnvId }
+```
+
+Which will be translated when imported into the stack into:
+```json
+"Fn::Join": [
+  "",
+  [
+    "$Env = '",
+    {
+      "Ref": "paramEnvId"
+    },
+    "'\r\n"
+  ]
+]
 ```
 
 Also works with javascript type comments:
