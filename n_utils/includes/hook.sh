@@ -97,4 +97,17 @@ deploy_cert() {
   store-secret.sh logout
 #  rm -f $KEYFILE $CERTFILE $CHAINFILE
 }
+
+unchanged_cert() {
+  local DOMAIN="$1"
+  local KEYFILE="$2"
+  local CERTFILE="$3"
+  local CHAINFILE="$4"
+  store-secret.sh $DOMAIN.crt < $CERTFILE
+  store-secret.sh $DOMAIN.key.clear < $KEYFILE
+  store-secret.sh $DOMAIN.chain < $CHAINFILE
+  store-secret.sh logout
+#  rm -f $KEYFILE $CERTFILE $CHAINFILE
+}
+
 HANDLER=$1; shift; $HANDLER $@
