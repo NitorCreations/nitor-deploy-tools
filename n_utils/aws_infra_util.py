@@ -32,7 +32,7 @@ from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars, get_images
 from n_utils.ndt import find_include
 from n_utils.ecr_utils import repo_uri
-from n_utils import ParamNotAvailable
+from n_utils import PARAM_NOT_AVAILABLE
 from n_utils.lazy_dict import LazyOrderedDict
 
 stacks = dict()
@@ -461,8 +461,6 @@ def existing(filename):
         return filename
     else:
         return None
-
-PARAM_NOT_AVAILABLE = ParamNotAvailable()
 
 
 def _add_params(target, source, source_prop, use_value):

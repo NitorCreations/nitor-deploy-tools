@@ -6,7 +6,7 @@ from os import environ
 from termcolor import colored
 from n_utils.log_events import fmttime
 from n_utils.cf_utils import log
-
+from n_utils import PARAM_NOT_AVAILABLE
 
 class LazyParam(object):
 
@@ -40,6 +40,13 @@ class LazyOrderedDict(OrderedDict):
                 return ret
             else:
                 raise ke
+
+    def __setitem__(self, key, value, dict_setitem=dict.__setitem__):
+        if value == PARAM_NOT_AVAILABLE:
+            res_val = self._lazy_resolve(key)
+            if res_val:
+                value = res_val
+        OrderedDict.__setitem__(self, key, value, dict_setitem=dict.__setitem__)
 
     def __contains__(self, key):
         if not OrderedDict.__contains__(self, key):

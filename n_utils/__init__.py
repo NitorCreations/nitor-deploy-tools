@@ -119,3 +119,5 @@ for script in NDT_AND_CONSOLE + NDT_ONLY:
 class ParamNotAvailable(object):
     def __init__(self):
         return
+
+PARAM_NOT_AVAILABLE = ParamNotAvailable()
