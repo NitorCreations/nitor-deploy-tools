@@ -23,6 +23,7 @@ from builtins import range
 from builtins import object
 import io
 import json
+import locale
 import os
 import random
 import re
@@ -34,6 +35,7 @@ import time
 import tempfile
 import six
 from collections import deque, OrderedDict
+from datetime import datetime
 from os.path import expanduser
 from threading import Event, Lock, Thread
 from operator import itemgetter
@@ -41,12 +43,14 @@ from operator import itemgetter
 import boto3
 from botocore.exceptions import ClientError, EndpointConnectionError
 import requests
+from termcolor import colored
 from requests.exceptions import ConnectionError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from n_vault import Vault
 from n_utils.mfa_utils import mfa_read_token, mfa_generate_code
 from n_utils import ParamNotAvailable
+from n_utils.log_events import fmttime
 
 NoneType = type(None)
 ACCOUNT_ID = None
@@ -57,6 +61,10 @@ INSTANCE_DATA_LINUX = '/opt/nitor/instance-data.json'
 INSTANCE_DATA_WIN = 'C:/nitor/instance-data.json'
 
 dthandler = lambda obj: obj.isoformat() if hasattr(obj, 'isoformat') else json.JSONEncoder().default(obj)
+
+def log(message):
+    os.write(1, (colored(fmttime(datetime.now()), 'yellow') + " "
+                 + message + os.linesep).encode(locale.getpreferredencoding()))
 
 def get_retry(url, retries=5, backoff_factor=0.3,
               status_forcelist=(500, 502, 504), session=None, timeout=5):

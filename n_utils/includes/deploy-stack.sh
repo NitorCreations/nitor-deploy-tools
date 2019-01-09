@@ -40,13 +40,13 @@ if [ "$_ARGCOMPLETE" ]; then
       compgen -W "$(get_stacks "$IMAGE_DIR")" -- $COMP_CUR
       ;;
     4)
-      eval "$(ndt load-parameters "$IMAGE_DIR" -s "$STACK" -e)"
+      eval "$(ndt load-parameters "$IMAGE_DIR" -s "$STACK" -e -z)"
       JOB_NAME="${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
       IMAGE_IDS="$(get_imageids $IMAGE_DIR $JOB_NAME)"
       compgen -W "$IMAGE_IDS" -- $COMP_CUR
       ;;
     5)
-      eval "$(ndt load-parameters "$IMAGE_DIR" -s "$STACK" -e)"
+      eval "$(ndt load-parameters "$IMAGE_DIR" -s "$STACK" -e -z)"
       echo "${JENKINS_JOB_PREFIX}_${IMAGE}_bake"
       ;;
     *)
@@ -101,12 +101,8 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$component" -s "$stackName" -e)"
+eval "$(ndt load-parameters "$component" -s "$stackName" -e -z)"
 
-if [ -z "$AMI_ID" ]; then
-  AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"
-fi
-
-export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
+export IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
 
 cf-update-stack "${STACK_NAME}" "${component}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN

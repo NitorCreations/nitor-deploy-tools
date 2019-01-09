@@ -80,9 +80,9 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$component" -l "$serverless" -e)"
+eval "$(ndt load-parameters "$component" -l "$serverless" -e -z)"
 
-ndt load-parameters "$component" -l "$serverless" -y > "$component/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
+ndt load-parameters "$component" -l "$serverless" -y -z > "$component/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
 ndt yaml-to-yaml "$component/serverless-$ORIG_SERVERLESS_NAME/template.yaml" > "$component/serverless-$ORIG_SERVERLESS_NAME/serverless.yml"
 
 cd "$component/serverless-$ORIG_SERVERLESS_NAME"

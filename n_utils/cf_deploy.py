@@ -32,9 +32,9 @@ from pygments import highlight, lexers, formatters
 from pygments.styles import get_style_by_name
 from termcolor import colored
 
-from . import aws_infra_util
-from .cf_utils import get_images
-from .log_events import CloudWatchLogsThread, CloudFormationEvents, fmttime
+from n_utils import aws_infra_util
+from n_utils.cf_utils import get_images, log
+from n_utils.log_events import CloudWatchLogsThread, CloudFormationEvents, fmttime
 
 REDIRECTED = False
 
@@ -51,11 +51,6 @@ def log_data(data, output_format="yaml"):
         formatted = str(formatted, 'UTF-8')
     colored_yaml = os.linesep + highlight(formatted, lexer, formatter)
     log(colored_yaml)
-
-def log(message):
-    os.write(1, (colored(fmttime(datetime.now()), 'yellow') + " "
-                 + message + os.linesep).encode(locale.getpreferredencoding()))
-
 
 def update_stack(stack_name, template, params, dry_run=False, session=None, tags=None):
     if session:
@@ -216,39 +211,6 @@ def delete(stack_name, regn, session=None):
                 raise
 
 
-def resolve_ami(template_doc, session=None):
-    ami_id = ""
-    ami_name = ""
-    ami_created = ""
-    if 'AMI_ID' in os.environ and os.environ['AMI_ID']:
-        ami_id = os.environ['AMI_ID']
-
-    if not ami_id and 'Parameters' in template_doc and \
-        'paramAmi' in template_doc['Parameters'] and \
-            'IMAGE_JOB' in os.environ:
-        image_job = re.sub(r'\W', '_', os.environ['IMAGE_JOB'].lower())
-        log("Looking for ami with name prefix " + image_job)
-        sorted_images = get_images(image_job)
-        if sorted_images:
-            image = sorted_images[0]
-            ami_id = image['ImageId']
-            ami_name = image['Name']
-            ami_created = image['CreationDate']
-    elif ami_id and 'Parameters' in template_doc and \
-            'paramAmi'in template_doc['Parameters']:
-        log("Looking for ami metadata with id " + ami_id)
-        if session:
-            ec2 = session.client('ec2')
-        else:
-            ec2 = boto3.client('ec2')
-        ami_meta = ec2.describe_images(ImageIds=[ami_id])
-        log("Result: " + aws_infra_util.json_save(ami_meta))
-        image = ami_meta['Images'][0]
-        ami_name = image['Name']
-        ami_created = image['CreationDate']
-    return ami_id, ami_name, ami_created
-
-
 def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     os.environ['AWS_DEFAULT_REGION'] = regn
     os.environ['REGION'] = regn
@@ -258,10 +220,8 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
         sys.stdout = Unbuffered(sys.__stdout__)
         REDIRECTED = True
     template_doc = aws_infra_util.yaml_to_dict(yaml_template)
-    ami_id, ami_name, ami_created = resolve_ami(template_doc, session=session)
 
-    log("**** Deploying stack '" + stack_name + "' with template '" +
-        yaml_template + "' and ami_id '" + str(ami_id) + "'")
+    log("**** Deploying stack '" + stack_name + "' with template '" + yaml_template + "'")
 
     if "Parameters" not in template_doc:
         template_doc['Parameters'] = {}
@@ -271,23 +231,6 @@ def deploy(stack_name, yaml_template, regn, dry_run=False, session=None):
     if "Tags" in template_doc:
         tags = template_doc["Tags"]
         del template_doc["Tags"]
-    if ami_id:
-        with open("ami.properties", 'w') as ami_props:
-            ami_props.write("AMI_ID=" + ami_id + "\nNAME=" + ami_name + "\n")
-        os.environ["paramAmi"] = ami_id
-        os.environ["paramAmiName"] = ami_name
-        os.environ["paramAmiCreated"] = ami_created
-        if "paramAmiName" not in template_parameters:
-            template_parameters['paramAmiName'] = \
-                collections.OrderedDict([("Description", "AMI Name"),
-                                         ("Type", "String"), ("Default", "")])
-        if "paramAmiCreated" not in template_parameters:
-            template_parameters['paramAmiCreated'] = \
-                collections.OrderedDict([("Description", "AMI Creation Date"),
-                                         ("Type", "String"), ("Default", "")])
-    else:
-        with open("ami.properties", 'w') as ami_props:
-            ami_props.write("AMI_ID=\nNAME=\n")
     json_small = aws_infra_util.json_save_small(template_doc)
 
     log("**** Final template ****")

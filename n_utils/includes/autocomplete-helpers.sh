@@ -59,7 +59,7 @@ checkout_branch() {
   fi
 }
 job_properties() {
-  ndt load-parameters $2 $3 $4 -p -b $1
+  ndt load-parameters $2 $3 $4 -p -b $1 -z
 }
 
 current_branch_job_properties() {

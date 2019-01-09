@@ -29,10 +29,11 @@ from glob import glob
 from yaml import ScalarNode, SequenceNode, MappingNode
 from botocore.exceptions import ClientError
 from copy import deepcopy
-from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars
+from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars, get_images
 from n_utils.ndt import find_include
 from n_utils.ecr_utils import repo_uri
 from n_utils import ParamNotAvailable
+from n_utils.lazy_dict import LazyOrderedDict
 
 stacks = dict()
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"
@@ -203,16 +204,53 @@ def _add_subcomponent_file(component, branch, type, name, files):
         files.append(component + os.sep + type + "-" + name + os.sep + "infra-" + branch + ".properties")
 
 
-def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, branch=None):
+def resolve_docker_uri(component, uriParam, image_branch):
+    docker = uriParam[14:]
+    docker_params = load_parameters(component=component, docker=docker, branch=image_branch)
+    return repo_uri(docker_params['DOCKER_NAME'])
+
+def resolve_ami(component, image, imagebranch):
+    image_params = load_parameters(component=component, image=image, branch=imagebranch)
+    if "JOB_NAME" in image_params:
+        job = image_params["JOB_NAME"].replace("-", "_")
+    else:
+        prefix = ""
+        if "JENKINS_JOB_PREFIX" in image_params:
+            prefix = image_params["JENKINS_JOB_PREFIX"]
+        job = prefix + "_" + component + "_bake"
+        if image:
+            job = job + "_" + image
+    images = get_images(job)
+    if images:
+        return images[0]
+    else:
+        return None
+
+def resolve_ami_id(component, imageParam, imagebranch):
+    image = imageParam[8:]
+    ami = resolve_ami(component, image, imagebranch)
+    if ami:
+        return ami["ImageId"]
+    else:
+        return None
+
+def resolve_ami_name(component, imageParam, imagebranch):
+    image = imageParam[10:]
+    ami = resolve_ami(component, imageParam, imagebranch)
+    if ami:
+        return ami["Name"]
+    else:
+        return None
+
+def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, branch=None, lazy=False):
     if not branch:
         if "GIT_BRANCH" in os.environ:
             branch = os.environ["GIT_BRANCH"]
         else:
             branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     branch = branch.strip().split("/")[-1:][0]
-    ret = {
-        "GIT_BRANCH": branch
-    }
+    ret = LazyOrderedDict()
+    ret["GIT_BRANCH"] = branch
     account = resolve_account()
     if account:
         ret["ACCOUNT_ID"] = account
@@ -234,17 +272,31 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
             import_parameter_file(file, ret)
     if serverless or stack:
         if 'BAKE_IMAGE_BRANCH' in ret:
-            dockerbranch = ret['BAKE_IMAGE_BRANCH']
+            image_branch = ret['BAKE_IMAGE_BRANCH']
         else:
-            dockerbranch = branch
-        for docker in [dockerdir.split("/docker-")[1] for dockerdir in glob(component + os.sep + "docker-*")]:
-            docker_params = load_parameters(component=component, docker=docker, branch=dockerbranch)
-            try:
-                ret['paramDockerUri' + docker] = repo_uri(docker_params['DOCKER_NAME'])
-            except ClientError:
-                # Best effor to load docker uris, but ignore errors since the repo might not
-                # actually be in use. Missing and used uris will result in an error later.
-                pass
+            image_branch = branch
+        if lazy:
+            matchers_and_resolvers = get_matchers_and_resolvers(component, image_branch)
+            ret.add_lazyparam(matchers_and_resolvers[0][0], matchers_and_resolvers[1][0])
+            ret.add_lazyparam(matchers_and_resolvers[0][1], matchers_and_resolvers[1][1])
+            ret.add_lazyparam(matchers_and_resolvers[0][2], matchers_and_resolvers[1][2])
+        else:
+            for docker in [dockerdir.split("/docker-")[1] for dockerdir in glob(component + os.sep + "docker-*")]:
+                try:
+                    ret['paramDockerUri' + docker] = resolve_docker_uri(component, 'paramDockerUri' + docker, image_branch)
+                except ClientError:
+                    # Best effor to load docker uris, but ignore errors since the repo might not
+                    # actually be in use. Missing and used uris will result in an error later.
+                    pass
+            for image_name in [imagedir.split("/image")[1].replace("-", "") for imagedir in glob(component + os.sep + "image*")]:
+                try:
+                    image = resolve_ami(component, image_name, image_branch)
+                    ret['paramAmi' + image_name] = image['ImageId']
+                    ret['paramAmiName' + image_name] = image['Name']
+                except ClientError:
+                    # Best effor to load ami info, but ignore errors since the image might not
+                    # actually be in use. Missing and used images will result in an error later.
+                    pass
     if "REGION" not in ret:
         ret["REGION"] = region()
     if "paramEnvId" not in ret:
@@ -417,14 +469,31 @@ def _add_params(target, source, source_prop, use_value):
     if source_prop in source:
         if isinstance(source[source_prop], OrderedDict) or isinstance(source[source_prop], dict):
             for k, val in list(source[source_prop].items()):
-                target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
+                target[k] = val['Default'] if use_value and 'Default' in val and val['Default'] else PARAM_NOT_AVAILABLE
         elif isinstance(source[source_prop], list):
             for list_item in source[source_prop]:
                 for k, val in list(list_item.items()):
-                    target[k] = val['Default'] if use_value and 'Default' in val else PARAM_NOT_AVAILABLE
+                    target[k] = val['Default'] if use_value and 'Default' in val and val['Default']  else PARAM_NOT_AVAILABLE
 
 def _get_params(data, template):
-    params = OrderedDict()
+    global SOURCED_PARAMS
+    if not SOURCED_PARAMS:
+        SOURCED_PARAMS = {}
+        # then override them with values from infra
+        template_dir = os.path.dirname(os.path.abspath(template))
+        image_dir = os.path.dirname(template_dir)
+
+        image_name = os.path.basename(image_dir)
+        stack_name = os.path.basename(template_dir)
+        if stack_name.startswith("stack-"):
+            stack_name = re.sub('^stack-', '', stack_name)
+            SOURCED_PARAMS = load_parameters(component=image_name, stack=stack_name, lazy=True)
+        elif stack_name.startswith("serverless-"):
+            stack_name = re.sub('^serverless-', '', stack_name)
+            SOURCED_PARAMS = load_parameters(component=image_name, serverless=stack_name, lazy=True)
+        SOURCED_PARAMS.update(os.environ)
+
+    params = SOURCED_PARAMS
 
     # first load defaults for all parameters in "Parameters"
     if 'Parameters' in data:
@@ -454,21 +523,7 @@ def _get_params(data, template):
             os.environ['ACCOUNT_ID'] = "None"
     params['ACCOUNT_ID'] = os.environ['ACCOUNT_ID']
 
-    global SOURCED_PARAMS
-    if not SOURCED_PARAMS:
-        SOURCED_PARAMS = {}
-        # then override them with values from infra
-        template_dir = os.path.dirname(os.path.abspath(template))
-        image_dir = os.path.dirname(template_dir)
-
-        image_name = os.path.basename(image_dir)
-        stack_name = os.path.basename(template_dir)
-        stack_name = re.sub('^stack-', '', stack_name)
-        SOURCED_PARAMS = load_parameters(component=image_name, stack=stack_name)
-        SOURCED_PARAMS.update(os.environ)
-
     params.update(SOURCED_PARAMS)
-
     # source_infra_properties.sh always resolves a region, account id and stack
     # name
     params["AWS::Region"] = params['REGION']
@@ -878,3 +933,15 @@ def _patch_launchconf(data):
                 lc_userdata.append({"Ref": ref})
                 first = 0
             lc_userdata.append("\n")
+
+matchers_and_resolvers = {}
+def get_matchers_and_resolvers(component, image_branch):
+    if not (component, image_branch) in matchers_and_resolvers:
+        dockerUriMatcher = lambda key : key.startswith("paramDockerUri")
+        dockerUriResolver = lambda key : resolve_docker_uri(component, key, image_branch)
+        amiIdMatcher = lambda key : key.startswith("paramAmi") and not key.startswith("paramAmiName")
+        amiIdResolver = lambda key : resolve_ami_id(component, key, image_branch)
+        amiNameMatcher = lambda key : key.startswith("paramAmiName")
+        amiNameResolver = lambda key : resolve_ami_name(component, key, image_branch)
+        matchers_and_resolvers[(component, image_branch)] = [[dockerUriMatcher, amiIdMatcher, amiNameMatcher], [dockerUriResolver, amiIdResolver, amiNameResolver]]
+    return matchers_and_resolvers[(component, image_branch)]

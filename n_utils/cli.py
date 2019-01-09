@@ -36,16 +36,16 @@ import yaml
 from argcomplete.completers import ChoicesCompleter, FilesCompleter
 from pygments import highlight, lexers, formatters
 from pygments.styles import get_style_by_name
-from . import aws_infra_util
-from . import cf_bootstrap
-from . import cf_deploy
-from . import cf_utils
-from . import volumes
-from .cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
+from n_utils import aws_infra_util
+from n_utils import cf_bootstrap
+from n_utils import cf_deploy
+from n_utils import cf_utils
+from n_utils import volumes
+from n_utils.cf_utils import InstanceInfo, is_ec2, region, regions, stacks, \
     stack_params_and_outputs, get_images, promote_image, \
     share_to_another_region, set_region, register_private_dns, interpolate_file, \
     assumed_role_name
-from .cloudfront_utils import distributions, distribution_comments, \
+from n_utils.cloudfront_utils import distributions, distribution_comments, \
     upsert_cloudfront_records
 from n_utils.ecr_utils import ensure_repo, repo_uri
 from n_utils.log_events import CloudWatchLogsGroups, CloudFormationEvents, CloudWatchLogsThread
@@ -952,6 +952,7 @@ def cli_load_parameters():
     format_group.add_argument("--properties", "-p", action="store_true", help="properties file format output")
     format_group.add_argument("--export-statements", "-e", action="store_true",
                               help="Output as eval-able export statements")
+    parser.add_argument("--lazy", "-z", action="store_true", help="Lazy load dynamically resolved variables (don't load them in practice unless something looks them up)")
     args = parser.parse_args()
 
     transform = json.dumps
