@@ -38,6 +38,11 @@ get_imageids() {
     fi
   fi
 }
+get_images() {
+  if [ -r infra.properties -o -r infra-master.properties ]; then
+    echo $(find $1 -mindepth 1 -maxdepth 1 -name image -o -name 'image-*' | sed -e 's/.*image\(.*\)/\1/g' -e 's/^-//')
+  fi
+}
 get_dockers() {
   if [ -r infra.properties -o -r infra-master.properties ]; then
     echo $(find $1 -mindepth 1 -maxdepth 1 -name 'docker-*' | sed 's/.*docker-\(.*\)/\1/g')
@@ -46,6 +51,16 @@ get_dockers() {
 get_serverless() {
   if [ -r infra.properties -o -r infra-master.properties ]; then
     echo $(find $1 -mindepth 1 -maxdepth 1 -name 'serverless-*' | sed 's/.*serverless-\(.*\)/\1/g')
+  fi
+}
+get_cdk() {
+  if [ -r infra.properties -o -r infra-master.properties ]; then
+    echo $(find $1 -mindepth 1 -maxdepth 1 -name 'cdk-*' | sed 's/.*cdk-\(.*\)/\1/g')
+  fi
+}
+get_terraform() {
+  if [ -r infra.properties -o -r infra-master.properties ]; then
+    echo $(find $1 -mindepth 1 -maxdepth 1 -name 'terraform-*' | sed 's/.*terraform-\(.*\)/\1/g')
   fi
 }
 checkout_branch() {

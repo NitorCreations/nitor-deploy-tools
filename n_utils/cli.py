@@ -946,12 +946,15 @@ def cli_load_parameters():
     subcomponent_group.add_argument("--serverless", "-l", help="Serverless subcomponent to descent into")
     subcomponent_group.add_argument("--docker", "-d", help="Docker image subcomponent to descent into")
     subcomponent_group.add_argument("--image", "-i", const="", nargs="?", help="AMI image subcomponent to descent into")
+    subcomponent_group.add_argument("--cdk", "-c", help="CDK subcomponent to descent into")
+    subcomponent_group.add_argument("--terraform", "-t", help="Terraform subcomponent to descent into")
     format_group = parser.add_mutually_exclusive_group()
     format_group.add_argument("--json", "-j", action="store_true", help="JSON format output (default)")
     format_group.add_argument("--yaml", "-y", action="store_true", help="YAML format output")
     format_group.add_argument("--properties", "-p", action="store_true", help="properties file format output")
     format_group.add_argument("--export-statements", "-e", action="store_true",
                               help="Output as eval-able export statements")
+
     args = parser.parse_args()
 
     transform = json.dumps

@@ -16,12 +16,15 @@
 
 
 if [ "$_ARGCOMPLETE" ]; then
+  # Handle command completion executions
   unset _ARGCOMPLETE
   source $(n-include autocomplete-helpers.sh)
-  # Handle command completion executions
   case $COMP_CWORD in
     2)
-      compgen -W "-h $(get_bakeable_images)" -- $COMP_CUR
+      compgen -W "-h -i $(get_stack_dirs)" -- $COMP_CUR
+      ;;
+    3)
+      compgen -W "$(get_images $COMP_PREV)" -- $COMP_CUR
       ;;
     *)
       exit 1
@@ -30,14 +33,16 @@ if [ "$_ARGCOMPLETE" ]; then
   exit 0
 fi
 
+
 usage() {
-  echo "usage: ndt bake-image [-h] component" >&2
+  echo "usage: ndt bake-image [-h] component [image-name]" >&2
   echo "" >&2
   echo "Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and" >&2
   echo "tags the image with the job name and build number." >&2
   echo "" >&2
   echo "positional arguments" >&2
-  echo "  component   the component directory where the ami bake configurations are" >&2
+  echo "  component     the component directory where the ami bake configurations are" >&2
+  echo "  [image-name]  Optional name for a named image in component/image-[image-name]" >&2
   echo "" >&2
   echo "optional arguments:" >&2
   echo "  -h, --help  show this help message and exit" >&2
@@ -61,22 +66,6 @@ component="$1" ; shift
 [ "${component}" ] || die "You must give the component name as argument"
 
 eval "$(ndt load-parameters "$component" -i "$1" -e)"
-
-[ ! -d .cache ] || rm -rf .cache
-mkdir .cache
-
-cache () {
-  if ! [ -d .cache ]; then
-      mkdir -p .cache
-  fi
-  args=${*}
-  cachefile=.cache/"${args//[\"\'\ -\*]/_}"
-  if [ -e "$cachefile" ]; then
-    cat $cachefile
-  else
-    "$@" | tee $cachefile
-  fi
-}
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$BAKE_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
@@ -116,7 +105,7 @@ if ! [ "$SECURITY_GROUP" ]; then
 fi
 if ! [ "$AMIBAKE_INSTANCEPROFILE" ]; then 
   [ "$INSTANCE_PROFILE_PARAM" ] || INSTANCE_PROFILE_PARAM="bakeInstanceInstanceprofile"
-  AMIBAKE_INSTANCEPROFILE="$(cache ndt show-stack-params-and-outputs -r $REGION $BAKERY_ROLES_STACK -p $INSTANCE_PROFILE_PARAM)"
+  AMIBAKE_INSTANCEPROFILE="$(ndt show-stack-params-and-outputs -r $REGION $BAKERY_ROLES_STACK -p $INSTANCE_PROFILE_PARAM)"
 fi
 [ "$PAUSE_SECONDS" ] || PAUSE_SECONDS=15
 for var in REGION SUBNET SECURITY_GROUP AMIBAKE_INSTANCEPROFILE ; do
@@ -131,7 +120,11 @@ for var in IMAGETYPE APP_USER APP_HOME SSH_USER; do
   [ "${!var}" ] || die "Please set ${var} in ${infrapropfile}"
 done
 
-imagedir=${component}/image
+if [ -n "$1" ]; then
+  imagedir="${component}/image-$1"
+else
+  imagedir="${component}/image"
+fi
 
 VAR_AMI="AMIID_${IMAGETYPE}"
 AMI="${!VAR_AMI}"
@@ -180,7 +173,11 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 if [ -z "$JOB_NAME" ]; then
-  JOB_NAME="${JENKINS_JOB_PREFIX}-${component}-bake"
+  if [ -n "$1" ]; then
+    JOB_NAME="${JENKINS_JOB_PREFIX}-${component}-bake-$1"
+  else
+    JOB_NAME="${JENKINS_JOB_PREFIX}-${component}-bake"
+  fi
 fi
 if [ "$IMAGETYPE" != "windows" ]; then
   if ! [ -r $imagedir/pre_install.sh ]; then

@@ -93,6 +93,10 @@ NDT_ONLY_SCRIPT = [
     'undeploy-stack.sh',
     'deploy-serverless.sh',
     'undeploy-serverless.sh',
+    'deploy-cdk.sh',
+    'undeploy-undeploy.sh',
+    'deploy-terraform.sh',
+    'undeploy-terraform.sh',
     'list-jobs.sh',
     'print-create-instructions.sh'
 ]

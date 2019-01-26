@@ -26,7 +26,7 @@ if [ "$_ARGCOMPLETE" ]; then
       compgen -W "$DRY-h $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
-      compgen -W "$(get_serverless $COMP_PREV)" -- $COMP_CUR
+      compgen -W "$(get_cdk $COMP_PREV)" -- $COMP_CUR
       ;;
     *)
       exit 1
@@ -36,19 +36,19 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt deploy-serverless [-d] [-h] component serverless-name" >&2
+  echo "usage: ndt deploy-cdk [-d] [-h] component cdk-name" >&2
   echo "" >&2
-  echo "Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the" >&2
-  echo "serverless project and runs sls deploy -s \$paramEnvId for the same" >&2
+  echo "Exports ndt parameters into component/cdk-name/variables.yml, runs pre_deploy.sh in the" >&2
+  echo "cdk project and runs cdk diff; cdk deploy for the same" >&2
   echo "" >&2
   echo "positional arguments:" >&2
-  echo "  component   the component directory where the serverless directory is" >&2
-  echo "  serverless-name the name of the serverless directory that has the template" >&2
-  echo "                  For example for lambda/serverless-sender/template.yaml" >&2
+  echo "  component   the component directory where the cdk directory is" >&2
+  echo "  cdk-name the name of the cdk directory that has the template" >&2
+  echo "                  For example for lambda/cdk-sender/bin/MyProject.ts" >&2
   echo "                  you would give sender" >&2
   echo "" >&2
   echo "optional arguments:" >&2
-  echo "  -d, --dryrun  dry-run - do only parameter expansion and template pre-processing and npm i"  >&2
+  echo "  -d, --dryrun  dry-run - do only parameter expansion and pre_deploy.sh and cdk diff"  >&2
   echo "  -h, --help    show this help message and exit"  >&2
   if "$@"; then
     echo "" >&2
@@ -71,8 +71,8 @@ set -xe
 
 component="$1" ; shift
 [ "${component}" ] || die "You must give the component name as argument"
-serverless="$1"; shift
-[ "${serverless}" ] || die "You must give the serverless name as argument"
+cdk="$1"; shift
+[ "${cdk}" ] || die "You must give the cdk name as argument"
 
 TSTAMP=$(date +%Y%m%d%H%M%S)
 if [ -z "$BUILD_NUMBER" ]; then
@@ -88,21 +88,20 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$component" -l "$serverless" -e)"
+eval "$(ndt load-parameters "$component" -l "$cdk" -e)"
 
-ndt load-parameters "$component" -l "$serverless" -y > "$component/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
-ndt yaml-to-yaml "$component/serverless-$ORIG_SERVERLESS_NAME/template.yaml" > "$component/serverless-$ORIG_SERVERLESS_NAME/serverless.yml"
+ndt load-parameters "$component" -l "$cdk" -y > "$component/cdk-$ORIG_CDK_NAME/variables.yml"
 
-cd "$component/serverless-$ORIG_SERVERLESS_NAME"
+cd "$component/cdk-$ORIG_CDK_NAME"
 
 if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
 fi
 
-npm i
+cdk diff
 
 if [ -n "$DRYRUN" ]; then
   exit 0
 fi
 
-sls deploy -s $paramEnvId
+cdk deploy

@@ -89,9 +89,9 @@ if [ "$1" = "-d" ]; then
 fi
 component="$1" ; shift
 stackName="$1" ; shift
-AMI_ID="$1"
+ARG_AMI_ID="$1"
 shift ||:
-IMAGE_JOB="$1"
+ARG_IMAGE_JOB="$1"
 shift ||:
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
@@ -107,6 +107,11 @@ if [ -z "$AMI_ID" ]; then
   AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"
 fi
 
-export AMI_ID IMAGE_JOB CF_BUCKET DEPLOY_ROLE_ARN
+if [ -n "$ARG_AMI_ID "]; then
+  export AMI_ID=$ARG_AMI_ID
+fi
+if [ -n "$ARG_IMAGE_JOB" ]; then
+  export IMAGE_JOB=$ARG_IMAGE_JOB
+fi
 
 cf-update-stack "${STACK_NAME}" "${component}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN

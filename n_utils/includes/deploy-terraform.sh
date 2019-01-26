@@ -26,7 +26,7 @@ if [ "$_ARGCOMPLETE" ]; then
       compgen -W "$DRY-h $(get_stack_dirs)" -- $COMP_CUR
       ;;
     3)
-      compgen -W "$(get_serverless $COMP_PREV)" -- $COMP_CUR
+      compgen -W "$(get_terraform $COMP_PREV)" -- $COMP_CUR
       ;;
     *)
       exit 1
@@ -36,15 +36,15 @@ if [ "$_ARGCOMPLETE" ]; then
 fi
 
 usage() {
-  echo "usage: ndt deploy-serverless [-d] [-h] component serverless-name" >&2
+  echo "usage: ndt deploy-terraform [-d] [-h] component terraform-name" >&2
   echo "" >&2
-  echo "Exports ndt parameters into component/serverless-name/variables.yml, runs npm i in the" >&2
-  echo "serverless project and runs sls deploy -s \$paramEnvId for the same" >&2
+  echo "Exports ndt parameters into component/terraform-name/terraform.tfvars as json, runs pre_deploy.sh in the" >&2
+  echo "terraform project and runs terraform plan; terraform apply for the same" >&2
   echo "" >&2
   echo "positional arguments:" >&2
-  echo "  component   the component directory where the serverless directory is" >&2
-  echo "  serverless-name the name of the serverless directory that has the template" >&2
-  echo "                  For example for lambda/serverless-sender/template.yaml" >&2
+  echo "  component   the component directory where the terraform directory is" >&2
+  echo "  terraform-name the name of the terraform directory that has the template" >&2
+  echo "                  For example for lambda/terraform-sender/template.yaml" >&2
   echo "                  you would give sender" >&2
   echo "" >&2
   echo "optional arguments:" >&2
@@ -71,8 +71,8 @@ set -xe
 
 component="$1" ; shift
 [ "${component}" ] || die "You must give the component name as argument"
-serverless="$1"; shift
-[ "${serverless}" ] || die "You must give the serverless name as argument"
+terraform="$1"; shift
+[ "${terraform}" ] || die "You must give the terraform name as argument"
 
 TSTAMP=$(date +%Y%m%d%H%M%S)
 if [ -z "$BUILD_NUMBER" ]; then
@@ -88,21 +88,22 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$component" -l "$serverless" -e)"
+eval "$(ndt load-parameters "$component" -l "$terraform" -e)"
 
-ndt load-parameters "$component" -l "$serverless" -y > "$component/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
-ndt yaml-to-yaml "$component/serverless-$ORIG_SERVERLESS_NAME/template.yaml" > "$component/serverless-$ORIG_SERVERLESS_NAME/serverless.yml"
+ndt load-parameters "$component" -t "$terraform" -j > "$component/terraform-$ORIG_TERRAFORM_NAME/terraform.tfvars"
 
-cd "$component/serverless-$ORIG_SERVERLESS_NAME"
+cd "$component/terraform-$ORIG_TERRAFORM_NAME"
 
 if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
 fi
 
-npm i
+terraform plan
 
 if [ -n "$DRYRUN" ]; then
   exit 0
 fi
+
+terraform apply
 
 sls deploy -s $paramEnvId
