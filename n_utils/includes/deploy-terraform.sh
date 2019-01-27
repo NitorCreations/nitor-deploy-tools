@@ -86,9 +86,11 @@ if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(ndt assume-role $DEPLOY_ROLE_ARN)
 elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(assume-deploy-role.sh)
+elif [ -n "$AWS_PROFILE" ]; then
+  eval "$(ndt profile-to-env $AWS_PROFILE)"
 fi
 
-eval "$(ndt load-parameters "$component" -l "$terraform" -e)"
+eval "$(ndt load-parameters "$component" -t "$terraform" -e)"
 
 ndt load-parameters "$component" -t "$terraform" -j > "$component/terraform-$ORIG_TERRAFORM_NAME/terraform.tfvars"
 
@@ -96,6 +98,10 @@ cd "$component/terraform-$ORIG_TERRAFORM_NAME"
 
 if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
+fi
+
+if ! [ -d "terraform.tfstate.d" ]; then
+  terraform init
 fi
 
 terraform plan
