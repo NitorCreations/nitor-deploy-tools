@@ -270,8 +270,11 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         _add_subcomponent_file(component, branch, "docker", docker, files)
         _add_subcomponent_file(component, branch, "image", image, files)
         if (image, six.string_types):
-            files.append(component + os.sep + "image" + os.sep + "infra.properties")
-            files.append(component + os.sep + "image" + os.sep + "infra-" + branch + ".properties")
+            image_dir = "image"
+            if image:
+                image_dir += "-" + image
+            files.append(component + os.sep + image_dir + os.sep + "infra.properties")
+            files.append(component + os.sep + image_dir + os.sep + "infra-" + branch + ".properties")
     for file in files:
         if os.path.exists(file):
             import_parameter_file(file, ret)
