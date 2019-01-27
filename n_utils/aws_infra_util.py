@@ -27,6 +27,7 @@ import six
 from collections import OrderedDict
 from glob import glob
 from yaml import ScalarNode, SequenceNode, MappingNode
+from StringIO import StringIO
 from botocore.exceptions import ClientError
 from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars, get_images
@@ -173,6 +174,20 @@ def _process_infra_prop_line(line, params, used_params):
         if value.startswith("\"") and value.endswith("\""):
             value = value[1:-1]
         value = expand_vars(value, used_params, None, [])
+        if value.strip().startswith("StackRef:"):
+            stackref_doc = yaml_load(StringIO(value))
+            stack_var = stackref_doc['StackRef']
+            region = stack_var['region']
+            stack_name = stack_var['stackName']
+            stack_param = stack_var['paramName']
+            stack_key = region + "." + stack_name
+            if stack_key in stacks:
+                stack_params = stacks[stack_key]
+            else:
+                stack_params = stack_params_and_outputs(region, stack_name)
+                stacks[stack_key] = stack_params
+            if stack_param in stack_params:
+                value = stack_params[stack_param]
         params[key] = value
         used_params[key] = value
 
