@@ -88,13 +88,14 @@ optional arguments:
 ## `ndt bake-image`
 
 ```bash
-usage: ndt bake-image [-h] component
+usage: ndt bake-image [-h] component [image-name]
 
 Runs an ansible playbook that  builds an Amazon Machine Image (AMI) and
 tags the image with the job name and build number.
 
 positional arguments
-  component   the component directory where the ami bake configurations are
+  component     the component directory where the ami bake configurations are
+  [image-name]  Optional name for a named image in component/image-[image-name]
 
 optional arguments:
   -h, --help  show this help message and exit
@@ -250,6 +251,25 @@ optional arguments:
   -y, --yes   Answer yes or use default to all questions
 ```
 
+## `ndt deploy-cdk`
+
+```bash
+usage: ndt deploy-cdk [-d] [-h] component cdk-name
+
+Exports ndt parameters into component/cdk-name/variables.json, runs pre_deploy.sh in the
+cdk project and runs cdk diff; cdk deploy for the same
+
+positional arguments:
+  component   the component directory where the cdk directory is
+  cdk-name the name of the cdk directory that has the template
+                  For example for lambda/cdk-sender/bin/MyProject.ts
+                  you would give sender
+
+optional arguments:
+  -d, --dryrun  dry-run - do only parameter expansion and pre_deploy.sh and cdk diff
+  -h, --help    show this help message and exit
+```
+
 ## `ndt deploy-serverless`
 
 ```bash
@@ -288,6 +308,25 @@ positional arguments:
 optional arguments:
   -d, --dryrun  dry-run - show only the change set without actually deploying it
   -h, --help  show this help message and exit
+```
+
+## `ndt deploy-terraform`
+
+```bash
+usage: ndt deploy-terraform [-d] [-h] component terraform-name
+
+Exports ndt parameters into component/terraform-name/terraform.tfvars as json, runs pre_deploy.sh in the
+terraform project and runs terraform plan; terraform apply for the same
+
+positional arguments:
+  component   the component directory where the terraform directory is
+  terraform-name the name of the terraform directory that has the template
+                  For example for lambda/terraform-sender/template.yaml
+                  you would give sender
+
+optional arguments:
+  -d, --dryrun  dry-run - do only parameter expansion and template pre-processing and npm i
+  -h, --help    show this help message and exit
 ```
 
 ## `ndt detach-volume`
@@ -537,7 +576,8 @@ optional arguments:
 
 ```bash
 usage: ndt load-parameters [-h] [--branch BRANCH]
-                           [--stack STACK | --serverless SERVERLESS | --docker DOCKER | --image [IMAGE]]
+                           [--stack STACK | --serverless SERVERLESS | --docker DOCKER | --image [IMAGE]
+                           | --cdk CDK | --terraform TERRAFORM]
                            [--json | --yaml | --properties | --export-statements]
                            [component]
 
@@ -586,6 +626,9 @@ optional arguments:
                         Docker image subcomponent to descent into
   --image [IMAGE], -i [IMAGE]
                         AMI image subcomponent to descent into
+  --cdk CDK, -c CDK     CDK subcomponent to descent into
+  --terraform TERRAFORM, -t TERRAFORM
+                        Terraform subcomponent to descent into
   --json, -j            JSON format output (default)
   --yaml, -y            YAML format output
   --properties, -p      properties file format output
@@ -939,6 +982,39 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
+```
+
+## `ndt undeploy-terraform`
+
+```bash
+usage: ndt undeploy-terraform [-h] component terraform-name
+
+Exports ndt parameters into component/terraform-name/terraform.tfvars as json
+and runs terraform destroy for the same
+
+positional arguments:
+  component   the component directory where the terraform directory is
+  terraform-name the name of the terraform directory that has the template
+                  For example for lambda/terraform-sender/template.yaml
+                  you would give sender
+
+optional arguments:
+  -h, --help    show this help message and exit
+```
+
+## `ndt undeploy-undeploy`
+
+```bash
+Traceback (most recent call last):
+  File "/home/pasi/src/nitor-deploy-tools/n_utils/ndt.py", line 100, in <module>
+    else:
+  File "/home/pasi/src/nitor-deploy-tools/n_utils/ndt.py", line 91, in ndt
+    sys.exit(0)
+  File "/usr/lib/python2.7/subprocess.py", line 394, in __init__
+    errread, errwrite)
+  File "/usr/lib/python2.7/subprocess.py", line 1047, in _execute_child
+    raise child_exception
+AttributeError: \'NoneType\' object has no attribute \'rfind\'
 ```
 
 ## `ndt upsert-cloudfront-records`
