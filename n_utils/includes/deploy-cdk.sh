@@ -38,7 +38,7 @@ fi
 usage() {
   echo "usage: ndt deploy-cdk [-d] [-h] component cdk-name" >&2
   echo "" >&2
-  echo "Exports ndt parameters into component/cdk-name/variables.yml, runs pre_deploy.sh in the" >&2
+  echo "Exports ndt parameters into component/cdk-name/variables.json, runs pre_deploy.sh in the" >&2
   echo "cdk project and runs cdk diff; cdk deploy for the same" >&2
   echo "" >&2
   echo "positional arguments:" >&2
@@ -88,9 +88,9 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$component" -l "$cdk" -e)"
+eval "$(ndt load-parameters "$component" -c "$cdk" -e)"
 
-ndt load-parameters "$component" -l "$cdk" -y > "$component/cdk-$ORIG_CDK_NAME/variables.yml"
+ndt load-parameters "$component" -c "$cdk" -j > "$component/cdk-$ORIG_CDK_NAME/variables.json"
 
 cd "$component/cdk-$ORIG_CDK_NAME"
 
@@ -98,6 +98,7 @@ if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
 fi
 
+cdk synth
 cdk diff
 
 if [ -n "$DRYRUN" ]; then
