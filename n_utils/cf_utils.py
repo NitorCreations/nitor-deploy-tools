@@ -603,17 +603,21 @@ def stack_params_and_outputs_and_stack(regn, stack_name):
     """
     cloudformation = boto3.client("cloudformation", region_name=regn)
     retry = 0
-    stack = None
+    stack = {}
+    resources = {}
     while not stack and retry < 10:
         try:
             stack = cloudformation.describe_stacks(StackName=stack_name)
             stack = stack['Stacks'][0]
-        except (ClientError, ConnectionError, EndpointConnectionError):
+        except (ConnectionError, EndpointConnectionError):
             retry = retry + 1
             time.sleep(1)
             continue
+        except ClientError:
+            break
+    if not stack:
+        return {}, {}
     retry = 0
-    resources = {}
     while not resources and retry < 3:
         try:
             resources = cloudformation.describe_stack_resources(StackName=stack_name)

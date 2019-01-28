@@ -162,6 +162,23 @@ def run_command(command):
         raise Exception("Failed to run " + str(command))
     return output[0]
 
+def _resolve_stackref_from_dict(stack_var):
+    if "region" in stack_var and "stackName" in stack_var and "paramName" in stack_var:
+        return _resolve_stackref(stack_var['region'], stack_var['stackName'], stack_var['paramName'])
+    else:
+        return None
+
+def _resolve_stackref(region, stack_name, stack_param):
+    stack_key = region + "." + stack_name
+    stack_params = {}
+    if stack_key in stacks:
+        stack_params = stacks[stack_key]
+    else:
+        stack_params = stack_params_and_outputs(region, stack_name)
+        stacks[stack_key] = stack_params
+    if stack_param in stack_params:
+        return stack_params[stack_param]
+    return None
 
 def _process_infra_prop_line(line, params, used_params):
     key_val = line.split("=", 1)
@@ -176,18 +193,9 @@ def _process_infra_prop_line(line, params, used_params):
         value = expand_vars(value, used_params, None, [])
         if value.strip().startswith("StackRef:"):
             stackref_doc = yaml_load(StringIO(value))
-            stack_var = stackref_doc['StackRef']
-            region = stack_var['region']
-            stack_name = stack_var['stackName']
-            stack_param = stack_var['paramName']
-            stack_key = region + "." + stack_name
-            if stack_key in stacks:
-                stack_params = stacks[stack_key]
-            else:
-                stack_params = stack_params_and_outputs(region, stack_name)
-                stacks[stack_key] = stack_params
-            if stack_param in stack_params:
-                value = stack_params[stack_param]
+            stack_value = _resolve_stackref_from_dict(stackref_doc['StackRef'])
+            if stack_value:
+                value = stack_value
         params[key] = value
         used_params[key] = value
 
@@ -682,19 +690,12 @@ def _preprocess_template(data, root, basefile, path, templateParams):
                                     path + "StackRef_", templateParams,
                                     True)
             data.clear()
-            region = stack_var['region']
-            stack_name = stack_var['stackName']
-            stack_param = stack_var['paramName']
-            stack_key = region + "." + stack_name
-            if stack_key in stacks:
-                stack_params = stacks[stack_key]
-            else:
-                stack_params = stack_params_and_outputs(region, stack_name)
-                stacks[stack_key] = stack_params
-            if stack_param not in stack_params:
-                sys.exit("Did not find value for: " + stack_param + " in stack " + stack_name)
+            stack_value = _resolve_stackref_from_dict(stack_var)
+            if not stack_value:
+                raise StackRefUnresolved("Did not find value for: " + stack_var['paramName'] + \
+                                        " in stack " + stack_var['region'] + "." + stack_var['stackName'])
             param_refresh_callback()
-            return stack_params[stack_param]
+            return stack_value
         elif 'Ref' in data:
             data['__source'] = basefile
         else:
@@ -948,3 +949,6 @@ def _patch_launchconf(data):
                 lc_userdata.append({"Ref": ref})
                 first = 0
             lc_userdata.append("\n")
+
+class StackRefUnresolved(Exception):
+    pass
