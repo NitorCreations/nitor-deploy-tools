@@ -228,6 +228,8 @@ def _add_subcomponent_file(component, branch, type, name, files):
         files.append(component + os.sep + type + "-" + name + os.sep + "infra-" + branch + ".properties")
 
 def resolve_docker_uri(component, uriParam, image_branch):
+    if uriParam in os.environ:
+        return os.environ[uriParam]
     docker = uriParam[14:]
     docker_params = load_parameters(component=component, docker=docker, branch=image_branch)
     return repo_uri(docker_params['DOCKER_NAME'])
