@@ -18,6 +18,8 @@ fi
 
 source $(n-include autocomplete-helpers.sh)
 
+export AWS_DEFAULT_REGION=$(ndt ec2-region)
+
 buildable_branches() {
   for BRANCH in $(git branch -r | grep -v origin/HEAD | grep -v feature/ | cut -d/ -f 2-); do
     checkout_branch $BRANCH
