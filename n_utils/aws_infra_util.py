@@ -15,6 +15,8 @@
 # limitations under the License.
 
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 from builtins import str
 from builtins import range
 import json
@@ -27,7 +29,7 @@ import six
 from collections import OrderedDict
 from glob import glob
 from yaml import ScalarNode, SequenceNode, MappingNode
-from StringIO import StringIO
+from io import StringIO
 from botocore.exceptions import ClientError
 from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars, get_images
@@ -333,7 +335,7 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
         if "STACK_NAME" not in ret:
             ret["STACK_NAME"] = component + "-" + ret["ORIG_STACK_NAME"] + "-" + ret["paramEnvId"]
-    for k, v in os.environ.items():
+    for k, v in list(os.environ.items()):
         if k.startswith("ORIG_") and k.endswith("_NAME"):
             ret[k] = v
     if "ORIG_DOCKER_NAME" in os.environ:
@@ -605,7 +607,7 @@ def _preprocess_template(data, root, basefile, path, templateParams):
             del data['Fn::ImportYaml']
             if yaml_file:
                 contents = yaml_load(open(yaml_file))
-                params = OrderedDict(templateParams.items())
+                params = OrderedDict(list(templateParams.items()))
                 params.update(data)
                 contents = expand_vars(contents, params, None, [])
                 data['Fn::ImportYaml'] = OrderedDict()
