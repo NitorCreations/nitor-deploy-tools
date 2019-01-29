@@ -306,6 +306,11 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         if os.path.exists(file):
             import_parameter_file(file, ret)
     if serverless or stack or cdk or terraform:
+        if not "AWS_DEFAULT_REGION" in os.environ:
+            if "REGION" in ret:
+                os.environ["AWS_DEFAULT_REGION"] = ret["REGION"]
+            else:
+                os.environ["AWS_DEFAULT_REGION"] = region()
         image_branch = branch
         if 'BAKE_IMAGE_BRANCH' in ret:
             image_branch = ret['BAKE_IMAGE_BRANCH']
