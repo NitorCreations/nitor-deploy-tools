@@ -297,7 +297,7 @@ def checkout_branch(branch):
     proc = subprocess.Popen(["git", "branch", "-a"], stdout=subprocess.PIPE)
     for line in iter(proc.stdout.readline, ''):
         if line.strip().endswith("/" + branch):
-            branch = line.strip()
+            branch = line.strip().split(" ")[-1:][0]
     proc = subprocess.Popen(["git", "archive", "--format", "tar", branch], stdout=subprocess.PIPE)
     tar = tarfile.open(mode="r|", fileobj=proc.stdout)
     tar.extractall(path=checkout_dir)
