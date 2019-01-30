@@ -294,6 +294,10 @@ def resolve_ami(component_params, component, image, imagebranch, branch):
 
 def checkout_branch(branch):
     checkout_dir = tempfile.mkdtemp()
+    proc = subprocess.Popen(["git", "branch", "-a"], stdout=subprocess.PIPE)
+    for line in iter(proc.stdout.readline, ''):
+        if line.strip().endswith("/" + branch):
+            branch = line.strip()
     proc = subprocess.Popen(["git", "archive", "--format", "tar", branch], stdout=subprocess.PIPE)
     tar = tarfile.open(mode="r|", fileobj=proc.stdout)
     tar.extractall(path=checkout_dir)
