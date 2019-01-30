@@ -677,8 +677,13 @@ def share_to_another_region(ami_id, regn, ami_name, account_ids, timeout_sec=900
     if len(perms['Add']) > 0:
         ec2.modify_image_attribute(ImageId=ami_id, LaunchPermission=perms)
 
+def _has_job_tag(image, image_name_prefix):
+    for tag in image['Tags']:
+        if re.match('^' + image_name_prefix + '_\\d{4,14}', tag['Value']):
+            return True
+    return False
 
-def get_images(image_name_prefix):
+def get_images(image_name_prefix, job_tag_function=_has_job_tag):
     image_name_prefix = re.sub(r'\W', '_', image_name_prefix)
     ec2 = boto3.client('ec2')
     ami_data = ec2.describe_images(Filters=[{'Name': 'tag-value',
@@ -687,16 +692,9 @@ def get_images(image_name_prefix):
         return [image for image in sorted(ami_data['Images'],
                                           key=itemgetter('CreationDate'),
                                           reverse=True)
-                if _has_job_tag(image, image_name_prefix)]
+                if job_tag_function(image, image_name_prefix)]
     else:
         return []
-
-
-def _has_job_tag(image, image_name_prefix):
-    for tag in image['Tags']:
-        if re.match('^' + image_name_prefix + '_\\d{4,14}', tag['Value']):
-            return True
-    return False
 
 
 def promote_image(ami_id, job_name):

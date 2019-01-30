@@ -94,24 +94,20 @@ shift ||:
 ARG_IMAGE_JOB="$1"
 shift ||:
 
+if [ -n "$ARG_AMI_ID "]; then
+  export AMI_ID=$ARG_AMI_ID paramAmi=$ARG_AMI_ID
+fi
+if [ -n "$ARG_IMAGE_JOB" ]; then
+  export IMAGE_JOB=$ARG_IMAGE_JOB
+fi
+
+eval "$(ndt load-parameters "$component" -s "$stackName" -e)"
+
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(ndt assume-role $DEPLOY_ROLE_ARN)
 elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(assume-deploy-role.sh)
-fi
-
-eval "$(ndt load-parameters "$component" -s "$stackName" -e)"
-
-if [ -z "$AMI_ID" ]; then
-  AMI_ID="$(ndt get-images $IMAGE_JOB | head -1 | cut -d: -f1)"
-fi
-
-if [ -n "$ARG_AMI_ID "]; then
-  export AMI_ID=$ARG_AMI_ID
-fi
-if [ -n "$ARG_IMAGE_JOB" ]; then
-  export IMAGE_JOB=$ARG_IMAGE_JOB
 fi
 
 cf-update-stack "${STACK_NAME}" "${component}/stack-${ORIG_STACK_NAME}/template.yaml" "$REGION" $DRY_RUN
