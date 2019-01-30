@@ -265,11 +265,13 @@ def resolve_ami(component_params, component, image, imagebranch, branch):
                 job += job + "_" + image
             job = re.sub(r'\W', '_', job)
     if "paramAmi" + image + "Build" in component_params:
+        # resolve with a specifically set image build number
         build = component_params["paramAmi" + image + "Build"]
         image_tag = job + "_" + build
         job_tag_func = lambda image, image_name_prefix: len([tag for tag in image["Tags"] if tag["Value"] == image_tag]) > 0
         images = get_images(job, job_tag_function=job_tag_func)
     elif imagebranch != branch:
+        # resolve promote job
         suffix = "_bake"
         repl_suffix = "_promote"
         if image:
@@ -277,10 +279,13 @@ def resolve_ami(component_params, component, image, imagebranch, branch):
             repl_suffix += "_" + image
         if not image_params:
             image_params = load_parameters(component=component, image=image, branch=imagebranch)
-        job = lreplace(image_params["JENKINS_JOB_PREFIX"] + "_", component_params["JENKINS_JOB_PREFIX"] + "_", job)
+        this_branch_prefix = re.sub(r'\W', '_', component_params["JENKINS_JOB_PREFIX"] + "_")
+        image_branch_prefix = re.sub(r'\W', '_', image_params["JENKINS_JOB_PREFIX"] + "_")
+        job = lreplace(image_branch_prefix, this_branch_prefix, job)
         job = rreplace(suffix, repl_suffix, job)
         images = get_images(job)
     else:
+        # get current branch latest images
         images = get_images(job)
     if images:
         return images[0]
@@ -349,12 +354,13 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
         for image_name in [imagedir.split("/image")[1].replace("-", "") for imagedir in glob(component + os.sep + "image*")]:
             try:
                 image = resolve_ami(ret, component, image_name, image_branch, branch)
-                ret['paramAmi' + image_name] = image['ImageId']
-                ret['paramAmiName' + image_name] = image['Name']
-                env_param_name = "AMI_ID"
-                if image_name:
-                    env_param_name +=  "_" + image_name.upper()
-                ret[env_param_name] = image['ImageId']
+                if image:
+                    ret['paramAmi' + image_name] = image['ImageId']
+                    ret['paramAmiName' + image_name] = image['Name']
+                    env_param_name = "AMI_ID"
+                    if image_name:
+                        env_param_name +=  "_" + image_name.upper()
+                    ret[env_param_name] = image['ImageId']
             except ClientError:
                 # Best effor to load ami info, but ignore errors since the image might not
                 # actually be in use. Missing and used images will result in an error later.

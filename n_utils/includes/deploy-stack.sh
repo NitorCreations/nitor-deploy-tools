@@ -94,7 +94,7 @@ shift ||:
 ARG_IMAGE_JOB="$1"
 shift ||:
 
-if [ -n "$ARG_AMI_ID "]; then
+if [ -n "$ARG_AMI_ID" ]; then
   export AMI_ID=$ARG_AMI_ID paramAmi=$ARG_AMI_ID
 fi
 if [ -n "$ARG_IMAGE_JOB" ]; then
