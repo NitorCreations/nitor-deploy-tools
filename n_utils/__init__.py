@@ -15,7 +15,6 @@
 """ Main module for nitor-deploy-tools
 """
 
-from builtins import object
 PATH_COMMANDS = [
     'bin/create-shell-archive.sh',
     'bin/ensure-letsencrypt-certs.sh',
@@ -120,7 +119,3 @@ for script in NDT_ONLY_SCRIPT:
 for script in NDT_AND_CONSOLE + NDT_ONLY:
     name, value = script.split("=")
     COMMAND_MAPPINGS[name] = value
-
-class ParamNotAvailable(object):
-    def __init__(self):
-        return

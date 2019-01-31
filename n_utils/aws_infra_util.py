@@ -36,11 +36,10 @@ from io import StringIO
 from botocore.exceptions import ClientError
 from copy import deepcopy
 from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, \
-                             expand_vars, get_images
+                             expand_vars, get_images, ParamNotAvailable
 from n_utils.git_utils import Git
 from n_utils.ndt import find_include
 from n_utils.ecr_utils import repo_uri
-from n_utils import ParamNotAvailable
 
 stacks = dict()
 CFG_PREFIX = "AWS::CloudFormation::Init_config_files_"

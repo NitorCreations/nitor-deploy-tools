@@ -47,7 +47,6 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from n_vault import Vault
 from n_utils.mfa_utils import mfa_read_token, mfa_generate_code
-from n_utils import ParamNotAvailable
 
 NoneType = type(None)
 ACCOUNT_ID = None
@@ -58,6 +57,10 @@ INSTANCE_DATA_LINUX = '/opt/nitor/instance-data.json'
 INSTANCE_DATA_WIN = 'C:/nitor/instance-data.json'
 
 dthandler = lambda obj: obj.isoformat() if hasattr(obj, 'isoformat') else json.JSONEncoder().default(obj)
+
+class ParamNotAvailable(object):
+    def __init__(self):
+        return
 
 def get_retry(url, retries=5, backoff_factor=0.3,
               status_forcelist=(500, 502, 504), session=None, timeout=5):
