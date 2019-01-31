@@ -33,6 +33,7 @@ setup(name='nitor_deploy_tools',
           'pytest-runner'
       ],
       install_requires=[
+          'future',
           'pyaml',
           'boto3',
           'awscli',
