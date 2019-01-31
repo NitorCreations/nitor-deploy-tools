@@ -84,7 +84,8 @@ NDT_ONLY = [
     'assumed-role-name=n_utils.cli:cli_assumed_role_name',
     'profile-to-env=n_utils.profile_util:profile_to_env',
     'profile-expiry-to-env=n_utils.profile_util:profile_expiry_to_env',
-    'enable-profile=n_utils.profile_util:cli_enable_profile'
+    'enable-profile=n_utils.profile_util:cli_enable_profile',
+    'list-jobs=n_utils.cli:cli_list_jobs'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',
@@ -97,7 +98,6 @@ NDT_ONLY_SCRIPT = [
     'undeploy-undeploy.sh',
     'deploy-terraform.sh',
     'undeploy-terraform.sh',
-    'list-jobs.sh',
     'print-create-instructions.sh'
 ]
 CONSOLE_ONLY = [

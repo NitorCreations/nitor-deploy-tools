@@ -1,22 +1,8 @@
 #!/bin/bash
 
-cache () {
-  if ! [ -d .cache ]; then
-      mkdir -p .cache
-  fi
-  #Delete cached files older than 5 minutes
-  find .cache -mindepth 1 -mmin +5 -exec rm -f {} \;
-  args="${*}"
-  cachefile=.cache/"${args//[\"\'\ -\*]/_}"
-  if [ -e "$cachefile" ]; then
-    cat $cachefile
-  else
-    "$@" | tee $cachefile
-  fi
-}
 get_bakeable_images() {
   if [ -r infra.properties -o -r infra-master.properties ]; then
-    echo $(find . -mindepth 2 -maxdepth 2 -name 'image' -a -type d | cut -d '/' -f 2)
+    echo $(find . -mindepth 2 -maxdepth 2 -name image -a -type d -o -name 'image-*' -a -type d | cut -d '/' -f 2)
   fi
 }
 get_stack_dirs() {

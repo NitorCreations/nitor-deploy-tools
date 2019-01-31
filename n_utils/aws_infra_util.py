@@ -35,7 +35,9 @@ from yaml import ScalarNode, SequenceNode, MappingNode
 from io import StringIO
 from botocore.exceptions import ClientError
 from copy import deepcopy
-from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, expand_vars, get_images
+from n_utils.cf_utils import stack_params_and_outputs, region, resolve_account, \
+                             expand_vars, get_images
+from n_utils.git_utils import Git
 from n_utils.ndt import find_include
 from n_utils.ecr_utils import repo_uri
 from n_utils import ParamNotAvailable
@@ -230,12 +232,15 @@ def _add_subcomponent_file(component, branch, type, name, files):
         files.append(component + os.sep + type + "-" + name + os.sep + "infra.properties")
         files.append(component + os.sep + type + "-" + name + os.sep + "infra-" + branch + ".properties")
 
-def resolve_docker_uri(component, uriParam, image_branch):
-    if uriParam in os.environ:
-        return os.environ[uriParam]
-    docker = uriParam[14:]
-    docker_params = load_parameters(component=component, docker=docker, branch=image_branch)
-    return repo_uri(docker_params['DOCKER_NAME'])
+def resolve_docker_uri(component, uriParam, image_branch, git):
+    if not git:
+        git = Git()
+    with git:
+        if uriParam in os.environ:
+            return os.environ[uriParam]
+        docker = uriParam[14:]
+        docker_params = load_parameters(component=component, docker=docker, branch=image_branch, git=git)
+        return repo_uri(docker_params['DOCKER_NAME'])
 
 def lreplace(pattern, sub, string):
     return sub + string[len(pattern):] if string.startswith(pattern) else string
@@ -243,151 +248,144 @@ def lreplace(pattern, sub, string):
 def rreplace(pattern, sub, string):
     return string[:-len(pattern)] + sub if string.endswith(pattern) else string
 
-def resolve_ami(component_params, component, image, imagebranch, branch):
-    if "paramAmi" + image in os.environ:
-        return { "ImageId": os.environ["paramAmi" + image],
-                "Name": os.environ["paramAmiName" + image] \
-                if "paramAmiName" + image in os.environ else "Unknown" }
-    images = []
-    image_params = {}
-    job = ""
-    if "IMAGE_JOB" in os.environ and not image:
-        job = re.sub(r'\W', '_', os.environ["IMAGE_JOB"])
-    else:
-        image_params = load_parameters(component=component, image=image, branch=imagebranch)
-        if "JOB_NAME" in image_params:
-            job = re.sub(r'\W', '_', image_params["JOB_NAME"])
+def resolve_ami(component_params, component, image, imagebranch, branch, git):
+    if not git:
+        git = Git()
+    with git:
+        if "paramAmi" + image in os.environ:
+            return { "ImageId": os.environ["paramAmi" + image],
+                    "Name": os.environ["paramAmiName" + image] \
+                    if "paramAmiName" + image in os.environ else "Unknown" }
+        images = []
+        image_params = {}
+        job = ""
+        if "IMAGE_JOB" in os.environ and not image:
+            job = re.sub(r'\W', '_', os.environ["IMAGE_JOB"])
         else:
-            prefix = ""
-            prefix = image_params["JENKINS_JOB_PREFIX"]
-            job = prefix + "_" + component + "_bake"
-            if image:
-                job += job + "_" + image
-            job = re.sub(r'\W', '_', job)
-    if "paramAmi" + image + "Build" in component_params:
-        # resolve with a specifically set image build number
-        build = component_params["paramAmi" + image + "Build"]
-        image_tag = job + "_" + build
-        job_tag_func = lambda image, image_name_prefix: len([tag for tag in image["Tags"] if tag["Value"] == image_tag]) > 0
-        images = get_images(job, job_tag_function=job_tag_func)
-    elif imagebranch != branch:
-        # resolve promote job
-        suffix = "_bake"
-        repl_suffix = "_promote"
-        if image:
-            suffix += "_" + image 
-            repl_suffix += "_" + image
-        if not image_params:
-            image_params = load_parameters(component=component, image=image, branch=imagebranch)
-        this_branch_prefix = re.sub(r'\W', '_', component_params["JENKINS_JOB_PREFIX"] + "_")
-        image_branch_prefix = re.sub(r'\W', '_', image_params["JENKINS_JOB_PREFIX"] + "_")
-        job = lreplace(image_branch_prefix, this_branch_prefix, job)
-        job = rreplace(suffix, repl_suffix, job)
-        images = get_images(job)
-    else:
-        # get current branch latest images
-        images = get_images(job)
-    if images:
-        return images[0]
-    else:
-        return None
-
-def checkout_branch(branch):
-    checkout_dir = tempfile.mkdtemp()
-    proc = subprocess.Popen(["git", "branch", "-a"], stdout=subprocess.PIPE)
-    for line in iter(proc.stdout.readline, ''):
-        if line.strip().endswith("/" + branch):
-            branch = line.strip().split(" ")[-1:][0]
-    proc = subprocess.Popen(["git", "archive", "--format", "tar", branch], stdout=subprocess.PIPE)
-    tar = tarfile.open(mode="r|", fileobj=proc.stdout)
-    tar.extractall(path=checkout_dir)
-    return checkout_dir
-
-def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, cdk=None, terraform=None, branch=None):
-    if "GIT_BRANCH" in os.environ:
-        current_branch = os.environ["GIT_BRANCH"]
-    else:
-        current_branch = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    current_branch = current_branch.strip().split("/")[-1:][0]
-    if not branch:
-        branch = current_branch
-    branch = branch.strip().split("/")[-1:][0]
-    ret = {
-        "GIT_BRANCH": current_branch
-    }
-    account = resolve_account()
-    if account:
-        ret["ACCOUNT_ID"] = account
-    if component:
-        ret["COMPONENT"] = component
-    prefix = ""
-    if current_branch != branch:
-        prefix = checkout_branch(branch) + os.sep
-    files = [prefix + "infra.properties", prefix + "infra-" + branch + ".properties"]
-    if component:
-        files.append(prefix + component + os.sep + "infra.properties")
-        files.append(prefix + component + os.sep + "infra-" + branch + ".properties")
-        _add_subcomponent_file(prefix + component, branch, "stack", stack, files)
-        _add_subcomponent_file(prefix + component, branch, "serverless", serverless, files)
-        _add_subcomponent_file(prefix + component, branch, "cdk", cdk, files)
-        _add_subcomponent_file(prefix + component, branch, "terraform", terraform, files)
-        _add_subcomponent_file(prefix + component, branch, "docker", docker, files)
-        _add_subcomponent_file(prefix + component, branch, "image", image, files)
-        if (image, six.string_types):
-            files.append(prefix + component + os.sep + "image" + os.sep + "infra.properties")
-            files.append(prefix + component + os.sep + "image" + os.sep + "infra-" + branch + ".properties")
-    for file in files:
-        if os.path.exists(file):
-            import_parameter_file(file, ret)
-    if serverless or stack or cdk or terraform:
-        if not "AWS_DEFAULT_REGION" in os.environ:
-            if "REGION" in ret:
-                os.environ["AWS_DEFAULT_REGION"] = ret["REGION"]
+            image_params = load_parameters(component=component, image=image, branch=imagebranch, git=git)
+            if "JOB_NAME" in image_params:
+                job = re.sub(r'\W', '_', image_params["JOB_NAME"])
             else:
-                os.environ["AWS_DEFAULT_REGION"] = region()
-        image_branch = branch
-        if 'BAKE_IMAGE_BRANCH' in ret:
-            image_branch = ret['BAKE_IMAGE_BRANCH']
-        for docker in [dockerdir.split("/docker-")[1] for dockerdir in glob(component + os.sep + "docker-*")]:
-            try:
-                ret['paramDockerUri' + docker] = resolve_docker_uri(component, 'paramDockerUri' + docker, image_branch)
-            except ClientError:
-                # Best effor to load docker uris, but ignore errors since the repo might not
-                # actually be in use. Missing and used uris will result in an error later.
-                pass
-        for image_name in [imagedir.split("/image")[1].replace("-", "") for imagedir in glob(component + os.sep + "image*")]:
-            try:
-                image = resolve_ami(ret, component, image_name, image_branch, branch)
+                prefix = ""
+                prefix = image_params["JENKINS_JOB_PREFIX"]
+                job = prefix + "_" + component + "_bake"
                 if image:
-                    ret['paramAmi' + image_name] = image['ImageId']
-                    ret['paramAmiName' + image_name] = image['Name']
-                    env_param_name = "AMI_ID"
-                    if image_name:
-                        env_param_name +=  "_" + image_name.upper()
-                    ret[env_param_name] = image['ImageId']
-            except ClientError:
-                # Best effor to load ami info, but ignore errors since the image might not
-                # actually be in use. Missing and used images will result in an error later.
-                pass
-    if prefix:
-        shutil.rmtree(prefix)
-    if "REGION" not in ret:
-        ret["REGION"] = region()
-    if "paramEnvId" not in ret:
-        ret["paramEnvId"] = branch
-    if "ORIG_STACK_NAME" in os.environ:
-        ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
-        if "STACK_NAME" not in ret:
-            ret["STACK_NAME"] = component + "-" + ret["ORIG_STACK_NAME"] + "-" + ret["paramEnvId"]
-    for k, v in list(os.environ.items()):
-        if k.startswith("ORIG_") and k.endswith("_NAME"):
-            ret[k] = v
-    if "ORIG_DOCKER_NAME" in os.environ:
-        if "DOCKER_NAME" not in ret:
-            ret["DOCKER_NAME"] = component + "/" + ret["paramEnvId"] + "-" + ret["ORIG_DOCKER_NAME"]
-    if "JENKINS_JOB_PREFIX" not in ret:
-        ret["JENKINS_JOB_PREFIX"] = "ndt" + ret["paramEnvId"]
-    return ret
+                    job += job + "_" + image
+                job = re.sub(r'\W', '_', job)
+        if "paramAmi" + image + "Build" in component_params:
+            # resolve with a specifically set image build number
+            build = component_params["paramAmi" + image + "Build"]
+            image_tag = job + "_" + build
+            job_tag_func = lambda image, image_name_prefix: len([tag for tag in image["Tags"] if tag["Value"] == image_tag]) > 0
+            images = get_images(job, job_tag_function=job_tag_func)
+        elif imagebranch != branch:
+            # resolve promote job
+            suffix = "_bake"
+            repl_suffix = "_promote"
+            if image:
+                suffix += "_" + image 
+                repl_suffix += "_" + image
+            if not image_params:
+                image_params = load_parameters(component=component, image=image, branch=imagebranch, git=git)
+            this_branch_prefix = re.sub(r'\W', '_', component_params["JENKINS_JOB_PREFIX"] + "_")
+            image_branch_prefix = re.sub(r'\W', '_', image_params["JENKINS_JOB_PREFIX"] + "_")
+            job = lreplace(image_branch_prefix, this_branch_prefix, job)
+            job = rreplace(suffix, repl_suffix, job)
+            images = get_images(job)
+        else:
+            # get current branch latest images
+            images = get_images(job)
+        if images:
+            return images[0]
+        else:
+            return None
+
+def load_parameters(component=None, stack=None, serverless=None, docker=None, image=None, 
+                    cdk=None, terraform=None, branch=None, resolve_images=False,
+                    git=None):
+    if not git:
+        git = Git()
+    with git:
+        current_branch = git.get_current_branch()
+        if not branch:
+            branch = current_branch
+        branch = branch.strip().split("origin/")[-1:][0]
+        ret = {
+            "GIT_BRANCH": branch
+        }
+        account = resolve_account()
+        if account:
+            ret["ACCOUNT_ID"] = account
+        if component:
+            ret["COMPONENT"] = component
+        prefix = ""
+        if current_branch != branch:
+            prefix = git.export_branch(branch) + os.sep
+        files = [prefix + "infra.properties", prefix + "infra-" + branch + ".properties"]
+        if component:
+            files.append(prefix + component + os.sep + "infra.properties")
+            files.append(prefix + component + os.sep + "infra-" + branch + ".properties")
+            _add_subcomponent_file(prefix + component, branch, "stack", stack, files)
+            _add_subcomponent_file(prefix + component, branch, "serverless", serverless, files)
+            _add_subcomponent_file(prefix + component, branch, "cdk", cdk, files)
+            _add_subcomponent_file(prefix + component, branch, "terraform", terraform, files)
+            _add_subcomponent_file(prefix + component, branch, "docker", docker, files)
+            _add_subcomponent_file(prefix + component, branch, "image", image, files)
+            if (image, six.string_types):
+                files.append(prefix + component + os.sep + "image" + os.sep + "infra.properties")
+                files.append(prefix + component + os.sep + "image" + os.sep + "infra-" + branch + ".properties")
+        for file in files:
+            if os.path.exists(file):
+                import_parameter_file(file, ret)
+        if (serverless or stack or cdk or terraform) and resolve_images:
+            if not "AWS_DEFAULT_REGION" in os.environ:
+                if "REGION" in ret:
+                    os.environ["AWS_DEFAULT_REGION"] = ret["REGION"]
+                else:
+                    os.environ["AWS_DEFAULT_REGION"] = region()
+            image_branch = branch
+            if 'BAKE_IMAGE_BRANCH' in ret:
+                image_branch = ret['BAKE_IMAGE_BRANCH']
+            for docker in [dockerdir.split("/docker-")[1] for dockerdir in glob(component + os.sep + "docker-*")]:
+                try:
+                    ret['paramDockerUri' + docker] = resolve_docker_uri(component, 'paramDockerUri' + docker, image_branch, checkout_context)
+                except ClientError:
+                    # Best effor to load docker uris, but ignore errors since the repo might not
+                    # actually be in use. Missing and used uris will result in an error later.
+                    pass
+            for image_name in [imagedir.split("/image")[1].replace("-", "") for imagedir in glob(component + os.sep + "image*")]:
+                try:
+                    image = resolve_ami(ret, component, image_name, image_branch, branch, checkout_context)
+                    if image:
+                        ret['paramAmi' + image_name] = image['ImageId']
+                        ret['paramAmiName' + image_name] = image['Name']
+                        env_param_name = "AMI_ID"
+                        if image_name:
+                            env_param_name +=  "_" + image_name.upper()
+                        ret[env_param_name] = image['ImageId']
+                except ClientError:
+                    # Best effor to load ami info, but ignore errors since the image might not
+                    # actually be in use. Missing and used images will result in an error later.
+                    pass
+        if prefix:
+            shutil.rmtree(prefix)
+        if "REGION" not in ret:
+            ret["REGION"] = region()
+        if "paramEnvId" not in ret:
+            ret["paramEnvId"] = branch
+        if "ORIG_STACK_NAME" in os.environ:
+            ret["ORIG_STACK_NAME"] = os.environ["ORIG_STACK_NAME"]
+            if "STACK_NAME" not in ret:
+                ret["STACK_NAME"] = component + "-" + ret["ORIG_STACK_NAME"] + "-" + ret["paramEnvId"]
+        for k, v in list(os.environ.items()):
+            if k.startswith("ORIG_") and k.endswith("_NAME"):
+                ret[k] = v
+        if "ORIG_DOCKER_NAME" in os.environ:
+            if "DOCKER_NAME" not in ret:
+                ret["DOCKER_NAME"] = component + "/" + ret["paramEnvId"] + "-" + ret["ORIG_DOCKER_NAME"]
+        if "JENKINS_JOB_PREFIX" not in ret:
+            ret["JENKINS_JOB_PREFIX"] = "ndt" + ret["paramEnvId"]
+        return ret
 
 
 def yaml_load(stream):

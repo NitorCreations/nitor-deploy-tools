@@ -57,6 +57,7 @@ from n_utils.account_utils import list_created_accounts, create_account
 from n_utils.aws_infra_util import load_parameters
 from n_utils.ndt import find_include, find_all_includes, include_dirs
 from n_utils.profile_util import update_profile, print_profile
+from n_utils.ndt_project import list_jobs
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -941,6 +942,7 @@ def cli_load_parameters():
     parser = get_parser(formatter=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("component", nargs="?", help="Compenent to descend into")
     parser.add_argument("--branch", "-b", help="Branch to get active parameters for")
+    parser.add_argument("--resolve-images", "-r", action="store_true", help="Also resolve subcomponent AMI IDs and docker repo urls")
     subcomponent_group = parser.add_mutually_exclusive_group()
     subcomponent_group.add_argument("--stack", "-s", help="CloudFormation subcomponent to descent into")
     subcomponent_group.add_argument("--serverless", "-l", help="Serverless subcomponent to descent into")
@@ -1025,3 +1027,12 @@ def cli_assumed_role_name():
     argcomplete.autocomplete(parser)
     _ = parser.parse_args()
     print(assumed_role_name())
+
+def cli_list_jobs():
+    """ Prints a line for every runnable job in this git repository, in all branches and
+    optionally exports the properties for each under '$root/job-properties/"""
+    parser = get_parser()
+    parser.add_argument("-e", "--export-job-properties", action="store_true", help="Set if you want the properties of all jobs into files under job-properties/")
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    print("\n".join(list_jobs(**vars(args))))

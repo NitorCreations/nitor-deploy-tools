@@ -30,6 +30,7 @@ import shutil
 import stat
 import string
 import sys
+import tempfile
 import time
 import tempfile
 import six

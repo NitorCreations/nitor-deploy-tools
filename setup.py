@@ -48,7 +48,8 @@ setup(name='nitor_deploy_tools',
           'six',
           'python-dateutil',
           'pycryptodomex',
-          'configparser'
+          'configparser',
+          'scandir'
       ] + ([
           'win-unicode-console',
           'wmi',
