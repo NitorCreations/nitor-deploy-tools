@@ -12,6 +12,7 @@ except ImportError:
 
 from n_utils.git_utils import Git
 from n_utils.aws_infra_util import load_parameters
+
 class Component(object):
     subcomponent_classes = []
     def __init__(self, name, project):
