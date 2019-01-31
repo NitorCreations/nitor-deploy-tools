@@ -806,17 +806,17 @@ def _apply_simple_regex(RE, line, params, vault, vault_keys):
 
 def expand_vars(line, params, vault, vault_keys):
     if isinstance(line, OrderedDict) or isinstance(line, dict):
-        ret = OrderedDict(line.items())
-        if "Fn::" in [x[:4] for x in ret.keys()]:
+        ret = OrderedDict(list(line.items()))
+        if "Fn::" in [x[:4] for x in list(ret.keys())]:
             return expand_only_double_paranthesis_params(ret, params, vault, vault_keys)
-        for key, value in line.items():
+        for key, value in list(line.items()):
             if key.startswith("Fn::"):
                 new_value = expand_only_double_paranthesis_params(value, params, vault, vault_keys)
-                ret = OrderedDict([(key, new_value) if k == key else (k, v) for k, v in ret.items()])
+                ret = OrderedDict([(key, new_value) if k == key else (k, v) for k, v in list(ret.items())])
             else:
                 new_key = expand_vars(key, params, vault, vault_keys)
                 new_value = expand_vars(value, params, vault, vault_keys)
-                ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in ret.items()])
+                ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in list(ret.items())])
         return ret
     if isinstance(line, list):
         return [expand_vars(x, params, vault, vault_keys) for x in line]
@@ -832,11 +832,11 @@ def expand_vars(line, params, vault, vault_keys):
 
 def expand_only_double_paranthesis_params(line, params, vault, vault_keys):
     if isinstance(line, OrderedDict) or isinstance(line, dict):
-        ret = OrderedDict(line.items())
-        for key, value in line.items():
+        ret = OrderedDict(list(line.items()))
+        for key, value in list(line.items()):
             new_key = expand_only_double_paranthesis_params(key, params, vault, vault_keys)
             new_value = expand_only_double_paranthesis_params(value, params, vault, vault_keys)
-            ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in ret.items()])
+            ret = OrderedDict([(new_key, new_value) if k == key else (k, v) for k, v in list(ret.items())])
         return ret
     if isinstance(line, list):
         return [expand_only_double_paranthesis_params(x, params, vault, vault_keys) for x in line]

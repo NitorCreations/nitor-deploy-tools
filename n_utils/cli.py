@@ -809,7 +809,7 @@ def cli_mfa_add_token():
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     if args.interactive:
-        args.token_secret = input("Enter token secret: ")
+        args.token_secret = eval(input("Enter token secret: "))
         code_1 = mfa_generate_code_with_secret(args.token_secret)
         print("First sync code: " + code_1)
         print("Waiting to generate second sync code. This could take 30 seconds...")
@@ -818,7 +818,7 @@ def cli_mfa_add_token():
             time.sleep(5)
             code_2 = mfa_generate_code_with_secret(args.token_secret)
         print("Second sync code: " + code_2)
-        args.token_arn = input("Enter token ARN: ")
+        args.token_arn = eval(input("Enter token ARN: "))
     elif args.token_arn is None or args.token_secret is None:
         parser.error("Both token_arn and token_secret are required when not adding interactively.")
     try:

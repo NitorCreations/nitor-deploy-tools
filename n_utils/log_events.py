@@ -51,6 +51,10 @@ from __future__ import division
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
 from past.utils import old_div
 from botocore.exceptions import ClientError
 from collections import deque
@@ -143,7 +147,7 @@ class CloudWatchLogsThread(Thread):
         self.cwlogs.get_logs()
 
 
-class CloudWatchLogsGroups():
+class CloudWatchLogsGroups(object):
     def __init__(self, log_filter='', log_group_filter='', start_time=None, end_time=None, sort=False):
         self.client = boto3.client('logs')
         self.log_filter = log_filter

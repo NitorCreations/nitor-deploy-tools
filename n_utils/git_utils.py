@@ -1,3 +1,4 @@
+from builtins import object
 import re
 import shutil
 import tarfile
@@ -46,7 +47,7 @@ class Git(object):
         return None
 
     def delete_exports(self):
-        for dir in self.export_directories.values():
+        for dir in list(self.export_directories.values()):
             try:
                 shutil.rmtree(dir)
             except:

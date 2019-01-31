@@ -136,7 +136,7 @@ def has_entry(prefix, name, file_name):
 
 def setup_cli(name=None, key_id=None, secret=None, region=None):
     if name is None:
-        name = input("Profile name: ")
+        name = eval(input("Profile name: "))
     home_dir = os.path.expanduser("~")
     config_file = os.path.join(home_dir, ".aws", "config")
     credentials_file = os.path.join(home_dir, ".aws", "credentials")
@@ -145,11 +145,11 @@ def setup_cli(name=None, key_id=None, secret=None, region=None):
         print("Profile " + name + " already exists. Not overwriting.")
         return
     if key_id is None:
-        key_id = input("Key ID: ")
+        key_id = eval(input("Key ID: "))
     if secret is None:
-        secret = input("Key secret: ")
+        secret = eval(input("Key secret: "))
     if region is None:
-        region = input("Default region: ")
+        region = eval(input("Default region: "))
     writer = ConfigFileWriter()
     config_values = {
         "__section__": "profile " + name,
@@ -305,7 +305,7 @@ def _map_ssh_key(context, param, value):
     key_name = None
     default_name = "ndt-" + context.__class__.__name__.lower() + "-instance"
     if value == "1":
-        key_name = input("Name for new key pair (" + default_name + "): ")
+        key_name = eval(input("Name for new key pair (" + default_name + "): "))
         if not key_name:
             key_name = default_name
         ec2 = boto3.client("ec2")
@@ -430,7 +430,7 @@ class ContextClassBase(object):
                 setattr(self, param, getattr(args, param + "_default")())
             else:
                 default = self.getattr(param + "_default")()
-                setval = input(self.format_prompt(param, default=default))
+                setval = eval(input(self.format_prompt(param, default=default)))
                 if not setval:
                     setval = default
                 if param in self.value_mappers:
@@ -501,7 +501,7 @@ class ContextClassBase(object):
                     stack_props_file.write("STACK_NAME=$ORIG_STACK_NAME\n")
         stack_template = os.path.join(stack_dir, "template.yaml")
         if os.path.exists(stack_template) and not yes:
-            answer = input("Overwrite " + self.stack_name + " stack? (n): ")
+            answer = eval(input("Overwrite " + self.stack_name + " stack? (n): "))
             if not answer or not answer.lower() == "y":
                 return False
         with open(stack_template, "w") as stack_file:

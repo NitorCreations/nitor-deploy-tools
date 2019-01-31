@@ -15,6 +15,7 @@
 """ Main module for nitor-deploy-tools
 """
 
+from builtins import object
 PATH_COMMANDS = [
     'bin/create-shell-archive.sh',
     'bin/ensure-letsencrypt-certs.sh',
