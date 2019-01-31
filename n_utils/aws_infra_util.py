@@ -347,14 +347,14 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
                 image_branch = ret['BAKE_IMAGE_BRANCH']
             for docker in [dockerdir.split("/docker-")[1] for dockerdir in glob(component + os.sep + "docker-*")]:
                 try:
-                    ret['paramDockerUri' + docker] = resolve_docker_uri(component, 'paramDockerUri' + docker, image_branch, checkout_context)
+                    ret['paramDockerUri' + docker] = resolve_docker_uri(component, 'paramDockerUri' + docker, image_branch, git)
                 except ClientError:
                     # Best effor to load docker uris, but ignore errors since the repo might not
                     # actually be in use. Missing and used uris will result in an error later.
                     pass
             for image_name in [imagedir.split("/image")[1].replace("-", "") for imagedir in glob(component + os.sep + "image*")]:
                 try:
-                    image = resolve_ami(ret, component, image_name, image_branch, branch, checkout_context)
+                    image = resolve_ami(ret, component, image_name, image_branch, branch, git)
                     if image:
                         ret['paramAmi' + image_name] = image['ImageId']
                         ret['paramAmiName' + image_name] = image['Name']

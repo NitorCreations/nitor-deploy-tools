@@ -57,7 +57,9 @@ from n_utils.account_utils import list_created_accounts, create_account
 from n_utils.aws_infra_util import load_parameters
 from n_utils.ndt import find_include, find_all_includes, include_dirs
 from n_utils.profile_util import update_profile, print_profile
-from n_utils.ndt_project import list_jobs
+from n_utils.ndt_project import list_jobs, list_components
+from n_utils.git_utils import Git
+from n_utils.ndt_project import Project
 
 SYS_ENCODING = locale.getpreferredencoding()
 
@@ -1032,7 +1034,33 @@ def cli_list_jobs():
     """ Prints a line for every runnable job in this git repository, in all branches and
     optionally exports the properties for each under '$root/job-properties/"""
     parser = get_parser()
-    parser.add_argument("-e", "--export-job-properties", action="store_true", help="Set if you want the properties of all jobs into files under job-properties/")
+    parser.add_argument("-e", "--export-job-properties", action="store_true",
+                        help="Set if you want the properties of all jobs into files under job-properties/")
+    parser.add_argument("-j", "--json", action="store_true", help="Print in json format. Optionally " \
+                                                                  "exported parameters will be in the json document")
+    parser.add_argument("-b", "--branch", help="The branch to process. Default is to process all branches").completer = \
+        ChoicesCompleter(Git().get_branches())
+    parser.add_argument("-c", "--component", help="Component to process. Default is to process all components").completer = \
+        ChoicesCompleter([c.name for c in Project().get_components()])
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
-    print("\n".join(list_jobs(**vars(args))))
+    ret = list_jobs(**vars(args))
+    if args.json:
+        print(json.dumps(ret, indent=2))
+    else:
+        print("\n".join(ret))
+
+def cli_list_components():
+    """ Prints the components in a branch, by default the current branch """
+    parser = get_parser()
+    parser.add_argument("-j", "--json", action="store_true", help="Print in json format.")
+    parser.add_argument("-b", "--branch", help="The branch to get components from. Default is to process current branch").completer = \
+        ChoicesCompleter(Git().get_branches())
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+    ret = list_components(**vars(args))
+    if args.json:
+        print(json.dumps(ret, indent=2))
+    else:
+        print("\n".join(ret))
+    

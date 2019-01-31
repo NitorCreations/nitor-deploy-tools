@@ -41,7 +41,7 @@ public class Settings {
      **/
     public String[] getJobs() {
         if (this.jobDefs == null) {
-            def process = new ProcessBuilder(["ndt", "list-jobs"])
+            def process = new ProcessBuilder(["ndt", "list-jobs", "-e"])
                     .redirectErrorStream(true)
                     .directory(this.workspace)
                     .start()

@@ -85,7 +85,8 @@ NDT_ONLY = [
     'profile-to-env=n_utils.profile_util:profile_to_env',
     'profile-expiry-to-env=n_utils.profile_util:profile_expiry_to_env',
     'enable-profile=n_utils.profile_util:cli_enable_profile',
-    'list-jobs=n_utils.cli:cli_list_jobs'
+    'list-jobs=n_utils.cli:cli_list_jobs',
+    'list-components=n_utils.cli:cli_list_components'
 ]
 NDT_ONLY_SCRIPT = [
     'bake-docker.sh',
