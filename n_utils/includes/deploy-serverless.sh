@@ -81,6 +81,8 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
+eval "$(ndt load-parameters "$component" -l "$serverless" -e -r)"
+
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(ndt assume-role $DEPLOY_ROLE_ARN)
@@ -88,9 +90,7 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$component" -l "$serverless" -e)"
-
-ndt load-parameters "$component" -l "$serverless" -y > "$component/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
+ndt load-parameters "$component" -l "$serverless" -y -r > "$component/serverless-$ORIG_SERVERLESS_NAME/variables.yml"
 ndt yaml-to-yaml "$component/serverless-$ORIG_SERVERLESS_NAME/template.yaml" > "$component/serverless-$ORIG_SERVERLESS_NAME/serverless.yml"
 
 cd "$component/serverless-$ORIG_SERVERLESS_NAME"

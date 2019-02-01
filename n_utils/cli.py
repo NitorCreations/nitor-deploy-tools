@@ -942,16 +942,24 @@ def cli_load_parameters():
     (arrays not supported)
     """
     parser = get_parser(formatter=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("component", nargs="?", help="Compenent to descend into")
-    parser.add_argument("--branch", "-b", help="Branch to get active parameters for")
+    parser.add_argument("component", nargs="?", help="Compenent to descend into").completer = \
+        ChoicesCompleter([c.name for c in Project().get_components()])
+    parser.add_argument("--branch", "-b", help="Branch to get active parameters for").completer = \
+        ChoicesCompleter(Git().get_branches())
     parser.add_argument("--resolve-images", "-r", action="store_true", help="Also resolve subcomponent AMI IDs and docker repo urls")
     subcomponent_group = parser.add_mutually_exclusive_group()
-    subcomponent_group.add_argument("--stack", "-s", help="CloudFormation subcomponent to descent into")
-    subcomponent_group.add_argument("--serverless", "-l", help="Serverless subcomponent to descent into")
-    subcomponent_group.add_argument("--docker", "-d", help="Docker image subcomponent to descent into")
-    subcomponent_group.add_argument("--image", "-i", const="", nargs="?", help="AMI image subcomponent to descent into")
-    subcomponent_group.add_argument("--cdk", "-c", help="CDK subcomponent to descent into")
-    subcomponent_group.add_argument("--terraform", "-t", help="Terraform subcomponent to descent into")
+    subcomponent_group.add_argument("--stack", "-s", help="CloudFormation subcomponent to descent into").completer = \
+        lambda prefix, parsed_args, **kwargs: component_typed_subcomponents("stack", prefix, parsed_args, **kwargs)
+    subcomponent_group.add_argument("--serverless", "-l", help="Serverless subcomponent to descent into").completer = \
+        lambda prefix, parsed_args, **kwargs: component_typed_subcomponents("serverless", prefix, parsed_args, **kwargs)
+    subcomponent_group.add_argument("--docker", "-d", help="Docker image subcomponent to descent into").completer = \
+        lambda prefix, parsed_args, **kwargs: component_typed_subcomponents("docker", prefix, parsed_args, **kwargs)
+    subcomponent_group.add_argument("--image", "-i", const="", nargs="?", help="AMI image subcomponent to descent into").completer = \
+        lambda prefix, parsed_args, **kwargs: component_typed_subcomponents("image", prefix, parsed_args, **kwargs)
+    subcomponent_group.add_argument("--cdk", "-c", help="CDK subcomponent to descent into").completer = \
+        lambda prefix, parsed_args, **kwargs: component_typed_subcomponents("cdk", prefix, parsed_args, **kwargs)
+    subcomponent_group.add_argument("--terraform", "-t", help="Terraform subcomponent to descent into").completer = \
+        lambda prefix, parsed_args, **kwargs: component_typed_subcomponents("terraform", prefix, parsed_args, **kwargs)
     format_group = parser.add_mutually_exclusive_group()
     format_group.add_argument("--json", "-j", action="store_true", help="JSON format output (default)")
     format_group.add_argument("--yaml", "-y", action="store_true", help="YAML format output")
@@ -959,6 +967,7 @@ def cli_load_parameters():
     format_group.add_argument("--export-statements", "-e", action="store_true",
                               help="Output as eval-able export statements")
 
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     transform = json.dumps
@@ -977,6 +986,15 @@ def cli_load_parameters():
         parser.error("image, stack, doker or serverless do not make sense without component")
     print(transform(load_parameters(**vars(args))), end="")
 
+def component_typed_subcomponents(sc_type, prefix, parsed_args, **kwargs):
+    p_args = {}
+    if parsed_args.branch:
+        p_args["branch"] = parsed_args.branch
+    if parsed_args.component:
+        return [sc.name for sc in Project(**p_args).get_component(parsed_args.component).get_subcomponents() if sc.type == sc_type and sc.name.startswith(prefix)]
+    else:
+        return [sc.name for sc in Project(**p_args).get_all_subcomponents() if sc.type == sc_type]
+    return None
 
 def map_to_exports(map):
     """ Prints the map as eval-able set of environment variables. Keys
@@ -1041,7 +1059,7 @@ def cli_list_jobs():
     parser.add_argument("-b", "--branch", help="The branch to process. Default is to process all branches").completer = \
         ChoicesCompleter(Git().get_branches())
     parser.add_argument("-c", "--component", help="Component to process. Default is to process all components").completer = \
-        ChoicesCompleter([c.name for c in Project().get_components()])
+        branch_components
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
     ret = list_jobs(**vars(args))
@@ -1049,6 +1067,12 @@ def cli_list_jobs():
         print(json.dumps(ret, indent=2))
     else:
         print("\n".join(ret))
+
+def branch_components(prefix, parsed_args, **kwargs):
+    if parsed_args.branch:
+        return [c.name for c in Project(branch=parsed_args.branch).get_components()]
+    else:
+        return [c.name for c in Project().get_components()]
 
 def cli_list_components():
     """ Prints the components in a branch, by default the current branch """

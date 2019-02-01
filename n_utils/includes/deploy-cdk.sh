@@ -81,6 +81,8 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
+eval "$(ndt load-parameters "$component" -c "$cdk" -e -r)"
+
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(ndt assume-role $DEPLOY_ROLE_ARN)
@@ -88,9 +90,7 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
   eval $(assume-deploy-role.sh)
 fi
 
-eval "$(ndt load-parameters "$component" -c "$cdk" -e)"
-
-ndt load-parameters "$component" -c "$cdk" -j > "$component/cdk-$ORIG_CDK_NAME/variables.json"
+ndt load-parameters "$component" -c "$cdk" -j -r > "$component/cdk-$ORIG_CDK_NAME/variables.json"
 
 cd "$component/cdk-$ORIG_CDK_NAME"
 

@@ -90,6 +90,9 @@ class SCImage(SubComponent):
 class SCStack(SubComponent):
     pass
 
+class SCDocker(SubComponent):
+    pass
+
 class SCServerless(SubComponent):
     pass
 
@@ -108,7 +111,7 @@ class Project(object):
         else:
             self.branch = branch
         self.componets = []
-        self.root = root if root else guess_project_root
+        self.root = root if root else guess_project_root()
         self.all_subcomponents = []
 
     def get_components(self):
@@ -125,11 +128,14 @@ class Project(object):
     def _find_components(self):
         return [Component(de.name, self) for de in scandir(self.root) if de.is_dir() and self._is_component(de.name)]
 
-    def get_all_subcomponents(self):
+    def get_all_subcomponents(self, sc_type=None):
         if not self.all_subcomponents:
             for component in self.get_components():
                 self.all_subcomponents.extend(component.get_subcomponents())
-        return self.all_subcomponents
+        if not sc_type:
+            return self.all_subcomponents
+        else:
+            return [sc for sc in self.all_subcomponents if sc.type == sc_type]
 
     def _is_component(self, dir):
         return len([de for de in scandir(dir) if de.is_file() and (de.name == "infra.properties" or (de.name.startswith("infra-") and de.name.endswith(".properties")))]) > 0

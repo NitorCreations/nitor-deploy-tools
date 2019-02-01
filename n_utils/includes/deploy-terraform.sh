@@ -81,6 +81,8 @@ else
   BUILD_NUMBER=$(printf "%04d\n" $BUILD_NUMBER)
 fi
 
+eval "$(ndt load-parameters "$component" -t "$terraform" -e -r)"
+
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
   eval $(ndt assume-role $DEPLOY_ROLE_ARN)
@@ -89,8 +91,6 @@ elif which assume-deploy-role.sh > /dev/null && [ -z "$AWS_SESSION_TOKEN" ]; the
 elif [ -n "$AWS_PROFILE" ]; then
   eval "$(ndt profile-to-env $AWS_PROFILE)"
 fi
-
-eval "$(ndt load-parameters "$component" -t "$terraform" -e)"
 
 ndt load-parameters "$component" -t "$terraform" -j > "$component/terraform-$ORIG_TERRAFORM_NAME/terraform.tfvars"
 

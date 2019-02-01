@@ -40,6 +40,7 @@ PolicyDocument:
     - ec2:RevokeSecurityGroupEgress
     - ec2:RunInstances
     - ec2:TerminateInstances
+    - ecr:DescribeRepositories
     - iam:AddRoleToInstanceProfile
     - iam:CreateInstanceProfile
     - iam:CreateRole

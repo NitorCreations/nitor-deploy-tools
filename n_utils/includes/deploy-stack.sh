@@ -101,7 +101,7 @@ if [ -n "$ARG_IMAGE_JOB" ]; then
   export IMAGE_JOB=$ARG_IMAGE_JOB
 fi
 
-eval "$(ndt load-parameters "$component" -s "$stackName" -e)"
+eval "$(ndt load-parameters "$component" -s "$stackName" -e -r)"
 
 #If assume-deploy-role.sh is on the path, run it to assume the appropriate role for deployment
 if [ -n "$DEPLOY_ROLE_ARN" ] && [ -z "$AWS_SESSION_TOKEN" ]; then
