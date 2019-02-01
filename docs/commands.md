@@ -544,6 +544,21 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+## `ndt list-components`
+
+```bash
+usage: ndt list-components [-h] [-j] [-b BRANCH]
+
+Prints the components in a branch, by default the current branch
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -j, --json            Print in json format.
+  -b BRANCH, --branch BRANCH
+                        The branch to get components from. Default is to
+                        process current branch
+```
+
 ## `ndt list-file-to-json`
 
 ```bash
@@ -563,19 +578,30 @@ optional arguments:
 ## `ndt list-jobs`
 
 ```bash
-usage: ndt list-jobs  [-h]
+usage: ndt list-jobs [-h] [-e] [-j] [-b BRANCH] [-c COMPONENT]
 
-List jobs that should be created in jenkins for the current repository.
-This includes all branches in the current repository.
+Prints a line for every runnable job in this git repository, in all branches
+and optionally exports the properties for each under \'$root/job-properties/
 
 optional arguments:
-  -h, --help  show this help message and exit exit 1
+  -h, --help            show this help message and exit
+  -e, --export-job-properties
+                        Set if you want the properties of all jobs into files
+                        under job-properties/
+  -j, --json            Print in json format. Optionally exported parameters
+                        will be in the json document
+  -b BRANCH, --branch BRANCH
+                        The branch to process. Default is to process all
+                        branches
+  -c COMPONENT, --component COMPONENT
+                        Component to process. Default is to process all
+                        components
 ```
 
 ## `ndt load-parameters`
 
 ```bash
-usage: ndt load-parameters [-h] [--branch BRANCH]
+usage: ndt load-parameters [-h] [--branch BRANCH] [--resolve-images]
                            [--stack STACK | --serverless SERVERLESS | --docker DOCKER | --image [IMAGE]
                            | --cdk CDK | --terraform TERRAFORM]
                            [--json | --yaml | --properties | --export-statements]
@@ -618,6 +644,7 @@ optional arguments:
   -h, --help            show this help message and exit
   --branch BRANCH, -b BRANCH
                         Branch to get active parameters for
+  --resolve-images, -r  Also resolve subcomponent AMI IDs and docker repo urls
   --stack STACK, -s STACK
                         CloudFormation subcomponent to descent into
   --serverless SERVERLESS, -l SERVERLESS
@@ -1007,9 +1034,9 @@ optional arguments:
 ```bash
 Traceback (most recent call last):
   File "/home/pasi/src/nitor-deploy-tools/n_utils/ndt.py", line 100, in <module>
-    else:
+    do_command_completion()
   File "/home/pasi/src/nitor-deploy-tools/n_utils/ndt.py", line 91, in ndt
-    sys.exit(0)
+    getattr(__import__(parts[0], fromlist=[parts[1]]), parts[1])()
   File "/usr/lib/python2.7/subprocess.py", line 394, in __init__
     errread, errwrite)
   File "/usr/lib/python2.7/subprocess.py", line 1047, in _execute_child
