@@ -99,7 +99,7 @@ if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
 fi
 
-if [ -z "$SKIP_NPM"]; then
+if [ -z "$SKIP_NPM" ]; then
   npm i
 fi
 
