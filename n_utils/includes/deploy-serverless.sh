@@ -49,7 +49,6 @@ usage() {
   echo "" >&2
   echo "optional arguments:" >&2
   echo "  -d, --dryrun  dry-run - do only parameter expansion and template pre-processing and npm i"  >&2
-  echo "  -n, --no-npm-install  do not try to install dependencies with npm. This is usefull with lerna/yarn."  >&2
   echo "  -h, --help    show this help message and exit"  >&2
   if "$@"; then
     echo "" >&2
@@ -62,10 +61,6 @@ if [ "$1" = "--help" -o "$1" = "-h" ]; then
 fi
 if [ "$1" = "-d" -o "$1" = "--dryrun" ]; then
   DRYRUN=1
-  shift
-fi
-if [ "$1" = "-n" -o "$1" = "--no-npm-install" ]; then
-  NO_NPM_INSTALL=1
   shift
 fi
 die () {
@@ -104,7 +99,7 @@ if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
 fi
 
-if [ -z "$NO_NPM_INSTALL" ]; then
+if [ -z "$SKIP_NPM" -o "$SKIP_NPM" = false ]; then
   npm i
 fi
 
