@@ -99,7 +99,9 @@ if [ -x "./pre_deploy.sh" ]; then
   "./pre_deploy.sh"
 fi
 
-npm i
+if [ -z "$SKIP_NPM"]; then
+  npm i
+fi
 
 if [ -n "$DRYRUN" ]; then
   exit 0
