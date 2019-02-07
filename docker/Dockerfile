@@ -69,7 +69,7 @@ RUN set -ex \
   && ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn \
   && ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg \
   && rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz \
-  && pip install ansible boto awscli boto3 nitor-vault \
+  && pip install -U --no-cache-dir ansible boto awscli boto3 nitor-vault \
   && npm i -g npm serverless \
   && wget -nv -O - "http://www.nic.funet.fi/pub/mirrors/apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" | tar -xzf - -C /opt \
   && ln -snf /opt/apache-maven-${MAVEN_VERSION} /opt/maven \
