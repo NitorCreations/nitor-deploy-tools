@@ -366,8 +366,6 @@ def load_parameters(component=None, stack=None, serverless=None, docker=None, im
                     # Best effor to load ami info, but ignore errors since the image might not
                     # actually be in use. Missing and used images will result in an error later.
                     pass
-        if prefix:
-            shutil.rmtree(prefix)
         if "REGION" not in ret:
             ret["REGION"] = region()
         if "paramEnvId" not in ret:

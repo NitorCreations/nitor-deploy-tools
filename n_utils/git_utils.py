@@ -30,11 +30,11 @@ class Git(object):
 
     def _get_export_directory(self, branch):
         if branch in self.export_directories:
-            return self.export_directories[branch]
+            return self.export_directories[branch], True
         else:
             co_dir = tempfile.mkdtemp()
             self.export_directories[branch] = co_dir
-            return co_dir
+            return co_dir, False
     
     def _resolve_branch(self, branch):
         proc = Popen(["git", "branch", "-a"], stdout=PIPE)
@@ -57,20 +57,21 @@ class Git(object):
                 pass
 
     def export_branch(self, branch):
+        checkout_dir = None
         if branch == self.get_current_branch():
             return self.get_git_root()
-        with self:
-            try:
-                checkout_dir = self._get_export_directory(branch)
+        try:
+            checkout_dir, exported = self._get_export_directory(branch)
+            if not exported:
                 export_branch = self._resolve_branch(branch)
                 if not export_branch:
                     raise CheckoutException("Failed to resolve branch " + branch + " for export")
                 proc = Popen(["git", "archive", "--format", "tar", export_branch], stdout=PIPE, stderr=open(devnull, 'w'))
                 tar = tarfile.open(mode="r|", fileobj=proc.stdout)
                 tar.extractall(path=checkout_dir)
-            except tarfile.ReadError:
-                raise CheckoutException("Failed to export branch " + branch)
-            return checkout_dir
+        except tarfile.ReadError:
+            raise CheckoutException("Failed to export branch " + branch)
+        return checkout_dir
 
     def get_git_root(self):
         if not self.root:

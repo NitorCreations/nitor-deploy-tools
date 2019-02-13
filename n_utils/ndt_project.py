@@ -40,7 +40,7 @@ class Component(object):
         return ret
 
     def _is_subcomponent(self, dir):
-        for name, obj in self.subcomponent_classes:
+        for _, obj in self.subcomponent_classes:
             if obj(self, "").match_dirname(dir):
                 return True
         return False
@@ -151,6 +151,8 @@ def guess_project_root():
 
 def list_jobs(export_job_properties=False, branch=None, json=False, component=None):
     ret = {"branches":[]}
+    arr = []
+    param_files = {}
     with Git() as git:
         current_project = Project(root=guess_project_root())
         if branch:
@@ -180,51 +182,72 @@ def list_jobs(export_job_properties=False, branch=None, json=False, component=No
                 for c_component in project.get_components():
                     branch_obj["components"].append({"name": c_component.name, "subcomponents": []})
                     components.append(c_component)
-        arr = []
-        for component in components:
-            for subcomponent in component.get_subcomponents():
-                if json:
-                    branch_elem = [b for b in ret["branches"] if b["name"] == component.project.branch][0]
-                    component_elem = [c for c in branch_elem["components"] if c["name"] == component.name][0]
-                    subc_elem = {"type": subcomponent.type}
-                    if subcomponent.name:
-                        subc_elem["name"] = subcomponent.name
-                    component_elem["subcomponents"].append(subc_elem)
-                    if export_job_properties:
-                        prop_args = {
-                            "component": subcomponent.component.name,
-                            subcomponent.type: subcomponent.name,
-                            "branch": branch,
-                            "git": git
-                        }
-                        subc_elem["properties"] = load_parameters(**prop_args)
+        if not json and export_job_properties:
+            try:
+                mkdir(current_project.root + sep + "job-properties")
+            except OSError as err:
+                # Directory already exists is ok
+                if err.errno == 17:
+                    pass
                 else:
-                    arr.append(subcomponent.list_row(component.project.branch))
-                    if export_job_properties:
-                        #$TYPE-$GIT_BRANCH-$COMPONENT-$NAME.properties
-                        try:
-                            mkdir(current_project.root + sep + "job-properties")
-                        except OSError as err:
-                            # Directory already exists is ok
-                            if err.errno == 17:
-                                pass
-                            else:
-                                raise err
-                        filename = subcomponent.job_properties_filename(branch, current_project.root)
-                        prop_args = {
-                            "component": subcomponent.component.name,
-                            subcomponent.type: subcomponent.name,
-                            "branch": branch,
-                            "git": git
-                        }
-                        parameters = load_parameters(**prop_args)
-                        with open(filename, 'w+') as prop_file:
-                            for key, value in list(parameters.items()):
-                                prop_file.write(key + "=" + value + "\n")
+                    raise err
         if json:
-            return ret
+            _collect_json(components, ret, export_job_properties ,git)
         else:
-            return arr
+            arr, param_files = _collect_prop_files(components, export_job_properties, current_project.root, git)
+            if export_job_properties:
+                _write_prop_files(param_files)
+    if json:
+        return ret
+    else:
+        return arr
+
+def _collect_json(components, ret, export_job_properties, git):
+    with git:
+        for component in components:
+            subcomponents = component.get_subcomponents()
+            for subcomponent in subcomponents:
+                branch_elem = [b for b in ret["branches"] if b["name"] == component.project.branch][0]
+                component_elem = [c for c in branch_elem["components"] if c["name"] == component.name][0]
+                subc_elem = {"type": subcomponent.type}
+                if subcomponent.name:
+                    subc_elem["name"] = subcomponent.name
+                component_elem["subcomponents"].append(subc_elem)
+                if export_job_properties:
+                    prop_args = {
+                        "component": subcomponent.component.name,
+                        subcomponent.type: subcomponent.name,
+                        "branch": component.project.branch,
+                        "git": git
+                    }
+                    subc_elem["properties"] = load_parameters(**prop_args)
+
+def _collect_prop_files(components, export_job_properties, root, git):
+    arr = []
+    param_files = {}
+    with git:
+        for component in components:
+            subcomponents = component.get_subcomponents()
+            for subcomponent in subcomponents:
+                arr.append(subcomponent.list_row(component.project.branch))
+                if export_job_properties:
+                    #$TYPE-$GIT_BRANCH-$COMPONENT-$NAME.properties
+                    filename = subcomponent.job_properties_filename(component.project.branch, root)
+                    prop_args = {
+                        "component": subcomponent.component.name,
+                        subcomponent.type: subcomponent.name,
+                        "branch": component.project.branch,
+                        "git": git
+                    }
+                    parameters = load_parameters(**prop_args)
+                    param_files[filename] = parameters
+    return arr, param_files
+
+def _write_prop_files(param_files):
+    for filename, parameters in list(param_files.items()):
+        with open(filename, 'w+') as prop_file:
+            for key, value in list(parameters.items()):
+                prop_file.write(key + "=" + value + "\n")
 
 def list_components(branch=None, json=None):
     return [c.name for c in Project(branch=branch).get_components()]
