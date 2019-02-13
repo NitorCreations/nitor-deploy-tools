@@ -126,7 +126,7 @@ class Project(object):
         return None
 
     def _find_components(self):
-        return [Component(de.name, self) for de in scandir(self.root) if de.is_dir() and self._is_component(de.name)]
+        return [Component(de.name, self) for de in scandir(self.root) if de.is_dir() and self._is_component(de.path)]
 
     def get_all_subcomponents(self, sc_type=None):
         if not self.all_subcomponents:
@@ -199,7 +199,7 @@ def list_jobs(export_job_properties=False, branch=None, json=False, component=No
                         }
                         subc_elem["properties"] = load_parameters(**prop_args)
                 else:
-                    arr.append(subcomponent.list_row(branch))
+                    arr.append(subcomponent.list_row(component.project.branch))
                     if export_job_properties:
                         #$TYPE-$GIT_BRANCH-$COMPONENT-$NAME.properties
                         try:
