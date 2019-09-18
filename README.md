@@ -1,3 +1,7 @@
+# DEPRECATED
+
+This project was renamed and moved to https://github.com/NitorCreations/nameless-deploy-tools
+
 # Nitor Deploy Tools
 [![Build Status](https://travis-ci.org/NitorCreations/nitor-deploy-tools.svg?branch=master)](https://travis-ci.org/NitorCreations/nitor-deploy-tools)
 [![Coverage Status](https://coveralls.io/repos/github/NitorCreations/nitor-deploy-tools/badge.svg?branch=master)](https://coveralls.io/github/NitorCreations/nitor-deploy-tools?branch=master)
