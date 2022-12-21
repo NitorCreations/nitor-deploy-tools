@@ -3,16 +3,16 @@
 For `ndt deploy-stack`, `ndt deploy-serverless`, `ndt yaml-to-json` and `ndt yaml-to-yaml` there
 is a template pre-processing step that is fairly important. The pre-processing implements some
 client side functionality that greatly improves the usability and modularisation of stacks and
-serverless projects. The flow of the prosessing is roughly as follows:
+serverless projects. The flow of the processing is roughly as follows:
 
 * Resolve ndt parameters from `infra*.properties` files along the path to the template
 * Expand and resolve the parameter section for the template to get all the parameters
   actually in use in the template
 * Expand the rest of the template verifying all parameter references
-* All values that use a dynamic parameter notation will be filled in as the template is pre-procesed.
+* All values that use a dynamic parameter notation will be filled in as the template is pre-processed.
     * There are three types of dynamic parameter notation: `((parameter))`, `$parameter` and `${parameter}`
     * Parameter replacement will not go into CloudFormation function objects (things starting `Fn::`) to
-      avoid replacing runtime parameters in included scripts. The double paranthesis `((parameter))` notation
+      avoid replacing runtime parameters in included scripts. The double parenthesis `((parameter))` notation
       is the exception to this. Parameters in that notation will be replaced at any level of the template
       including inside functions.
 * `Ref: parameter` references will be posted to CloudFormation as-is
@@ -21,7 +21,7 @@ Easiest way to test your parameter processing is to run `ndt yaml-to-yaml my/sta
 
 ## Pre-processing functions
 
-There are a few usefull fuction you can insert and use in the pre-processing phase
+There are a few useful functions you can insert and use in the pre-processing phase
 
 ### `Fn::ImportYaml`
 
@@ -84,7 +84,7 @@ Parameters:
 ### `Fn::ImportFile`
 
 Imports a file in place of the function. Useful for files you want to manage externally to the
-template as for example userdata shell scripts or AppSync schemas or the like. Importing
+template for example userdata shell scripts or AppSync schemas or the like. Importing
 does a few useful tricks:
 
 * Resolves parameter references with a few different notations to fit into different scripting files
@@ -163,7 +163,7 @@ This is transformed into
 ]
 ```
 
-Note how CloudFormation internal parameters are avaible via `CF_AWS__StackName` to `"Ref": "AWS::StackName"`
+Note how CloudFormation internal parameters are available via `CF_AWS__StackName` to `"Ref": "AWS::StackName"`
 type transformation. Suffixing a parameter with `#optional` will result in no error being thrown if the
 parameter is not present in the stack and in that case the value will simply be empty or the value
 given in the script file instead of a reference.
@@ -194,7 +194,7 @@ const stackName = //CF{ "Ref": "AWS::StackName" }
 ```
 
 The third way to insert parameters is via a notation of the type `$CF{parameterName|defaultVal}#optional`. This
-references will simply be replaced with a reference to the parameter in place, leaving everything around
+reference will simply be replaced with a reference to the parameter in place, leaving everything around
 it intact. This is handy for example when importing variables into json, where the above comment based
 syntax would break json syntax.
 
@@ -224,10 +224,10 @@ Which will be translated when imported into the stack into:
 ```
 ### `StackRef`
 
-Gets either a input or output parameter or logical resource of another stack as the value to substitute the
+Gets either an input or output parameter or logical resource of another stack as the value to substitute the
 function. Neither parameter nor resources need to be exported to be available, which makes this somewhat
 more flexible that CloudFormation native Export/Import. The substitution is completely client-side so
-referencing stacks will not be modified in any way if referenced staks change. Later there will be tooling to
+referencing stacks will not be modified in any way if referenced stacks change. Later there will be tooling to
 manage changes across several stacks in the same repository that refer to eachother. You can run
 `ndt show-stack-params-and-outputs [stack-name]` to see the parameters and resources that are available
 in each stack.
